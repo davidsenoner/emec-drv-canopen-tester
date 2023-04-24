@@ -1,0 +1,181 @@
+
+body {
+    background-color:#ffffff;
+    color:#000000;
+    font-family:Helvetica, Arial;
+    font-weight:normal;
+    text-decoration:none;
+    margin: 0px 20px 0px 20px; 
+}
+
+a a.content {
+    font-family: sans-serif;
+    color: #036;
+    text-decoration:none;
+}
+
+A:link {
+    text-decoration: none;
+    color: #036;
+}
+
+A:visited {
+    text-decoration: none;
+    color: #036;
+}
+
+A:active {
+    text-decoration: none;
+    color: #F30;
+}
+
+A:hover {
+    text-decoration: none;
+    font-style:italic;
+    font-weight: bold;
+    color: #036;
+}
+
+A.offsite {
+    text-decoration: none;
+    color: #C30;
+} 
+
+H1 {
+    font-family:Helvetica, Arial;
+    font-size: 36;
+}
+H2 {
+    font-family:Helvetica, Arial;
+    font-size: 24;
+}
+H3 {
+    font-family:Helvetica, Arial;
+    font-size: 20;
+    background: #EFE0b3;
+    border: 1 solid ;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 2px;
+}
+H4 {
+    font-family:Helvetica, Arial;
+    font-size: 18;
+    background: #FFF0b3;
+    border: 1 solid ;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+}
+H5 {
+    font-family:Helvetica, Arial;
+    font-size: 16;
+    background: #FFF0d3;
+    border: 1 dotted ;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 6px;
+}
+
+H6 {
+    font-family:Helvetica, Arial;
+    font-size: 14;
+    text-transform:uppercase;
+}
+
+@media screen {
+    .port {
+	position: fixed;
+	background-color: red;
+	color: white;
+	font-family:serif;
+	font-style:italic;
+	left: 0px;
+	right:0px;
+	bottom:0px;
+	text-align: center;
+	margin: 20px 0px 0px 0px;
+    }
+
+    .logo {
+	position: fixed;
+	right:50px;
+	top:50px;
+	text-align: center;
+    }
+}
+
+toc1 {
+    position: fixed;
+    width: 10em;
+    height: auto;
+    top: 15%;
+    right: auto;
+    bottom: 100px;
+    left: 0;
+}
+
+main1 {
+    position: absolute;
+    width: auto;
+    height: auto;
+    top: 15%;
+    right: 0;
+    bottom: 100px;
+    left: 10em;
+}
+
+globalEDS baudrates dummymap otherset {
+    border: 2px solid black;
+    width: 400;
+    margin: 10px 10em 10px;
+}
+
+.objdescr {
+
+}
+
+.objdesc, .entrydesc {
+    border: 2px solid black;
+    width: 400;
+    left: 15em;
+    margin: 0px 10em 15px;
+}
+td {
+    border: 1px solid black;
+    width: 200;
+    text-indent: 5px;
+}
+
+pre {
+   font-size:12;
+   font-weight: light;
+   font-family: Arial, Helvetica;
+}
+
+ghwconf colibconf lhwconf {
+    font-family: Courier;
+    font-size: 12;
+    margin: 10px 14em 10px;
+
+}
+
+@media print {
+    .port {
+        background-color: red;
+        color: white;
+        font-family:serif;
+        font-style:italic;
+        left: 0px;
+        right:0px;
+        bottom:0px;
+        text-align: center;
+        margin: 20px 0px 0px 0px;
+    }
+
+    .logo {
+        right:50px;
+        top:50px;
+        text-align: center;
+    }
+}
