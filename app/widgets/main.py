@@ -31,6 +31,10 @@ class MainWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
 
+        # Init canopen logger
+        logging.getLogger('can').setLevel(logging.ERROR)
+        logging.getLogger('canopen').setLevel(logging.ERROR)
+
         # Init default widgets
         self._ui.lbl_can_status.setText("No connection")
 

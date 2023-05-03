@@ -9,13 +9,13 @@ from PyQt5.QtGui import QCursor
 
 logger = logging.getLogger(__name__)
 
-
 TITAN40_EMECDRV5_LIFT_NODE_ID = 0x0C
 TITAN40_EMECDRV5_SLEWING_NODE_ID = 0x0D
 
 
 class ScannerTable(QObject):
     nodes_changed = pyqtSignal(int)
+
     def __init__(self,
                  widget: QTableWidget,
                  network: Network
@@ -41,9 +41,12 @@ class ScannerTable(QObject):
         self.draw_table()
 
     def search(self):
-        self.network.scanner.reset()
-        self.network.scanner.search()
-        time.sleep(0.05)
+        try:
+            self.network.scanner.reset()
+            self.network.scanner.search()
+            time.sleep(0.05)
+        except Exception as e:
+            logger.debug(f"Error scanning devices: {e}")
         self.draw_table()
 
     def draw_table(self):
@@ -92,11 +95,15 @@ class ScannerTable(QObject):
 
     def add_node(self, node_id: int):
         # Create node from ID
-        new_node = BaseNode402(node_id, 'app/resources/eds/emecdrv5.eds')
+        try:
+            new_node = BaseNode402(node_id, 'app/resources/eds/emecdrv5.eds')
 
-        # Add new node to network
-        self.network.add_node(new_node)
-        logging.debug(f'Node ID {node_id} added to network')
+            # Add new node to network
+            self.network.add_node(new_node)
+            logging.debug(f'Node ID {node_id} added to network')
+        except Exception as e:
+            logger.debug(e)
+            return
 
         # Redraw tables
         time.sleep(0.05)
