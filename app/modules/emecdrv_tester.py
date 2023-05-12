@@ -124,24 +124,60 @@ class EMECDrvTester(QTimer):
         self.initialised.emit()
 
     @property
+    def ccw_movements(self):
+        try:
+            return self.node.sdo[0x2000][1].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
+    def cw_movements(self):
+        try:
+            return self.node.sdo[0x2000][2].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
     def actual_position(self):
-        return self.node.sdo[OD_POSITION_ACTUAL_VALUE].raw
+        try:
+            return self.node.sdo[OD_POSITION_ACTUAL_VALUE].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
 
     @property
     def max_current(self):
-        return self.node.sdo[OD_MAX_CURRENT].raw
+        try:
+            return self.node.sdo[OD_MAX_CURRENT].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
 
     @property
     def rated_current(self):
-        return self.node.sdo[OD_MOTOR_RATED_CURRENT].raw
+        try:
+            return self.node.sdo[OD_MOTOR_RATED_CURRENT].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
 
     @property
     def current_actual_value(self):
-        return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw
+        try:
+            return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
 
     @property
     def control_word(self):
-        return self.node.sdo[OD_CONTROL_WORD].raw
+        try:
+            return self.node.sdo[OD_CONTROL_WORD].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
 
     def get_elapsed_time(self) -> int:
         return self.elapsed_time
@@ -230,7 +266,7 @@ class EMECDrvTester(QTimer):
 
             self.start(1000)  # Start QTimer with Timeout period
             self.started.emit()
-            logger.debug(f"Start Test on Node {self.node.id}")
+            logger.debug(f"Start Test on Node {self.node.id} on network {self.node.network}")
 
     def stop_test(self):
         # Clear Operating Enabled flag

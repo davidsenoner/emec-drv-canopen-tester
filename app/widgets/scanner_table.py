@@ -18,14 +18,15 @@ class ScannerTable(QObject):
 
     def __init__(self,
                  widget: QTableWidget,
-                 network: Network
+                 network_list: list
                  ):
         super().__init__()
 
         self.table_widget = widget
-        self.network = network
+        self.network_list = network_list
 
         _headers = [
+            "Channel",
             "Node ID",
             "Type",
             "Add Node",
@@ -36,17 +37,18 @@ class ScannerTable(QObject):
         self.table_widget.setHorizontalHeaderLabels(_headers)
 
         # Init Scanner
-        self.network.scanner.search()
-
-        self.draw_table()
+        self.search()
 
     def search(self):
         try:
-            self.network.scanner.reset()
-            self.network.scanner.search()
-            time.sleep(0.05)
+            for network in self.network_list:
+                if network is not None:
+                    network.scanner.reset()
+                    network.scanner.search()
+                    time.sleep(0.05)
         except Exception as e:
             logger.debug(f"Error scanning devices: {e}")
+
         self.draw_table()
 
     def draw_table(self):
@@ -56,50 +58,59 @@ class ScannerTable(QObject):
         for i in reversed(range(rows)):
             self.table_widget.removeRow(i)
 
-        for node_id in self.network.scanner.nodes:
-            i = self.table_widget.rowCount()
+        for channel, network in enumerate(self.network_list):
+            if network is None:
+                continue
 
-            self.table_widget.insertRow(i)
-            self.table_widget.setRowHeight(i, 35)
+            for node_id in network.scanner.nodes:
+                i = self.table_widget.rowCount()
 
-            _column = 0
+                self.table_widget.insertRow(i)
+                self.table_widget.setRowHeight(i, 35)
 
-            # COLUMN NODE ID
-            self.table_widget.setItem(i, _column, QTableWidgetItem(f'ID: {node_id}'))
+                _column = 0
 
-            # COLUMN NODE TYPE
-            _column = _column + 1
-            if node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Lift'))
-            elif node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Slewing'))
-            else:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Unknown'))
+                # COLUMN CHANNEL
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(channel)))
 
-            # COLUMN ADD NODE BUTTON
-            _column = _column + 1
-            btn_start = QPushButton('Add')
-            btn_start.setMaximumSize(QSize(50, 30))
-            btn_start.setCursor(QCursor(Qt.PointingHandCursor))
-            btn_start.clicked.connect(lambda state=False, j=node_id: self.add_node(j))
-            self.table_widget.setCellWidget(i, _column, btn_start)
+                # COLUMN NODE ID
+                _column = _column + 1
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'ID: {node_id}'))
 
-            # COLUMN NODE ADDED
-            _column = _column + 1
-            if node_id in self.network.nodes:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'OK'))
-            else:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'NOK'))
+                # COLUMN NODE TYPE
+                _column = _column + 1
+                if node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+                    self.table_widget.setItem(i, _column, QTableWidgetItem(f'Lift'))
+                elif node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+                    self.table_widget.setItem(i, _column, QTableWidgetItem(f'Slewing'))
+                else:
+                    self.table_widget.setItem(i, _column, QTableWidgetItem(f'Unknown'))
+
+                # COLUMN ADD NODE BUTTON
+                _column = _column + 1
+                btn_start = QPushButton('Add')
+                btn_start.setMaximumSize(QSize(50, 30))
+                btn_start.setCursor(QCursor(Qt.PointingHandCursor))
+                btn_start.clicked.connect(lambda state=False, n=network, j=node_id: self.add_node(n, j))
+                self.table_widget.setCellWidget(i, _column, btn_start)
+
+                # COLUMN NODE ADDED
+                _column = _column + 1
+                if node_id in network.nodes:
+                    self.table_widget.setItem(i, _column, QTableWidgetItem(f'OK'))
+                else:
+                    self.table_widget.setItem(i, _column, QTableWidgetItem(f'NOK'))
 
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table_widget.horizontalHeader().setStretchLastSection(True)
 
-    def add_node(self, node_id: int):
+    def add_node(self, network: Network, node_id: int):
         # Create node from ID
         try:
             new_node = BaseNode402(node_id, 'app/resources/eds/emecdrv5.eds')
 
             # Add new node to network
-            self.network.add_node(new_node)
+            network.add_node(new_node)
             logging.debug(f'Node ID {node_id} added to network')
         except Exception as e:
             logger.debug(e)
