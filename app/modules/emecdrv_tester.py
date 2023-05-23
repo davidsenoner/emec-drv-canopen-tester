@@ -10,8 +10,14 @@ logger = logging.getLogger(__name__)
 
 # EMECDRV SPECIFIC
 
-MIN_TARGET_POSITION = 0  # 0% LIFT POSITION
-MAX_TARGET_POSITION = 100  # 100% LIFT POSITION
+TITAN40_EMECDRV5_LIFT_NODE_ID = 0x0C
+TITAN40_EMECDRV5_SLEWING_NODE_ID = 0x0D
+
+MIN_TARGET_POSITION_LIFT = 0  # 0% LIFT POSITION
+MAX_TARGET_POSITION_LIFT = 100  # 100% LIFT POSITION
+
+MIN_TARGET_POSITION_SLEWING = -100  # 0% LIFT POSITION
+MAX_TARGET_POSITION_SLEWING = 1900  # 100% LIFT POSITION
 
 OD_MANUFACTURER_DEVICE_NAME = 0x1008
 OD_MANUFACTURER_HARDWARE_VERSION = 0x1009
@@ -73,8 +79,8 @@ class EMECDrvTester(QTimer):
 
     def __init__(self,
                  node: BaseNode402,
-                 min_movement: int = 35,  # default for Lift
-                 max_movement: int = 45  # default for Lift
+                 min_target: int = MIN_TARGET_POSITION_LIFT,  # default for Lift
+                 max_target: int = MAX_TARGET_POSITION_LIFT  # default for Lift
                  ):
         super().__init__()
 
@@ -85,9 +91,12 @@ class EMECDrvTester(QTimer):
         self.reached_status_timer = 0
         self.test_error_message = None
 
-        # define min and max movement time
-        self.min_movement = min_movement
-        self.max_movement = max_movement
+        self.min_target = min_target
+        self.max_target = max_target
+
+        self.target_temp = 0
+
+        self.tolerance = 10
 
         # Node initialisation
         node.nmt.state = 'OPERATIONAL'
@@ -117,9 +126,30 @@ class EMECDrvTester(QTimer):
             time.sleep(0.001)
 
         # Connect Signals
-        self.timeout.connect(self.timeout_timer)
+        if node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+            self.timeout.connect(self.timeout_test)
+
+            # define min and max movement time
+            self.min_movement = 28
+            self.max_movement = 40
+
+            self.min_target = MIN_TARGET_POSITION_LIFT
+            self.max_target = MAX_TARGET_POSITION_LIFT
+
+        elif node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+            self.timeout.connect(self.timeout_test)
+
+            # define min and max movement time
+            self.min_movement = 130  # minimum movement time in seconds
+            self.max_movement = 155  # maximum movement time in seconds
+
+            self.min_target = MIN_TARGET_POSITION_SLEWING
+            self.max_target = MAX_TARGET_POSITION_SLEWING
+
+            self.tolerance = 100
 
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
+        logger.debug(f'min_movement: {self.min_movement}, max_movement: {self.max_movement}')
 
         self.initialised.emit()
 
@@ -127,6 +157,30 @@ class EMECDrvTester(QTimer):
     def ccw_movements(self):
         try:
             return self.node.sdo[0x2000][1].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
+    def accumulative_operating_time(self):
+        try:
+            return self.node.sdo[0x2000][0].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
+    def device_temp(self):
+        try:
+            return self.node.sdo[0x2001][0].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
+    def max_device_temp(self):
+        try:
+            return self.node.sdo[0x2001][1].raw
         except Exception as e:
             logger.debug(e)
             return 0
@@ -143,6 +197,14 @@ class EMECDrvTester(QTimer):
     def actual_position(self):
         try:
             return self.node.sdo[OD_POSITION_ACTUAL_VALUE].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
+    def target_position(self):
+        try:
+            return self.node.sdo[OD_TARGET_POSITION].raw
         except Exception as e:
             logger.debug(e)
             return 0
@@ -179,6 +241,38 @@ class EMECDrvTester(QTimer):
             logger.debug(e)
             return 0
 
+    @property
+    def status_word(self):
+        try:
+            return self.node.sdo[OD_STATUS_WORD].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
+    def manufacturer_device_name(self):
+        try:
+            return self.node.sdo[OD_MANUFACTURER_DEVICE_NAME].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
+    def manufacturer_hardware_version(self):
+        try:
+            return self.node.sdo[OD_MANUFACTURER_HARDWARE_VERSION].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
+    @property
+    def manufacturer_software_version(self):
+        try:
+            return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
+        except Exception as e:
+            logger.debug(e)
+            return 0
+
     def get_elapsed_time(self) -> int:
         return self.elapsed_time
 
@@ -207,42 +301,56 @@ class EMECDrvTester(QTimer):
 
         return state
 
-    def timeout_timer(self):
+    def timeout_test(self):
         self.elapsed_time = self.elapsed_time + 1
         self.test_timer_timeout.emit()
 
         try:
-            if self.node.sdo[OD_STATUS_WORD].raw & STATUS_TARGET_REACHED or \
-                    (self.actual_position < (self.node.sdo[OD_TARGET_POSITION].raw + 4) and \
-                    self.actual_position > (self.node.sdo[OD_TARGET_POSITION].raw - 4)):
-                if self.actual_position < (MAX_TARGET_POSITION - 50):
-                    self.node.sdo[OD_TARGET_POSITION].raw = MAX_TARGET_POSITION
-                else:
-                    self.node.sdo[OD_TARGET_POSITION].raw = MIN_TARGET_POSITION
-
-                self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_START_MOVEMENT_ORDER
-                self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_START_MOVEMENT_ORDER
+            if (self.max_target - self.tolerance) < self.actual_position < (self.max_target + self.tolerance):
+                if self.target_temp != self.min_target:
+                    # control min movement time
+                    if self.moving_time < self.min_movement < self.elapsed_time:
+                        self.test_error_message = f"Movement ({self.moving_time}s) time under limit of {self.min_movement}s"
+                        self.stop_test()  # Stop if timeout error
+                    else:
+                        self.stop_movement()
+                        self.target_temp = self.min_target
+                        self.node.sdo[OD_TARGET_POSITION].raw = self.min_target
+                        QTimer.singleShot(1500, self.start_movement)
+                        self.moving_time = 0  # Reset timer when reaching target position
 
                 self.reached_status_timer = self.reached_status_timer + 1
-
-                # control min movement time
-                if self.moving_time < self.min_movement < self.elapsed_time:
-                    self.test_error_message = f"Movement time under limit of {self.min_movement}s"
-                    self.stop_test()  # Stop if timeout error
 
                 if self.reached_status_timer > 10:
                     self.test_error_message = f"Driver always in reached status"
                     self.stop_test()  # Stop if timeout error
 
-                self.moving_time = 0  # Reset timer when reaching target position
+            elif (-self.min_target - self.tolerance) < self.actual_position < (-self.min_target + self.tolerance):
+                if self.target_temp != self.max_target:
+                    # control min movement time
+                    if self.moving_time < self.min_movement < self.elapsed_time:
+                        self.test_error_message = f"Movement time ({self.moving_time}s) under limit of {self.min_movement}s"
+                        self.stop_test()  # Stop if timeout error
+                    else:
+                        self.stop_movement()
+                        self.target_temp = self.max_target
+                        self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
+                        QTimer.singleShot(1500, self.start_movement)
+                        self.moving_time = 0  # Reset timer when reaching target position
+
+                self.reached_status_timer = self.reached_status_timer + 1
+
+                if self.reached_status_timer > 10:
+                    self.test_error_message = f"Driver always in reached status"
+                    self.stop_test()  # Stop if timeout error
 
             else:
                 # Control max movement time
                 if self.moving_time > self.max_movement:
-                    self.test_error_message = f"Movement timeout exceeded limit of {self.max_movement}s"
+                    self.test_error_message = f"Movement time ({self.moving_time}s) exceeded limit of {self.max_movement}s"
                     self.stop_test()  # Stop if timeout error
 
-                    logger.debug("Error due to moving time exceeded")
+                    logger.debug("Movement time ({self.moving_time}s) exceeded limit of {self.max_movement}s")
 
                 self.moving_time = self.moving_time + 1  # increment timer during movement
                 self.reached_status_timer = 0  # reset timer if out of reached status
@@ -257,6 +365,14 @@ class EMECDrvTester(QTimer):
                 self.moving_time = 0
                 self.reached_status_timer = 0
                 self.test_error_message = None
+
+                # Init target first time to min
+
+                mid = (self.max_target - self.min_target)/2
+                if self.node.sdo[OD_TARGET_POSITION].raw > mid:
+                    self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
+                else:
+                    self.node.sdo[OD_TARGET_POSITION].raw = self.min_target
 
                 self.start_movement()
             except Exception as e:
@@ -285,12 +401,18 @@ class EMECDrvTester(QTimer):
         logger.debug(f"Stop Test on Node {self.node.id}")
 
     def start_movement(self):
+
         # Set Operating Enabled flag
         self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_ENABLE_OPERATION
 
         # A rising flank starts a movement order
         self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_START_MOVEMENT_ORDER
         self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_START_MOVEMENT_ORDER
+
+    def stop_movement(self):
+
+        self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_ENABLE_OPERATION
+
 
     def ack_error(self):
         """

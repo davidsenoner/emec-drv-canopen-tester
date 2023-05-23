@@ -1,26 +1,8 @@
 <RCC>
   <qresource prefix="images">
-    <file>Microtec Logo.jpg</file>
-    <file>Microtec_Logo_C_PNG_500px.png</file>
-    <file>Microtec_Logo_C_PNG_1500px.png</file>
-    <file>Microtec_Logo_M 40px.png</file>
-  </qresource>
-  <qresource prefix="loaders">
-    <file>audio.svg</file>
-    <file>ball-triangle.svg</file>
-    <file>bars.svg</file>
-    <file>circles.svg</file>
-    <file>grid.svg</file>
-    <file>hearts.svg</file>
-    <file>oval.svg</file>
-    <file>puff.svg</file>
-    <file>rings.svg</file>
-    <file>spinning-circles.svg</file>
-    <file>tail-spin.svg</file>
-    <file>three-dots.svg</file>
+    <file>logo_emec.png</file>
   </qresource>
   <qresource prefix="icons">
-    <file>check.png</file>
     <file>cil-3d.png</file>
     <file>cil-4k.png</file>
     <file>cil-account-logout.png</file>
@@ -270,14 +252,11 @@
     <file>cil-x-circle.png</file>
     <file>cil-zoom-in.png</file>
     <file>cil-zoom-out.png</file>
-    <file>dot_green.png</file>
-    <file>dot_red.png</file>
     <file>icon_close.png</file>
     <file>icon_maximize.png</file>
     <file>icon_menu.png</file>
     <file>icon_minimize.png</file>
     <file>icon_restore.png</file>
     <file>icon_settings.png</file>
-    <file>x.png</file>
   </qresource>
 </RCC>

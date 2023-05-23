@@ -2,7 +2,7 @@ import logging
 import time
 from canopen import Network, BaseNode402
 
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer
 from PyQt5.QtGui import QCursor
 
@@ -277,3 +277,27 @@ class NodeTable(QObject):
 
         if action == info_action:
             logger.debug(f'Info for Node {node_table_row.node_id}')
+            # Create QMessageBox-Dialog
+
+            text = f"Node ID: {node_table_row.node_id}\n"
+            text += f"Channel: {node_table_row.channel}\n"
+            text += f"Manufacturer Device Name: {node_table_row.manufacturer_device_name}\n"
+            text += f"Manufacturer Hardware Version: {node_table_row.manufacturer_hardware_version}\n"
+            text += f"Manufacturer Software Version: {node_table_row.manufacturer_software_version}\n"
+            text += f"CW/CCW movements: {str(node_table_row.cw_movements)}/{str(node_table_row.ccw_movements)}\n"
+            text += f"Accumulative operating time: {str(node_table_row.accumulative_operating_time)}\n"
+            text += f"Device temperature: {str(node_table_row.device_temp)} (max: {str(node_table_row.max_device_temp)})\n"
+            text += f"State: {str(node_table_row.node.state)}\n"
+            text += f"Actual position: {str(node_table_row.actual_position)}\n"
+            text += f"Target position: {str(node_table_row.target_position)}\n"
+            text += f"Control Word: {hex(node_table_row.control_word)}\n"
+            text += f"Status Word: {hex(node_table_row.status_word)}\n"
+            text += f"Actual current: {str(node_table_row.current_actual_value)}\n"
+            text += f"Rated/Max current: {str(node_table_row.rated_current)}/{str(node_table_row.max_current)}\n"
+
+            msg_box = QMessageBox()
+            msg_box.setText(text)
+            msg_box.setWindowTitle(f'Info Node {node_table_row.node_id}')
+            msg_box.setStandardButtons(QMessageBox.Ok)
+
+            result = msg_box.exec_()

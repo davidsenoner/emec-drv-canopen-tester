@@ -31,6 +31,7 @@ class MainWindow(QMainWindow):
         # Init UI
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
+        self.showMaximized()
 
         # Init canopen logger
         logging.getLogger('can').setLevel(logging.ERROR)
