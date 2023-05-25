@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainPMJkFK.ui'
+## Form generated from reading UI file 'mainaGiYpn.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -12,7 +12,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from .  resources_rc import *
+from . resources_rc import *
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -638,16 +638,21 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.verticalFrame = QFrame(self.gridFrame)
         self.verticalFrame.setObjectName(u"verticalFrame")
-        self.verticalFrame.setMaximumSize(QSize(300, 16777215))
+        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.verticalFrame.sizePolicy().hasHeightForWidth())
+        self.verticalFrame.setSizePolicy(sizePolicy1)
+        self.verticalFrame.setMaximumSize(QSize(320, 16777215))
         self.verticalLayout_3 = QVBoxLayout(self.verticalFrame)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.label = QLabel(self.verticalFrame)
         self.label.setObjectName(u"label")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy1)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy2)
         self.label.setMaximumSize(QSize(100, 39))
         self.label.setPixmap(QPixmap(u":/images/logo_emec.png"))
         self.label.setScaledContents(True)
@@ -656,32 +661,38 @@ class Ui_MainWindow(object):
 
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(-1, 9, 0, 9)
         self.lbl_can1_status = QLabel(self.verticalFrame)
         self.lbl_can1_status.setObjectName(u"lbl_can1_status")
 
         self.gridLayout.addWidget(self.lbl_can1_status, 2, 1, 1, 1)
-
-        self.lbl_can0_status = QLabel(self.verticalFrame)
-        self.lbl_can0_status.setObjectName(u"lbl_can0_status")
-
-        self.gridLayout.addWidget(self.lbl_can0_status, 1, 1, 1, 1)
-
-        self.lbl_can2_status = QLabel(self.verticalFrame)
-        self.lbl_can2_status.setObjectName(u"lbl_can2_status")
-
-        self.gridLayout.addWidget(self.lbl_can2_status, 3, 1, 1, 1)
 
         self.lbl_can3_Status = QLabel(self.verticalFrame)
         self.lbl_can3_Status.setObjectName(u"lbl_can3_Status")
 
         self.gridLayout.addWidget(self.lbl_can3_Status, 4, 1, 1, 1)
 
+        self.lbl_can2_status = QLabel(self.verticalFrame)
+        self.lbl_can2_status.setObjectName(u"lbl_can2_status")
+
+        self.gridLayout.addWidget(self.lbl_can2_status, 3, 1, 1, 1)
+
+        self.label_5 = QLabel(self.verticalFrame)
+        self.label_5.setObjectName(u"label_5")
+
+        self.gridLayout.addWidget(self.label_5, 4, 0, 1, 1)
+
         self.label_2 = QLabel(self.verticalFrame)
         self.label_2.setObjectName(u"label_2")
-        sizePolicy1.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
-        self.label_2.setSizePolicy(sizePolicy1)
+        sizePolicy2.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
+        self.label_2.setSizePolicy(sizePolicy2)
 
         self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
+
+        self.lbl_can0_status = QLabel(self.verticalFrame)
+        self.lbl_can0_status.setObjectName(u"lbl_can0_status")
+
+        self.gridLayout.addWidget(self.lbl_can0_status, 1, 1, 1, 1)
 
         self.label_3 = QLabel(self.verticalFrame)
         self.label_3.setObjectName(u"label_3")
@@ -693,31 +704,36 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.label_4, 3, 0, 1, 1)
 
-        self.label_5 = QLabel(self.verticalFrame)
-        self.label_5.setObjectName(u"label_5")
+        self.btn_scan_ch0 = QPushButton(self.verticalFrame)
+        self.btn_scan_ch0.setObjectName(u"btn_scan_ch0")
+        self.btn_scan_ch0.setMinimumSize(QSize(0, 30))
+        self.btn_scan_ch0.setMaximumSize(QSize(100, 16777215))
 
-        self.gridLayout.addWidget(self.label_5, 4, 0, 1, 1)
+        self.gridLayout.addWidget(self.btn_scan_ch0, 1, 2, 1, 1)
+
+        self.btn_scan_ch1 = QPushButton(self.verticalFrame)
+        self.btn_scan_ch1.setObjectName(u"btn_scan_ch1")
+        self.btn_scan_ch1.setMinimumSize(QSize(0, 30))
+
+        self.gridLayout.addWidget(self.btn_scan_ch1, 2, 2, 1, 1)
+
+        self.btn_scan_ch2 = QPushButton(self.verticalFrame)
+        self.btn_scan_ch2.setObjectName(u"btn_scan_ch2")
+        self.btn_scan_ch2.setMinimumSize(QSize(0, 30))
+
+        self.gridLayout.addWidget(self.btn_scan_ch2, 3, 2, 1, 1)
+
+        self.btn_scan_ch3 = QPushButton(self.verticalFrame)
+        self.btn_scan_ch3.setObjectName(u"btn_scan_ch3")
+        self.btn_scan_ch3.setMinimumSize(QSize(0, 30))
+
+        self.gridLayout.addWidget(self.btn_scan_ch3, 4, 2, 1, 1)
 
 
         self.verticalLayout_3.addLayout(self.gridLayout)
 
-        self.btn_detect_nodes = QPushButton(self.verticalFrame)
-        self.btn_detect_nodes.setObjectName(u"btn_detect_nodes")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.btn_detect_nodes.sizePolicy().hasHeightForWidth())
-        self.btn_detect_nodes.setSizePolicy(sizePolicy2)
-        self.btn_detect_nodes.setMinimumSize(QSize(206, 30))
-        self.btn_detect_nodes.setCursor(QCursor(Qt.PointingHandCursor))
-        self.btn_detect_nodes.setStyleSheet(u"font: bold 14px;\n"
-"min-width: 10em;\n"
-"padding: 6px;")
 
-        self.verticalLayout_3.addWidget(self.btn_detect_nodes)
-
-
-        self.horizontalLayout.addWidget(self.verticalFrame)
+        self.horizontalLayout.addWidget(self.verticalFrame, 0, Qt.AlignTop)
 
         self.tbl_available_nodes = QTableWidget(self.gridFrame)
         self.tbl_available_nodes.setObjectName(u"tbl_available_nodes")
@@ -759,13 +775,16 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EMEC Drive EOL Tester", None))
         self.label.setText("")
         self.lbl_can1_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lbl_can0_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lbl_can2_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.lbl_can3_Status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Channel 0", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Channel 1", None))
-        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Channel 2", None))
-        self.label_5.setText(QCoreApplication.translate("MainWindow", u"Channel 3", None))
-        self.btn_detect_nodes.setText(QCoreApplication.translate("MainWindow", u"Scan devices / Init", None))
+        self.lbl_can2_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindow", u"CH3", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"CH0", None))
+        self.lbl_can0_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"CH1", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"CH2", None))
+        self.btn_scan_ch0.setText(QCoreApplication.translate("MainWindow", u"Scan CH0", None))
+        self.btn_scan_ch1.setText(QCoreApplication.translate("MainWindow", u"Scan CH1", None))
+        self.btn_scan_ch2.setText(QCoreApplication.translate("MainWindow", u"Scan CH2", None))
+        self.btn_scan_ch3.setText(QCoreApplication.translate("MainWindow", u"Scan CH3", None))
     # retranslateUi
 

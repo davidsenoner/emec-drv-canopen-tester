@@ -37,17 +37,40 @@ class ScannerTable(QObject):
         self.table_widget.setHorizontalHeaderLabels(_headers)
 
         # Init Scanner
-        self.search()
+        #self.search()
+
+        self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table_widget.horizontalHeader().setStretchLastSection(True)
 
     def search(self):
+        btn = self.sender()
+        btnName = btn.objectName()
+
+        network = None
+
+        if btnName == "btn_scan_ch0":
+            if len(self.network_list) > 0:
+                network = self.network_list[0]
+
+        if btnName == "btn_scan_ch1":
+            if len(self.network_list) > 1:
+                network = self.network_list[1]
+
+        if btnName == "btn_scan_ch2":
+            if len(self.network_list) > 2:
+                network = self.network_list[2]
+
+        if btnName == "btn_scan_ch3":
+            if len(self.network_list) > 3:
+                network = self.network_list[3]
+
         try:
-            for network in self.network_list:
-                if network is not None:
-                    network.scanner.reset()
-                    network.scanner.search()
-                    time.sleep(0.05)
+            if network is not None:
+                network.scanner.reset()
+                network.scanner.search()
+                time.sleep(0.05)
         except Exception as e:
-            logger.debug(f"Error scanning devices: {e}")
+            logger.debug(f"Error scanning devices with button {btnName}: {e}")
 
         self.draw_table()
 

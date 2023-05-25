@@ -13,11 +13,17 @@ logger = logging.getLogger(__name__)
 TITAN40_EMECDRV5_LIFT_NODE_ID = 0x0C
 TITAN40_EMECDRV5_SLEWING_NODE_ID = 0x0D
 
+#  TARGET POSITIONS FOR TESTING MOVEMENT (NOTE: CHANGE MIN/MAX TIME IF TARGET CHANGES)
 MIN_TARGET_POSITION_LIFT = 0  # 0% LIFT POSITION
 MAX_TARGET_POSITION_LIFT = 100  # 100% LIFT POSITION
+MIN_TARGET_POSITION_SLEWING = -100  # NEGATIVE VALUE FOR CCW MOVEMENT
+MAX_TARGET_POSITION_SLEWING = 1900  # POSITIVE VALUE FOR CW MOVEMENT
 
-MIN_TARGET_POSITION_SLEWING = -100  # 0% LIFT POSITION
-MAX_TARGET_POSITION_SLEWING = 1900  # 100% LIFT POSITION
+#  MIN AND MAX TIME FOR MOVEMENT
+MIN_MOVEMENT_TIME_LIFT = 28
+MAX_MOVEMENT_TIME_LIFT = 40
+MIN_MOVEMENT_TIME_SLEWING = 130
+MAX_MOVEMENT_TIME_SLEWING = 155
 
 OD_MANUFACTURER_DEVICE_NAME = 0x1008
 OD_MANUFACTURER_HARDWARE_VERSION = 0x1009
@@ -77,11 +83,7 @@ class EMECDrvTester(QTimer):
 
     test_timer_timeout = pyqtSignal()
 
-    def __init__(self,
-                 node: BaseNode402,
-                 min_target: int = MIN_TARGET_POSITION_LIFT,  # default for Lift
-                 max_target: int = MAX_TARGET_POSITION_LIFT  # default for Lift
-                 ):
+    def __init__(self, node: BaseNode402):
         super().__init__()
 
         self.node = node
@@ -91,10 +93,11 @@ class EMECDrvTester(QTimer):
         self.reached_status_timer = 0
         self.test_error_message = None
 
-        self.min_target = min_target
-        self.max_target = max_target
+        self.min_target = MIN_TARGET_POSITION_LIFT,  # default for Lift
+        self.max_target = MAX_TARGET_POSITION_LIFT  # default for Lift
 
-        self.target_temp = 0
+        # int a value that cannot be min or max target
+        self.target_temp = (MAX_TARGET_POSITION_LIFT - MIN_TARGET_POSITION_LIFT)/2
 
         self.tolerance = 10
 
@@ -130,9 +133,9 @@ class EMECDrvTester(QTimer):
             self.timeout.connect(self.timeout_test)
 
             # define min and max movement time
-            self.min_movement = 28
-            self.max_movement = 40
-
+            self.min_time = MIN_MOVEMENT_TIME_LIFT
+            self.max_time = MAX_MOVEMENT_TIME_LIFT
+            
             self.min_target = MIN_TARGET_POSITION_LIFT
             self.max_target = MAX_TARGET_POSITION_LIFT
 
@@ -140,8 +143,8 @@ class EMECDrvTester(QTimer):
             self.timeout.connect(self.timeout_test)
 
             # define min and max movement time
-            self.min_movement = 130  # minimum movement time in seconds
-            self.max_movement = 155  # maximum movement time in seconds
+            self.min_time = MIN_MOVEMENT_TIME_SLEWING  # minimum movement time in seconds
+            self.max_time = MAX_MOVEMENT_TIME_SLEWING  # maximum movement time in seconds
 
             self.min_target = MIN_TARGET_POSITION_SLEWING
             self.max_target = MAX_TARGET_POSITION_SLEWING
@@ -149,12 +152,64 @@ class EMECDrvTester(QTimer):
             self.tolerance = 100
 
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
-        logger.debug(f'min_movement: {self.min_movement}, max_movement: {self.max_movement}')
+        logger.debug(f'min_movement: {self.min_time}, max_movement: {self.max_time}')
 
         self.initialised.emit()
 
     @property
+    def min_target(self):
+        """
+        Minimum target value that drive will reach during test process
+        :return:
+        """
+        return self._min_target
+
+    @min_target.setter
+    def min_target(self, target: int):
+        self._min_target = target
+
+    @property
+    def max_target(self):
+        """
+        Maximum target value that drive will reach during test process
+        :return:
+        """
+        return self._max_target
+
+    @max_target.setter
+    def max_target(self, target: int):
+        self._max_target = target
+
+    @property
+    def min_time(self):
+        """
+        Minimum time that need to pass during a movement
+        :return:
+        """
+        return self._min_time
+
+    @min_time.setter
+    def min_time(self, min_t: int):
+        self._min_time = min_t
+
+    @property
+    def max_time(self):
+        """
+        Maximum time that can pass during a movement
+        :return:
+        """
+        return self._max_time
+
+    @max_time.setter
+    def max_time(self, max_t: int):
+        self._max_time = max_t
+
+    @property
     def ccw_movements(self):
+        """
+        CCW movements red from CANOpen register
+        :return:
+        """
         try:
             return self.node.sdo[0x2000][1].raw
         except Exception as e:
@@ -251,6 +306,10 @@ class EMECDrvTester(QTimer):
 
     @property
     def manufacturer_device_name(self):
+        """
+        Return's manufacturer device name red from canopen registers
+        :return:
+        """
         try:
             return self.node.sdo[OD_MANUFACTURER_DEVICE_NAME].raw
         except Exception as e:
@@ -259,6 +318,10 @@ class EMECDrvTester(QTimer):
 
     @property
     def manufacturer_hardware_version(self):
+        """
+        Return's manufacturer hardware version red from canopen registers
+        :return:
+        """
         try:
             return self.node.sdo[OD_MANUFACTURER_HARDWARE_VERSION].raw
         except Exception as e:
@@ -267,6 +330,10 @@ class EMECDrvTester(QTimer):
 
     @property
     def manufacturer_software_version(self):
+        """
+        Return's manufacturer software version red from canopen registers
+        :return:
+        """
         try:
             return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
         except Exception as e:
@@ -274,16 +341,25 @@ class EMECDrvTester(QTimer):
             return 0
 
     def get_elapsed_time(self) -> int:
+        """
+        Return's elapsed time since test start
+        :return:
+        """
         return self.elapsed_time
 
     @property
     def status(self) -> str:
+        """
+        Generates a readable status message for UI table
+        :return: Message string
+        """
         state = "Unknown"
         try:
             state = self.node.state
         except Exception as e:
             logger.debug(f'Error reading status: {e}')
-            return "Error 0"
+            self.stop_test()  # Stop the test if these error occurs
+            return "Error reading status"
 
         if self.isActive():
             if state == 'OPERATION ENABLED':
@@ -309,8 +385,8 @@ class EMECDrvTester(QTimer):
             if (self.max_target - self.tolerance) < self.actual_position < (self.max_target + self.tolerance):
                 if self.target_temp != self.min_target:
                     # control min movement time
-                    if self.moving_time < self.min_movement < self.elapsed_time:
-                        self.test_error_message = f"Movement ({self.moving_time}s) time under limit of {self.min_movement}s"
+                    if self.moving_time < self.min_time < self.elapsed_time:
+                        self.test_error_message = f"Movement ({self.moving_time}s) time under limit of {self.min_time}s"
                         self.stop_test()  # Stop if timeout error
                     else:
                         self.stop_movement()
@@ -328,8 +404,8 @@ class EMECDrvTester(QTimer):
             elif (-self.min_target - self.tolerance) < self.actual_position < (-self.min_target + self.tolerance):
                 if self.target_temp != self.max_target:
                     # control min movement time
-                    if self.moving_time < self.min_movement < self.elapsed_time:
-                        self.test_error_message = f"Movement time ({self.moving_time}s) under limit of {self.min_movement}s"
+                    if self.moving_time < self.min_time < self.elapsed_time:
+                        self.test_error_message = f"Movement time ({self.moving_time}s) under limit of {self.min_time}s"
                         self.stop_test()  # Stop if timeout error
                     else:
                         self.stop_movement()
@@ -346,8 +422,8 @@ class EMECDrvTester(QTimer):
 
             else:
                 # Control max movement time
-                if self.moving_time > self.max_movement:
-                    self.test_error_message = f"Movement time ({self.moving_time}s) exceeded limit of {self.max_movement}s"
+                if self.moving_time > self.max_time:
+                    self.test_error_message = f"Movement time ({self.moving_time}s) exceeded limit of {self.max_time}s"
                     self.stop_test()  # Stop if timeout error
 
                     logger.debug("Movement time ({self.moving_time}s) exceeded limit of {self.max_movement}s")
@@ -368,7 +444,7 @@ class EMECDrvTester(QTimer):
 
                 # Init target first time to min
 
-                mid = (self.max_target - self.min_target)/2
+                mid = (self.max_target - self.min_target) / 2
                 if self.node.sdo[OD_TARGET_POSITION].raw > mid:
                     self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
                 else:

@@ -69,7 +69,8 @@ class NodeTable(QObject):
             "CCW",
             "Pos",
             "Duration",
-            "State"
+            "min/max time",
+            "State",
         ]
 
         self.table_widget.setColumnCount(len(_headers))
@@ -152,8 +153,13 @@ class NodeTable(QObject):
             _column = 5
             self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
 
-            # COLUMN STATUS
+            # COLUMN MIN/MAX TIME
             _column = 8
+            self.table_widget.setItem(i, _column,
+                                      QTableWidgetItem(f'{node_table_row.min_time}/{node_table_row.max_time}s'))
+
+            # COLUMN STATUS
+            _column = 9
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
 
             i += 1
@@ -235,8 +241,13 @@ class NodeTable(QObject):
             duration = str(seconds // 60) + "m " + str(seconds % 60) + "s"
             self.table_widget.setItem(i, _column, QTableWidgetItem(duration))
 
-            # COLUMN STATUS
+            # COLUMN MIN/MAX TIME
             _column = 8
+            self.table_widget.setItem(i, _column,
+                                      QTableWidgetItem(f'{node_table_row.min_time}/{node_table_row.max_time}s'))
+
+            # COLUMN STATUS
+            _column = 9
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
 
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)

@@ -58,6 +58,7 @@ class NetworkManager:
     @staticmethod
     def network_connect(channel: str, bus_type: str):
         network = Network()
+
         try:
             return network.connect(channel=channel, bustype=bus_type)
         except Exception as e:
