@@ -7,6 +7,7 @@ from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer
 from PyQt5.QtGui import QCursor
 
 from app.modules.emecdrv_tester import EMECDrvTester
+from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ class NodeTable(QObject):
 
         _headers = [
             "Channel",
-            "Node ID",
+            "Type",
             "Start",
             "Stop",
             "CW",
@@ -199,9 +200,14 @@ class NodeTable(QObject):
             # COLUMN CHANNEL
             self.table_widget.setItem(i, _column, QTableWidgetItem(str(key)))
 
-            # COLUMN NODE ID
+            # COLUMN NODE TYPE
             _column = 1
-            self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.node_id)))
+            if node_table_row.node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Lift'))
+            elif node_table_row.node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Slewing'))
+            else:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Unknown'))
 
             # COLUMN START BUTTON
             _column = 2
