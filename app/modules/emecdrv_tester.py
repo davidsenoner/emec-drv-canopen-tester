@@ -283,7 +283,7 @@ class EMECDrvTester(QTimer):
     @property
     def current_actual_value(self):
         try:
-            return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw
+            return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw * 4.5  # factor 4,5x
         except Exception as e:
             logger.debug(e)
             return 0
