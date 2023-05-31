@@ -72,6 +72,7 @@ class NodeTable(QObject):
             "Duration",
             "min/max time",
             "State",
+            "SW-Version"
         ]
 
         self.table_widget.setColumnCount(len(_headers))
@@ -255,6 +256,10 @@ class NodeTable(QObject):
             # COLUMN STATUS
             _column = 9
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
+
+            # COLUMN SOFTWARE VERSION
+            _column = 10
+            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.manufacturer_software_version))
 
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table_widget.horizontalHeader().setStretchLastSection(True)
