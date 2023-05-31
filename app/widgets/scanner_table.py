@@ -7,10 +7,9 @@ from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderV
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject
 from PyQt5.QtGui import QCursor
 
-logger = logging.getLogger(__name__)
+from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 
-TITAN40_EMECDRV5_LIFT_NODE_ID = 0x0C
-TITAN40_EMECDRV5_SLEWING_NODE_ID = 0x0D
+logger = logging.getLogger(__name__)
 
 
 class ScannerTable(QObject):
