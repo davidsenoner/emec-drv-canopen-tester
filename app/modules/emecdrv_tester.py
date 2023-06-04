@@ -33,7 +33,8 @@ OD_MODES_OF_OPERATION = 0x6060
 OD_POSITION_ACTUAL_VALUE = 0x6064
 OD_MAX_CURRENT = 0x6073
 OD_MOTOR_RATED_CURRENT = 0x6075
-OD_CURRENT_ACTUAL_VALUE = 0x6078
+OD_CURRENT_ACTUAL_VALUE = 0x6078  # factor = OD_MOTOR_RATED_CURRENT / 1000
+OD_DC_LINK_CIRCUIT_VOLTAGE = 0x6079  # Battery voltage
 OD_TARGET_POSITION = 0x607A
 
 OD_STATUS_WORD = 0x6041
@@ -74,13 +75,7 @@ HOMING_OPERATING_MODE = 0x06
 
 
 class EMECDrvTester(QTimer):
-
-    initialised = pyqtSignal()
-    started = pyqtSignal()
-    stopped = pyqtSignal()
-    failure = pyqtSignal()
-    cycle = pyqtSignal()
-
+    redraw_info = pyqtSignal()
     test_timer_timeout = pyqtSignal()
 
     def __init__(self, node: BaseNode402):
@@ -154,8 +149,6 @@ class EMECDrvTester(QTimer):
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
         logger.debug(f'min_movement: {self.min_time}, max_movement: {self.max_time}')
 
-        self.initialised.emit()
-
     @property
     def min_target(self):
         """
@@ -206,103 +199,56 @@ class EMECDrvTester(QTimer):
 
     @property
     def ccw_movements(self):
-        """
-        CCW movements red from CANOpen register
-        :return:
-        """
-        try:
-            return self.node.sdo[0x2000][1].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[0x2000][1].raw
 
     @property
     def accumulative_operating_time(self):
-        try:
-            return self.node.sdo[0x2000][0].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[0x2000][0].raw
 
     @property
     def device_temp(self):
-        try:
-            return self.node.sdo[0x2001][0].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[0x2001][0].raw
 
     @property
     def max_device_temp(self):
-        try:
-            return self.node.sdo[0x2001][1].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[0x2001][1].raw
 
     @property
     def cw_movements(self):
-        try:
-            return self.node.sdo[0x2000][2].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[0x2000][2].raw
 
     @property
     def actual_position(self):
-        try:
-            return self.node.sdo[OD_POSITION_ACTUAL_VALUE].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_POSITION_ACTUAL_VALUE].raw
 
     @property
     def target_position(self):
-        try:
-            return self.node.sdo[OD_TARGET_POSITION].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_TARGET_POSITION].raw
 
     @property
     def max_current(self):
-        try:
-            return self.node.sdo[OD_MAX_CURRENT].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_MAX_CURRENT].raw
 
     @property
     def rated_current(self):
-        try:
-            return self.node.sdo[OD_MOTOR_RATED_CURRENT].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_MOTOR_RATED_CURRENT].raw
 
     @property
     def current_actual_value(self):
-        try:
-            return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw * 4.5  # factor 4,5x
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        factor = self.rated_current / 1000
+        return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw * factor  # added factor to raw value
+
+    @property
+    def dc_link_circuit_voltage(self):
+        return self.node.sdo[OD_DC_LINK_CIRCUIT_VOLTAGE].raw
 
     @property
     def control_word(self):
-        try:
-            return self.node.sdo[OD_CONTROL_WORD].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_CONTROL_WORD].raw
 
     @property
     def status_word(self):
-        try:
-            return self.node.sdo[OD_STATUS_WORD].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_STATUS_WORD].raw
 
     @property
     def manufacturer_device_name(self):
@@ -310,11 +256,7 @@ class EMECDrvTester(QTimer):
         Return's manufacturer device name red from canopen registers
         :return:
         """
-        try:
-            return self.node.sdo[OD_MANUFACTURER_DEVICE_NAME].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_MANUFACTURER_DEVICE_NAME].raw
 
     @property
     def manufacturer_hardware_version(self):
@@ -322,11 +264,7 @@ class EMECDrvTester(QTimer):
         Return's manufacturer hardware version red from canopen registers
         :return:
         """
-        try:
-            return self.node.sdo[OD_MANUFACTURER_HARDWARE_VERSION].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_MANUFACTURER_HARDWARE_VERSION].raw
 
     @property
     def manufacturer_software_version(self):
@@ -334,11 +272,7 @@ class EMECDrvTester(QTimer):
         Return's manufacturer software version red from canopen registers
         :return:
         """
-        try:
-            return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
-        except Exception as e:
-            logger.debug(e)
-            return 0
+        return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
 
     def get_elapsed_time(self) -> int:
         """
@@ -353,13 +287,7 @@ class EMECDrvTester(QTimer):
         Generates a readable status message for UI table
         :return: Message string
         """
-        state = "Unknown"
-        try:
-            state = self.node.state
-        except Exception as e:
-            logger.debug(f'Error reading status: {e}')
-            self.stop_test()  # Stop the test if these error occurs
-            return "Error reading status"
+        state = self.node.state
 
         if self.isActive():
             if state == 'OPERATION ENABLED':
@@ -443,7 +371,6 @@ class EMECDrvTester(QTimer):
                 self.test_error_message = None
 
                 # Init target first time to min
-
                 mid = (self.max_target - self.min_target) / 2
                 if self.node.sdo[OD_TARGET_POSITION].raw > mid:
                     self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
@@ -451,44 +378,53 @@ class EMECDrvTester(QTimer):
                     self.node.sdo[OD_TARGET_POSITION].raw = self.min_target
 
                 self.start_movement()
+
+                self.start(1000)  # Start QTimer with Timeout period
+                self.redraw_info.emit()
+                logger.debug(f"Start Test Node: {self.node.id} on network {self.node.network}")
+
             except Exception as e:
                 logger.debug(f"Error starting test: {e}")
-                self.failure.emit()
-                return
-
-            self.start(1000)  # Start QTimer with Timeout period
-            self.started.emit()
-            logger.debug(f"Start Test on Node {self.node.id} on network {self.node.network}")
 
     def stop_test(self):
         # Clear Operating Enabled flag
         try:
-            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_ENABLE_OPERATION
+            self.stop_movement()
         except Exception as e:
-            self.failure.emit()
-            logger.debug(f"Error during stopping test: {e}")
+            logger.debug(f"Error sending stop command to device: {e}")
 
         self.moving_time = 0
         self.elapsed_time = 0
         self.reached_status_timer = 0
 
         self.stop()  # Stop QTimer
-        self.stopped.emit()
+        self.redraw_info.emit()
         logger.debug(f"Stop Test on Node {self.node.id}")
+
+    def halt_test(self):
+        self.moving_time = 0
+        self.elapsed_time = 0
+        self.reached_status_timer = 0
+        self.stop()  # Stop QTimer
+        logger.debug(f'Halt test')
 
     def start_movement(self):
 
-        # Set Operating Enabled flag
-        self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_ENABLE_OPERATION
+        try:
+            # Set Operating Enabled flag
+            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_ENABLE_OPERATION
 
-        # A rising flank starts a movement order
-        self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_START_MOVEMENT_ORDER
-        self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_START_MOVEMENT_ORDER
+            # A rising flank starts a movement order
+            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_START_MOVEMENT_ORDER
+            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_START_MOVEMENT_ORDER
+        except Exception as e:
+            logger.debug(f'Cannot start movement: {e}')
 
     def stop_movement(self):
-
-        self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_ENABLE_OPERATION
-
+        try:
+            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_ENABLE_OPERATION
+        except Exception as e:
+            logger.debug(f'Cannot stop movement: {e}')
 
     def ack_error(self):
         """
@@ -501,9 +437,6 @@ class EMECDrvTester(QTimer):
             self.node.sdo[OD_CONTROL_WORD].raw = control_word | CONTROL_ACK_ERROR
             self.node.sdo[OD_CONTROL_WORD].raw = control_word & ~CONTROL_ACK_ERROR
         except Exception as e:
-            self.failure.emit()
-            logger.debug(f"Error during ack:  {e}")
+            logger.debug(f"Error during ack_error: {e}")
 
         self.test_error_message = None
-
-        self.initialised.emit()

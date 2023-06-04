@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderV
 from app.widgets.ui_main import Ui_MainWindow
 
 from app.widgets.node_table import NodeTable
-from app.widgets.scanner_table import ScannerTable
 from app.modules.network_manager import NetworkManager
 
 logger = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ class MainWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.showMaximized()
-        self.setWindowTitle("EMEC Drive End-Of-Line Tester v1.0")
+        self.setWindowTitle("EMEC Drive End-Of-Line Tester v1.1")
 
         # Init canopen logger
         logging.getLogger('can').setLevel(logging.ERROR)
@@ -49,16 +48,6 @@ class MainWindow(QMainWindow):
                 network_status_list[label].setText(network.bus.channel_info)
 
             # Init Tables
-            self.scanner_table = ScannerTable(self._ui.tbl_available_nodes, self.network_manager.network_list)
             self.node_table = NodeTable(self._ui.tbl_node_list, self.network_manager.network_list)
-
-            # Connect Qt Signals
-            self._ui.btn_scan_ch0.clicked.connect(self.scanner_table.search)
-            self._ui.btn_scan_ch1.clicked.connect(self.scanner_table.search)
-            self._ui.btn_scan_ch2.clicked.connect(self.scanner_table.search)
-            self._ui.btn_scan_ch3.clicked.connect(self.scanner_table.search)
-
-            self.scanner_table.nodes_changed.connect(self.node_table.update_node_table_rows)
-            self.node_table.nodes_changed.connect(self.scanner_table.draw_table)
 
         self.show()

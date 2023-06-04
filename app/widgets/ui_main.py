@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'maindPCQBg.ui'
+## Form generated from reading UI file 'mainfTowtr.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -663,6 +663,11 @@ class Ui_MainWindow(object):
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(-1, 0, 0, 0)
+        self.lbl_can2_status = QLabel(self.verticalFrame)
+        self.lbl_can2_status.setObjectName(u"lbl_can2_status")
+
+        self.gridLayout.addWidget(self.lbl_can2_status, 1, 3, 1, 1)
+
         self.label_2 = QLabel(self.verticalFrame)
         self.label_2.setObjectName(u"label_2")
         sizePolicy2.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
@@ -670,70 +675,37 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
 
-        self.lbl_can0_status = QLabel(self.verticalFrame)
-        self.lbl_can0_status.setObjectName(u"lbl_can0_status")
-
-        self.gridLayout.addWidget(self.lbl_can0_status, 1, 1, 1, 1)
-
-        self.btn_scan_ch0 = QPushButton(self.verticalFrame)
-        self.btn_scan_ch0.setObjectName(u"btn_scan_ch0")
-        self.btn_scan_ch0.setMinimumSize(QSize(100, 40))
-        self.btn_scan_ch0.setMaximumSize(QSize(150, 16777215))
-
-        self.gridLayout.addWidget(self.btn_scan_ch0, 1, 2, 1, 1)
-
         self.label_4 = QLabel(self.verticalFrame)
         self.label_4.setObjectName(u"label_4")
         sizePolicy2.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy2)
 
-        self.gridLayout.addWidget(self.label_4, 1, 3, 1, 1)
+        self.gridLayout.addWidget(self.label_4, 1, 2, 1, 1)
 
-        self.label_3 = QLabel(self.verticalFrame)
-        self.label_3.setObjectName(u"label_3")
+        self.label_5 = QLabel(self.verticalFrame)
+        self.label_5.setObjectName(u"label_5")
 
-        self.gridLayout.addWidget(self.label_3, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.label_5, 2, 2, 1, 1)
 
-        self.lbl_can2_status = QLabel(self.verticalFrame)
-        self.lbl_can2_status.setObjectName(u"lbl_can2_status")
+        self.lbl_can3_Status = QLabel(self.verticalFrame)
+        self.lbl_can3_Status.setObjectName(u"lbl_can3_Status")
 
-        self.gridLayout.addWidget(self.lbl_can2_status, 1, 4, 1, 1)
+        self.gridLayout.addWidget(self.lbl_can3_Status, 2, 3, 1, 1)
+
+        self.lbl_can0_status = QLabel(self.verticalFrame)
+        self.lbl_can0_status.setObjectName(u"lbl_can0_status")
+
+        self.gridLayout.addWidget(self.lbl_can0_status, 1, 1, 1, 1)
 
         self.lbl_can1_status = QLabel(self.verticalFrame)
         self.lbl_can1_status.setObjectName(u"lbl_can1_status")
 
         self.gridLayout.addWidget(self.lbl_can1_status, 2, 1, 1, 1)
 
-        self.btn_scan_ch1 = QPushButton(self.verticalFrame)
-        self.btn_scan_ch1.setObjectName(u"btn_scan_ch1")
-        self.btn_scan_ch1.setMinimumSize(QSize(100, 40))
-        self.btn_scan_ch1.setMaximumSize(QSize(150, 16777215))
+        self.label_3 = QLabel(self.verticalFrame)
+        self.label_3.setObjectName(u"label_3")
 
-        self.gridLayout.addWidget(self.btn_scan_ch1, 2, 2, 1, 1)
-
-        self.btn_scan_ch2 = QPushButton(self.verticalFrame)
-        self.btn_scan_ch2.setObjectName(u"btn_scan_ch2")
-        self.btn_scan_ch2.setMinimumSize(QSize(100, 40))
-        self.btn_scan_ch2.setMaximumSize(QSize(150, 16777215))
-
-        self.gridLayout.addWidget(self.btn_scan_ch2, 1, 5, 1, 1)
-
-        self.label_5 = QLabel(self.verticalFrame)
-        self.label_5.setObjectName(u"label_5")
-
-        self.gridLayout.addWidget(self.label_5, 2, 3, 1, 1)
-
-        self.lbl_can3_Status = QLabel(self.verticalFrame)
-        self.lbl_can3_Status.setObjectName(u"lbl_can3_Status")
-
-        self.gridLayout.addWidget(self.lbl_can3_Status, 2, 4, 1, 1)
-
-        self.btn_scan_ch3 = QPushButton(self.verticalFrame)
-        self.btn_scan_ch3.setObjectName(u"btn_scan_ch3")
-        self.btn_scan_ch3.setMinimumSize(QSize(100, 40))
-        self.btn_scan_ch3.setMaximumSize(QSize(150, 16777215))
-
-        self.gridLayout.addWidget(self.btn_scan_ch3, 2, 5, 1, 1)
+        self.gridLayout.addWidget(self.label_3, 2, 0, 1, 1)
 
 
         self.verticalLayout_3.addLayout(self.gridLayout)
@@ -769,17 +741,13 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EMEC Drive EOL Tester", None))
         self.label.setText("")
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"CH0", None))
-        self.lbl_can0_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.btn_scan_ch0.setText(QCoreApplication.translate("MainWindow", u"Scan CH0", None))
-        self.label_4.setText(QCoreApplication.translate("MainWindow", u"CH2", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"CH1", None))
         self.lbl_can2_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lbl_can1_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.btn_scan_ch1.setText(QCoreApplication.translate("MainWindow", u"Scan CH1", None))
-        self.btn_scan_ch2.setText(QCoreApplication.translate("MainWindow", u"Scan CH2", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"CH0", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"CH2", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"CH3", None))
         self.lbl_can3_Status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.btn_scan_ch3.setText(QCoreApplication.translate("MainWindow", u"Scan CH3", None))
+        self.lbl_can0_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.lbl_can1_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"CH1", None))
     # retranslateUi
 

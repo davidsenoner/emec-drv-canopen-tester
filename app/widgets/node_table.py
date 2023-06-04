@@ -57,9 +57,12 @@ class NodeTable(QObject):
                  ):
         super().__init__()
 
+        self._start_node_id = None
         self.table_widget = widget
         self.networks = networks
         self.table_rows = {}
+        self._redraw_table = True
+
 
         _headers = [
             "Channel",
@@ -70,9 +73,9 @@ class NodeTable(QObject):
             "CCW",
             "Pos",
             "Duration",
-            "min/max time",
-            "State",
-            "SW-Version"
+            "Current",
+            "SW-Version",
+            "State"
         ]
 
         self.table_widget.setColumnCount(len(_headers))
@@ -81,10 +84,13 @@ class NodeTable(QObject):
         self.table_widget.customContextMenuRequested.connect(self.on_context_menu)
 
         self.refresh_table_timer = QTimer()
-        self.refresh_table_timer.start(10000)
-        self.refresh_table_timer.timeout.connect(self.draw_node_info)
+        self.refresh_table_timer.setObjectName("refresh_timer")
+        self.refresh_table_timer.start(5000)
+        self.refresh_table_timer.timeout.connect(self.refresh)
 
-        self.draw_table()
+        self.refresh_table_timer1 = QTimer()
+        self.refresh_table_timer1.start(1000)
+        self.refresh_table_timer1.timeout.connect(self.draw_table)
 
     @staticmethod
     def start_node(node_table_row: NodeTableRow):
@@ -119,20 +125,32 @@ class NodeTable(QObject):
         except Exception as e:
             logger.debug(f'Error removing node from network: {e}')
 
+    @staticmethod
+    def add_node(network: Network, node_id: int):
+        # Create node from ID
+        try:
+            # Add new node to network
+            network.add_node(BaseNode402(node_id, 'app/resources/eds/emecdrv5.eds'))
+            time.sleep(0.05)
+
+            logging.debug(f'Node ID {node_id} added to network')
+        except Exception as e:
+            logger.debug(e)
+
     def update_node_table_rows(self):
+        # iterate over all channels
         for channel, network in enumerate(self.networks):
             if network is None:
                 continue
 
+            # add new nodes if there are some
             for node_id in network:
                 key = f'{channel}_{node_id}'
 
                 if key not in self.table_rows:
                     try:
                         node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
-                        node_table_row.failure.connect(self.draw_node_info)
-                        node_table_row.started.connect(self.draw_node_info)
-                        node_table_row.stopped.connect(self.draw_node_info)
+                        node_table_row.redraw_info.connect(self.draw_node_info)
                         node_table_row.test_timer_timeout.connect(self.draw_test_info)
 
                         self.table_rows.update({key: node_table_row})
@@ -140,29 +158,63 @@ class NodeTable(QObject):
                     except Exception as e:
                         logger.debug(e)
 
-        self.draw_table()
+            # remove nodes if they aren't present anymore
+            try:
+                for key in self.table_rows:
+                    if str(key).startswith(f'{channel}_'):
+                        node_id = int(key.replace(f'{channel}_', '', 1))
+
+                        #network.scanner.reset()
+                        #network.scanner.search()
+                        #time.sleep(0.05)
+
+                        if node_id not in network.scanner.nodes:
+                            self.table_rows.pop(key)
+                            self.pop_node(self.table_rows[key])
+                            logging.debug(f'Node ID {key} removed from network')
+            except Exception as e:
+                # If exception (can happen if transmit buffer full) than remove all nodes
+                self.table_rows.clear()
+                network.clear()
+                logging.debug(f'All Nodes removed from network: {e}')
 
     def draw_node_info(self):
 
         i = 0
 
+        self.update_node_table_rows()
+
         for key, node_table_row in self.table_rows.items():
             # COLUMN CW MOVEMENTS
             _column = 4
-            self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
+            except Exception as e:
+                node_table_row.halt_test()
+                self.refresh()
+                break
 
             # COLUMN CCW MOVEMENTS
             _column = 5
-            self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
+            except Exception as e:
+                node_table_row.halt_test()
+                self.refresh()
+                break
 
-            # COLUMN MIN/MAX TIME
+            # COLUMN ACTUAL CURRENT
             _column = 8
-            self.table_widget.setItem(i, _column,
-                                      QTableWidgetItem(f'{node_table_row.min_time}/{node_table_row.max_time}s'))
+            self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
 
             # COLUMN STATUS
-            _column = 9
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
+            _column = 10
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
+            except Exception as e:
+                node_table_row.halt_test()
+                self.refresh()
+                break
 
             i += 1
 
@@ -173,7 +225,12 @@ class NodeTable(QObject):
         for key, node_table_row in self.table_rows.items():
             # COLUMN ACTUAL POSITION
             _column = 6
-            self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
+            except Exception as e:
+                node_table_row.halt_test()
+                self.refresh()
+                break
 
             # COLUMN DURATION
             _column = 7
@@ -181,9 +238,21 @@ class NodeTable(QObject):
             duration = str(seconds // 60) + "m " + str(seconds % 60) + "s"
             self.table_widget.setItem(i, _column, QTableWidgetItem(duration))
 
+            # COLUMN ACTUAL CURRENT
+            _column = 8
+            self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+
             i += 1
 
     def draw_table(self):
+
+        if not self._redraw_table:
+            return
+
+        self._redraw_table = False
+
+        self.update_node_table_rows()
+
         rows = self.table_widget.rowCount()
 
         # clear table
@@ -194,7 +263,7 @@ class NodeTable(QObject):
             i = self.table_widget.rowCount()
 
             self.table_widget.insertRow(i)
-            self.table_widget.setRowHeight(i, 35)
+            self.table_widget.setRowHeight(i, 40)
 
             _column = 0
 
@@ -213,7 +282,7 @@ class NodeTable(QObject):
             # COLUMN START BUTTON
             _column = 2
             btn_start = QPushButton('Start')
-            btn_start.setMaximumSize(QSize(50, 30))
+            btn_start.setMaximumSize(QSize(60, 35))
             btn_start.setCursor(QCursor(Qt.PointingHandCursor))
             btn_start.clicked.connect(
                 lambda arg, n=node_table_row: self.start_node(n)
@@ -223,24 +292,36 @@ class NodeTable(QObject):
             # COLUMN STOP BUTTON
             _column = 3
             btn_stop = QPushButton('Stop')
-            btn_stop.setMaximumSize(QSize(50, 30))
+            btn_stop.setMaximumSize(QSize(60, 35))
             btn_stop.setCursor(QCursor(Qt.PointingHandCursor))
             btn_stop.clicked.connect(
-                lambda arg, n= node_table_row: self.stop_node(n)
+                lambda arg, n=node_table_row: self.stop_node(n)
             )
             self.table_widget.setCellWidget(i, _column, btn_stop)
 
             # COLUMN CW MOVEMENTS
             _column = 4
-            self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
+            except Exception as e:
+                node_table_row.halt_test()
+                break
 
             # COLUMN CCW MOVEMENTS
             _column = 5
-            self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
+            except Exception as e:
+                node_table_row.halt_test()
+                break
 
             # COLUMN ACTUAL POSITION
             _column = 6
-            self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
+            except Exception as e:
+                node_table_row.halt_test()
+                break
 
             # COLUMN DURATION
             _column = 7
@@ -248,18 +329,30 @@ class NodeTable(QObject):
             duration = str(seconds // 60) + "m " + str(seconds % 60) + "s"
             self.table_widget.setItem(i, _column, QTableWidgetItem(duration))
 
-            # COLUMN MIN/MAX TIME
+            # COLUMN ACTUAL CURRENT
             _column = 8
-            self.table_widget.setItem(i, _column,
-                                      QTableWidgetItem(f'{node_table_row.min_time}/{node_table_row.max_time}s'))
-
-            # COLUMN STATUS
-            _column = 9
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
+            self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
 
             # COLUMN SOFTWARE VERSION
+            _column = 9
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.manufacturer_software_version))
+            except Exception as e:
+                node_table_row.halt_test()
+                break
+
+            # COLUMN STATUS
             _column = 10
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.manufacturer_software_version))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
+            except Exception as e:
+                node_table_row.halt_test()
+                break
+
+            # start automatically node if just added
+            if key == self._start_node_id:
+                self.start_node(node_table_row)
+                self._start_node_id = None
 
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table_widget.horizontalHeader().setStretchLastSection(True)
@@ -279,43 +372,38 @@ class NodeTable(QObject):
         menu = QMenu()
 
         reset_action = menu.addAction("Reset device")
-        remove_safety_action = menu.addAction("Remove safety")
         info_action = menu.addAction("Info")
 
         action = menu.exec_(self.table_widget.mapToGlobal(pos))
 
         if action == reset_action:
             self.reset_node(node_table_row)
-            self.draw_table()
-
-        if action == remove_safety_action:
-            self.pop_node(node_table_row)
-            self.table_rows.pop(key)
-
-            # Redraw Tables
-            self.draw_table()
-            self.nodes_changed.emit(node_table_row.node_id)
-            logger.debug(f'Pop Node ID: {node_table_row.node_id} from network: {node_table_row.network}')
+            self._redraw_table = True
 
         if action == info_action:
-            logger.debug(f'Info for Node {node_table_row.node_id}')
+            logger.debug(f'Info for Node {node_table_row.node_id} on channel {node_table_row.channel}')
             # Create QMessageBox-Dialog
 
-            text = f"Node ID: {node_table_row.node_id}\n"
-            text += f"Channel: {node_table_row.channel}\n"
-            text += f"Manufacturer Device Name: {node_table_row.manufacturer_device_name}\n"
-            text += f"Manufacturer Hardware Version: {node_table_row.manufacturer_hardware_version}\n"
-            text += f"Manufacturer Software Version: {node_table_row.manufacturer_software_version}\n"
-            text += f"CW/CCW movements: {str(node_table_row.cw_movements)}/{str(node_table_row.ccw_movements)}\n"
-            text += f"Accumulative operating time: {str(node_table_row.accumulative_operating_time)}\n"
-            text += f"Device temperature: {str(node_table_row.device_temp)} (max: {str(node_table_row.max_device_temp)})\n"
-            text += f"State: {str(node_table_row.node.state)}\n"
-            text += f"Actual position: {str(node_table_row.actual_position)}\n"
-            text += f"Target position: {str(node_table_row.target_position)}\n"
-            text += f"Control Word: {hex(node_table_row.control_word)}\n"
-            text += f"Status Word: {hex(node_table_row.status_word)}\n"
-            text += f"Actual current: {str(node_table_row.current_actual_value)}\n"
-            text += f"Rated/Max current: {str(node_table_row.rated_current)}/{str(node_table_row.max_current)}\n"
+            text = "Empty"
+
+            try:
+                text = f"Node ID: {node_table_row.node_id}\n"
+                text += f"Channel: {node_table_row.channel}\n"
+                text += f"Manufacturer Device Name: {node_table_row.manufacturer_device_name}\n"
+                text += f"Manufacturer Hardware Version: {node_table_row.manufacturer_hardware_version}\n"
+                text += f"Manufacturer Software Version: {node_table_row.manufacturer_software_version}\n"
+                text += f"CW/CCW movements: {str(node_table_row.cw_movements)}/{str(node_table_row.ccw_movements)}\n"
+                #text += f"Accumulative operating time: {str(node_table_row.accumulative_operating_time)}\n"
+                #text += f"Device temperature: {str(node_table_row.device_temp)} (max: {str(node_table_row.max_device_temp)})\n"
+                text += f"State: {str(node_table_row.node.state)}\n"
+                text += f"Actual position: {str(node_table_row.actual_position)}\n"
+                text += f"Target position: {str(node_table_row.target_position)}\n"
+                text += f"Control Word: {hex(node_table_row.control_word)}\n"
+                text += f"Status Word: {hex(node_table_row.status_word)}\n"
+                text += f"Actual current: {str(node_table_row.current_actual_value)}\n"
+                text += f"Rated/Max current: {str(node_table_row.rated_current)}/{str(node_table_row.max_current)}\n"
+            except Exception as e:
+                logger.debug(f'Error reading values from Node for MessageBox creation: {e}')
 
             msg_box = QMessageBox()
             msg_box.setText(text)
@@ -323,3 +411,21 @@ class NodeTable(QObject):
             msg_box.setStandardButtons(QMessageBox.Ok)
 
             result = msg_box.exec_()
+
+    def refresh(self):
+        for channel, network in enumerate(self.networks):
+            try:
+                if network is not None:
+                    network.scanner.reset()
+                    network.scanner.search()
+                    time.sleep(0.05)
+
+                    for node_id in network.scanner.nodes:
+                        if node_id not in network:
+                            self.add_node(network, node_id)
+                            self._start_node_id = f'{channel}_{node_id}'
+
+            except Exception as e:
+                logger.debug(f"Error during node refresh: {e}")
+
+        self._redraw_table = True
