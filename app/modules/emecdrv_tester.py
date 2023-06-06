@@ -94,7 +94,7 @@ class EMECDrvTester(QTimer):
         # int a value that cannot be min or max target
         self.target_temp = (MAX_TARGET_POSITION_LIFT - MIN_TARGET_POSITION_LIFT)/2
 
-        self.tolerance = 10
+        self.tolerance = 11
 
         # Node initialisation
         node.nmt.state = 'OPERATIONAL'

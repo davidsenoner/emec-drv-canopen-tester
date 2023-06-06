@@ -174,7 +174,7 @@ class NodeTable(QObject):
                             logging.debug(f'Node ID {key} removed from network')
             except Exception as e:
                 # If exception (can happen if transmit buffer full) than remove all nodes
-                self.table_rows.clear()
+                #self.table_rows.clear()
                 network.clear()
                 logging.debug(f'All Nodes removed from network: {e}')
 
@@ -190,31 +190,44 @@ class NodeTable(QObject):
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
             except Exception as e:
-                node_table_row.halt_test()
+                logger.debug(f'cw_movements: {e}')
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                #node_table_row.halt_test()
                 self.refresh()
-                break
+                #break
 
             # COLUMN CCW MOVEMENTS
             _column = 5
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
             except Exception as e:
-                node_table_row.halt_test()
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'ccw_movements: {e}')
+                #node_table_row.halt_test()
                 self.refresh()
-                break
+                #break
 
             # COLUMN ACTUAL CURRENT
             _column = 8
-            self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'current_actual_value: {e}')
+                #node_table_row.halt_test()
+                self.refresh()
+                #break
 
             # COLUMN STATUS
             _column = 10
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
             except Exception as e:
-                node_table_row.halt_test()
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'status: {e}')
+                #node_table_row.halt_test()
                 self.refresh()
-                break
+                #break
 
             i += 1
 
@@ -228,9 +241,11 @@ class NodeTable(QObject):
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
             except Exception as e:
-                node_table_row.halt_test()
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'actual_position: {e}')
+                #node_table_row.halt_test()
                 self.refresh()
-                break
+                #break
 
             # COLUMN DURATION
             _column = 7
@@ -240,7 +255,14 @@ class NodeTable(QObject):
 
             # COLUMN ACTUAL CURRENT
             _column = 8
-            self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'current_actual_value: {e}')
+                #node_table_row.halt_test()
+                self.refresh()
+                #break
 
             i += 1
 
@@ -304,24 +326,30 @@ class NodeTable(QObject):
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
             except Exception as e:
-                node_table_row.halt_test()
-                break
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'cw_movements: {e}')
+                #node_table_row.halt_test()
+                #break
 
             # COLUMN CCW MOVEMENTS
             _column = 5
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
             except Exception as e:
-                node_table_row.halt_test()
-                break
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'ccw_movements: {e}')
+                #node_table_row.halt_test()
+                #break
 
             # COLUMN ACTUAL POSITION
             _column = 6
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
             except Exception as e:
-                node_table_row.halt_test()
-                break
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'actual_position: {e}')
+                #node_table_row.halt_test()
+                #break
 
             # COLUMN DURATION
             _column = 7
@@ -331,23 +359,34 @@ class NodeTable(QObject):
 
             # COLUMN ACTUAL CURRENT
             _column = 8
-            self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'current_actual_value: {e}')
+                #node_table_row.halt_test()
+                self.refresh()
+                #break
 
             # COLUMN SOFTWARE VERSION
             _column = 9
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.manufacturer_software_version))
             except Exception as e:
-                node_table_row.halt_test()
-                break
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'manufacturer_software_version: {e}')
+                #node_table_row.halt_test()
+                #break
 
             # COLUMN STATUS
             _column = 10
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
             except Exception as e:
-                node_table_row.halt_test()
-                break
+                self.table_widget.setItem(i, _column, QTableWidgetItem("empty"))
+                logger.debug(f'status: {e}')
+                #node_table_row.halt_test()
+                #break
 
             # start automatically node if just added
             if key == self._start_node_id:
