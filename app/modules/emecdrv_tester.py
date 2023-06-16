@@ -20,8 +20,8 @@ MIN_TARGET_POSITION_SLEWING = -100  # NEGATIVE VALUE FOR CCW MOVEMENT
 MAX_TARGET_POSITION_SLEWING = 1900  # POSITIVE VALUE FOR CW MOVEMENT
 
 #  MIN AND MAX TIME FOR MOVEMENT
-MIN_MOVEMENT_TIME_LIFT = 28
-MAX_MOVEMENT_TIME_LIFT = 40
+MIN_MOVEMENT_TIME_LIFT = 35
+MAX_MOVEMENT_TIME_LIFT = 50
 MIN_MOVEMENT_TIME_SLEWING = 130
 MAX_MOVEMENT_TIME_SLEWING = 155
 
@@ -75,7 +75,6 @@ HOMING_OPERATING_MODE = 0x06
 
 
 class EMECDrvTester(QTimer):
-    redraw_info = pyqtSignal()
     test_timer_timeout = pyqtSignal()
 
     def __init__(self, node: BaseNode402):
@@ -94,7 +93,7 @@ class EMECDrvTester(QTimer):
         # int a value that cannot be min or max target
         self.target_temp = (MAX_TARGET_POSITION_LIFT - MIN_TARGET_POSITION_LIFT)/2
 
-        self.tolerance = 11
+        self.tolerance = 0
 
         # Node initialisation
         node.nmt.state = 'OPERATIONAL'
@@ -133,6 +132,8 @@ class EMECDrvTester(QTimer):
             
             self.min_target = MIN_TARGET_POSITION_LIFT
             self.max_target = MAX_TARGET_POSITION_LIFT
+
+            self.tolerance = 0
 
         elif node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.timeout.connect(self.timeout_test)
@@ -235,7 +236,7 @@ class EMECDrvTester(QTimer):
 
     @property
     def current_actual_value(self):
-        factor = self.rated_current / 1000
+        factor = float(self.rated_current) / 1000
         return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw * factor  # added factor to raw value
 
     @property
@@ -310,7 +311,7 @@ class EMECDrvTester(QTimer):
         self.test_timer_timeout.emit()
 
         try:
-            if (self.max_target - self.tolerance) < self.actual_position < (self.max_target + self.tolerance):
+            if (self.max_target - self.tolerance) <= self.actual_position <= (self.max_target + self.tolerance):
                 if self.target_temp != self.min_target:
                     # control min movement time
                     if self.moving_time < self.min_time < self.elapsed_time:
@@ -320,6 +321,7 @@ class EMECDrvTester(QTimer):
                         self.stop_movement()
                         self.target_temp = self.min_target
                         self.node.sdo[OD_TARGET_POSITION].raw = self.min_target
+                        # wait 1,5s until restart movement in opposite direction
                         QTimer.singleShot(1500, self.start_movement)
                         self.moving_time = 0  # Reset timer when reaching target position
 
@@ -329,7 +331,7 @@ class EMECDrvTester(QTimer):
                     self.test_error_message = f"Driver always in reached status"
                     self.stop_test()  # Stop if timeout error
 
-            elif (-self.min_target - self.tolerance) < self.actual_position < (-self.min_target + self.tolerance):
+            elif (-self.min_target - self.tolerance) <= self.actual_position <= (-self.min_target + self.tolerance):
                 if self.target_temp != self.max_target:
                     # control min movement time
                     if self.moving_time < self.min_time < self.elapsed_time:
@@ -380,7 +382,6 @@ class EMECDrvTester(QTimer):
                 self.start_movement()
 
                 self.start(1000)  # Start QTimer with Timeout period
-                self.redraw_info.emit()
                 logger.debug(f"Start Test Node: {self.node.id} on network {self.node.network}")
 
             except Exception as e:
@@ -398,7 +399,6 @@ class EMECDrvTester(QTimer):
         self.reached_status_timer = 0
 
         self.stop()  # Stop QTimer
-        self.redraw_info.emit()
         logger.debug(f"Stop Test on Node {self.node.id}")
 
     def halt_test(self):
