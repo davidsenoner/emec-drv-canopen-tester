@@ -22,8 +22,8 @@ MAX_TARGET_POSITION_SLEWING = 1900  # POSITIVE VALUE FOR CW MOVEMENT
 #  MIN AND MAX TIME FOR MOVEMENT
 MIN_MOVEMENT_TIME_LIFT = 35
 MAX_MOVEMENT_TIME_LIFT = 50
-MIN_MOVEMENT_TIME_SLEWING = 130
-MAX_MOVEMENT_TIME_SLEWING = 155
+MIN_MOVEMENT_TIME_SLEWING = 145
+MAX_MOVEMENT_TIME_SLEWING = 170
 
 OD_MANUFACTURER_DEVICE_NAME = 0x1008
 OD_MANUFACTURER_HARDWARE_VERSION = 0x1009
@@ -145,7 +145,7 @@ class EMECDrvTester(QTimer):
             self.min_target = MIN_TARGET_POSITION_SLEWING
             self.max_target = MAX_TARGET_POSITION_SLEWING
 
-            self.tolerance = 100
+            self.tolerance = 0 # 100
 
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
         logger.debug(f'min_movement: {self.min_time}, max_movement: {self.max_time}')
@@ -307,10 +307,15 @@ class EMECDrvTester(QTimer):
         return state
 
     def timeout_test(self):
+        """
+        Timer is running if test have been started
+        :return:
+        """
         self.elapsed_time = self.elapsed_time + 1
         self.test_timer_timeout.emit()
 
         try:
+            # max position reached condition
             if (self.max_target - self.tolerance) <= self.actual_position <= (self.max_target + self.tolerance):
                 if self.target_temp != self.min_target:
                     # control min movement time
@@ -331,6 +336,7 @@ class EMECDrvTester(QTimer):
                     self.test_error_message = f"Driver always in reached status"
                     self.stop_test()  # Stop if timeout error
 
+            # min position reached condition
             elif (-self.min_target - self.tolerance) <= self.actual_position <= (-self.min_target + self.tolerance):
                 if self.target_temp != self.max_target:
                     # control min movement time
@@ -350,13 +356,14 @@ class EMECDrvTester(QTimer):
                     self.test_error_message = f"Driver always in reached status"
                     self.stop_test()  # Stop if timeout error
 
+            # moving condition
             else:
                 # Control max movement time
                 if self.moving_time > self.max_time:
                     self.test_error_message = f"Movement time ({self.moving_time}s) exceeded limit of {self.max_time}s"
                     self.stop_test()  # Stop if timeout error
 
-                    logger.debug("Movement time ({self.moving_time}s) exceeded limit of {self.max_movement}s")
+                    logger.debug(f"Movement time ({self.moving_time}s) exceeded limit of {self.max_time}s")
 
                 self.moving_time = self.moving_time + 1  # increment timer during movement
                 self.reached_status_timer = 0  # reset timer if out of reached status
