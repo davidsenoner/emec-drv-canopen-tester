@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.showMaximized()
-        self.setWindowTitle("EMEC Drive End-Of-Line Tester v1.3")  # Window title bar
+        self.setWindowTitle("EMEC Drive End-Of-Line Tester v1.4")  # Window title bar
 
         # Init canopen logger
         logging.getLogger('can').setLevel(logging.ERROR)
