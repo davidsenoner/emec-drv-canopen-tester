@@ -768,6 +768,45 @@ QPushButton:pressed {
           </layout>
          </item>
          <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Min. software version</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Lift:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Slewing:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="led_min_sw_ver_slewing">
+             <property name="maxLength">
+              <number>20</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLineEdit" name="led_min_sw_ver_lift">
+             <property name="maxLength">
+              <number>20</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
           <widget class="QTableWidget" name="tbl_node_list">
            <property name="editTriggers">
             <set>QAbstractItemView::EditKeyPressed</set>
@@ -790,6 +829,11 @@ QPushButton:pressed {
     </item>
    </layout>
   </widget>
+  <action name="actionImpostazioni">
+   <property name="text">
+    <string>Impostazioni</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../resources/images/resources.qrc"/>
