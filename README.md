@@ -2,7 +2,9 @@
 End of Line tester for EMEC CANOpen Drives (slewing and hovering drive)
 Written in python ad using pyQt for UI and canopen module for CANOpen communication.
 
-## Convert UI
+
+# Contribute
+### Convert UI
 
 Execute pyside6-uic to generate .py from .ui file.
 ```console
@@ -17,10 +19,19 @@ Open *Formular->Python-Code anzeigen...* in Qt Designer
 import resources_rc --> from . resources_rc import *
 ```
 
-## Convert QRC
+### Convert QRC
 ```console
 pyside6-rcc resources.qrc -o resources_rc.py
 ```
+
+# Build and release
+Execute following command for building the application as an executable with pyinstaller
+```cosole
+pyinstaller EMEC_Tester.spec
+```
+
+**Note**: If you copy the executable folder on a linux OS you need to set the _execute_ permission since it will be set to "Nobody" as default.
+
 
 # Hardware
 

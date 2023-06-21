@@ -7,6 +7,8 @@ from app.widgets.ui_main import Ui_MainWindow
 from app.widgets.node_table import NodeTable
 from app.modules.network_manager import NetworkManager
 
+from PyQt5.QtCore import QSettings
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.DEBUG,
@@ -50,4 +52,30 @@ class MainWindow(QMainWindow):
             # Init Tables
             self.node_table = NodeTable(self._ui.tbl_node_list, self.network_manager.network_list)
 
+        # Settings management
+        self.settings = QSettings("EMEC", "Tester")
+
+        min_sw_version_slewing = self.settings.value("min_sw_version_slewing", "v1.25")
+        min_sw_version_lift = self.settings.value("min_sw_version_lift", "v3.16")
+
+        # init min sw version to UI
+        self._ui.led_min_sw_ver_slewing.setText(min_sw_version_slewing)
+        self._ui.led_min_sw_ver_lift.setText(min_sw_version_lift)
+
+        # Signals for min software version
+        self._ui.led_min_sw_ver_lift.editingFinished.connect(self.update_qsettings)
+        self._ui.led_min_sw_ver_slewing.editingFinished.connect(self.update_qsettings)
+
         self.show()
+
+    def update_qsettings(self):
+        lne = self.sender()
+        lneName = lne.objectName()
+
+        if lne == self._ui.led_min_sw_ver_lift:
+            self.settings.setValue("min_sw_version_lift", lne.text())
+
+        if lne == self._ui.led_min_sw_ver_slewing:
+            self.settings.setValue("min_sw_version_slewing", lne.text())
+
+        logger.debug(f'{lneName} modified to {lne.text()}')

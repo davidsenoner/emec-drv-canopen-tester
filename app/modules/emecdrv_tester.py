@@ -3,8 +3,10 @@ import time
 from canopen import BaseNode402, RemoteNode, LocalNode
 
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget
-from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer
+from PyQt5.QtCore import QSize, Qt, pyqtSignal, QSettings, QTimer
 from PyQt5.QtGui import QCursor
+
+from app.modules.utils import compare_versions
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +88,8 @@ class EMECDrvTester(QTimer):
         self.elapsed_time = 0
         self.reached_status_timer = 0
         self.test_error_message = None
+
+        self.settings = QSettings("EMEC", "Tester")
 
         self.min_target = MIN_TARGET_POSITION_LIFT,  # default for Lift
         self.max_target = MAX_TARGET_POSITION_LIFT  # default for Lift
@@ -275,6 +279,21 @@ class EMECDrvTester(QTimer):
         """
         return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
 
+    def get_software_version_ok(self) -> bool:
+        # compare software version
+        min_sw_version = 0
+
+        # load min software version from settings depending on drive type
+        if self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+            min_sw_version = self.settings.value("min_sw_version_slewing", "v1.25")
+        elif self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+            min_sw_version = self.settings.value("min_sw_version_lift", "v3.16")
+
+        # compare min sw version with version from drive
+        software_comparision = compare_versions(self.manufacturer_software_version, min_sw_version)
+
+        return software_comparision >= 0
+
     def get_elapsed_time(self) -> int:
         """
         Return's elapsed time since test start
@@ -375,12 +394,14 @@ class EMECDrvTester(QTimer):
     def start_test(self):
         if not self.isActive():
             try:
+                # init vars to 0
                 self.moving_time = 0
                 self.reached_status_timer = 0
                 self.test_error_message = None
 
-                # Init target first time to min
-                mid = (self.max_target - self.min_target) / 2
+                # Init target first time min or max depending on actual position
+                mid = (self.max_target - self.min_target) / 2  # get mid position
+
                 if self.node.sdo[OD_TARGET_POSITION].raw > mid:
                     self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
                 else:
