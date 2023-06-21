@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainfTowtr.ui'
+## Form generated from reading UI file 'mainMTculg.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -616,6 +616,8 @@ class Ui_MainWindow(object):
 "\n"
 "\n"
 "")
+        self.actionImpostazioni = QAction(MainWindow)
+        self.actionImpostazioni.setObjectName(u"actionImpostazioni")
         self.bgApp = QWidget(MainWindow)
         self.bgApp.setObjectName(u"bgApp")
         self.bgApp.setStyleSheet(u"")
@@ -659,6 +661,11 @@ class Ui_MainWindow(object):
         self.label.setScaledContents(True)
 
         self.verticalLayout_3.addWidget(self.label)
+
+        self.label_9 = QLabel(self.verticalFrame)
+        self.label_9.setObjectName(u"label_9")
+
+        self.verticalLayout_3.addWidget(self.label_9)
 
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
@@ -716,6 +723,40 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
+        self.label_6 = QLabel(self.gridFrame)
+        self.label_6.setObjectName(u"label_6")
+
+        self.verticalLayout_2.addWidget(self.label_6)
+
+        self.gridLayout_3 = QGridLayout()
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.label_8 = QLabel(self.gridFrame)
+        self.label_8.setObjectName(u"label_8")
+
+        self.gridLayout_3.addWidget(self.label_8, 0, 2, 1, 1)
+
+        self.label_7 = QLabel(self.gridFrame)
+        self.label_7.setObjectName(u"label_7")
+
+        self.gridLayout_3.addWidget(self.label_7, 0, 0, 1, 1)
+
+        self.led_min_sw_ver_slewing = QLineEdit(self.gridFrame)
+        self.led_min_sw_ver_slewing.setObjectName(u"led_min_sw_ver_slewing")
+        self.led_min_sw_ver_slewing.setMinimumSize(QSize(0, 30))
+        self.led_min_sw_ver_slewing.setMaxLength(20)
+
+        self.gridLayout_3.addWidget(self.led_min_sw_ver_slewing, 0, 1, 1, 1)
+
+        self.led_min_sw_ver_lift = QLineEdit(self.gridFrame)
+        self.led_min_sw_ver_lift.setObjectName(u"led_min_sw_ver_lift")
+        self.led_min_sw_ver_lift.setMinimumSize(QSize(0, 30))
+        self.led_min_sw_ver_lift.setMaxLength(20)
+
+        self.gridLayout_3.addWidget(self.led_min_sw_ver_lift, 0, 3, 1, 1)
+
+
+        self.verticalLayout_2.addLayout(self.gridLayout_3)
+
         self.tbl_node_list = QTableWidget(self.gridFrame)
         self.tbl_node_list.setObjectName(u"tbl_node_list")
         self.tbl_node_list.setEditTriggers(QAbstractItemView.EditKeyPressed)
@@ -740,14 +781,19 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EMEC Drive EOL Tester", None))
+        self.actionImpostazioni.setText(QCoreApplication.translate("MainWindow", u"Impostazioni", None))
         self.label.setText("")
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"<h4>Channels</h4>", None))
         self.lbl_can2_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"CH0", None))
-        self.label_4.setText(QCoreApplication.translate("MainWindow", u"CH2", None))
-        self.label_5.setText(QCoreApplication.translate("MainWindow", u"CH3", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<b>CH0</b>", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"<b>CH2</b>", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindow", u"<b>CH3</b>", None))
         self.lbl_can3_Status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.lbl_can0_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.lbl_can1_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"CH1", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"<b>CH1</b>", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindow", u"<h4>Min. software version</h4>", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"<b>Lift:</b>", None))
+        self.label_7.setText(QCoreApplication.translate("MainWindow", u"<b>Slewing:</b>", None))
     # retranslateUi
 

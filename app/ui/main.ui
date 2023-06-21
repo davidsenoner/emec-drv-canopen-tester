@@ -682,6 +682,13 @@ QPushButton:pressed {
                </widget>
               </item>
               <item>
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string>&lt;h4&gt;Channels&lt;/h4&gt;</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <layout class="QGridLayout" name="gridLayout">
                 <property name="topMargin">
                  <number>0</number>
@@ -708,7 +715,7 @@ QPushButton:pressed {
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>CH0</string>
+                   <string>&lt;b&gt;CH0&lt;/b&gt;</string>
                   </property>
                  </widget>
                 </item>
@@ -721,14 +728,14 @@ QPushButton:pressed {
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>CH2</string>
+                   <string>&lt;b&gt;CH2&lt;/b&gt;</string>
                   </property>
                  </widget>
                 </item>
                 <item row="2" column="2">
                  <widget class="QLabel" name="label_5">
                   <property name="text">
-                   <string>CH3</string>
+                   <string>&lt;b&gt;CH3&lt;/b&gt;</string>
                   </property>
                  </widget>
                 </item>
@@ -756,13 +763,64 @@ QPushButton:pressed {
                 <item row="2" column="0">
                  <widget class="QLabel" name="label_3">
                   <property name="text">
-                   <string>CH1</string>
+                   <string>&lt;b&gt;CH1&lt;/b&gt;</string>
                   </property>
                  </widget>
                 </item>
                </layout>
               </item>
              </layout>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>&lt;h4&gt;Min. software version&lt;/h4&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>&lt;b&gt;Lift:&lt;/b&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>&lt;b&gt;Slewing:&lt;/b&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="led_min_sw_ver_slewing">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="maxLength">
+              <number>20</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLineEdit" name="led_min_sw_ver_lift">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="maxLength">
+              <number>20</number>
+             </property>
             </widget>
            </item>
           </layout>
@@ -790,6 +848,11 @@ QPushButton:pressed {
     </item>
    </layout>
   </widget>
+  <action name="actionImpostazioni">
+   <property name="text">
+    <string>Impostazioni</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../resources/images/resources.qrc"/>

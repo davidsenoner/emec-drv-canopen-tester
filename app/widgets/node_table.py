@@ -3,8 +3,8 @@ import time
 from canopen import Network, BaseNode402
 
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox
-from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer
-from PyQt5.QtGui import QCursor
+from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer, QSettings
+from PyQt5.QtGui import QCursor, QColor, QBrush
 
 from app.modules.emecdrv_tester import EMECDrvTester
 from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
@@ -357,7 +357,17 @@ class NodeTable(QObject):
             # COLUMN SOFTWARE VERSION
             _column = 9
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.manufacturer_software_version))
+                item = QTableWidgetItem(node_table_row.manufacturer_software_version)
+
+                brush = QBrush(QColor(255, 0, 0, 255))
+                brush.setStyle(Qt.SolidPattern)
+
+                if node_table_row.get_software_version_ok():
+                    item.setForeground(QBrush())
+                else:
+                    item.setForeground(brush)
+                self.table_widget.setItem(i, _column, item)
+
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
                 logger.debug(f'manufacturer_software_version: {e}')
