@@ -25,7 +25,7 @@ MAX_TARGET_POSITION_SLEWING = 1900  # POSITIVE VALUE FOR CW MOVEMENT
 MIN_MOVEMENT_TIME_LIFT = 35
 MAX_MOVEMENT_TIME_LIFT = 50
 MIN_MOVEMENT_TIME_SLEWING = 145
-MAX_MOVEMENT_TIME_SLEWING = 170
+MAX_MOVEMENT_TIME_SLEWING = 175
 
 OD_MANUFACTURER_DEVICE_NAME = 0x1008
 OD_MANUFACTURER_HARDWARE_VERSION = 0x1009
@@ -149,7 +149,7 @@ class EMECDrvTester(QTimer):
             self.min_target = MIN_TARGET_POSITION_SLEWING
             self.max_target = MAX_TARGET_POSITION_SLEWING
 
-            self.tolerance = 0 # 100
+            self.tolerance = 10
 
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
         logger.debug(f'min_movement: {self.min_time}, max_movement: {self.max_time}')
@@ -335,7 +335,7 @@ class EMECDrvTester(QTimer):
 
         try:
             # max position reached condition
-            if (self.max_target - self.tolerance) <= self.actual_position <= (self.max_target + self.tolerance):
+            if (abs(self.max_target) - self.tolerance) <= self.actual_position:
                 if self.target_temp != self.min_target:
                     # control min movement time
                     if self.moving_time < self.min_time < self.elapsed_time:
@@ -343,8 +343,7 @@ class EMECDrvTester(QTimer):
                         self.stop_test()  # Stop if timeout error
                     else:
                         self.stop_movement()
-                        self.target_temp = self.min_target
-                        self.node.sdo[OD_TARGET_POSITION].raw = self.min_target
+                        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = self.min_target
                         # wait 1,5s until restart movement in opposite direction
                         QTimer.singleShot(1500, self.start_movement)
                         self.moving_time = 0  # Reset timer when reaching target position
@@ -356,7 +355,7 @@ class EMECDrvTester(QTimer):
                     self.stop_test()  # Stop if timeout error
 
             # min position reached condition
-            elif (-self.min_target - self.tolerance) <= self.actual_position <= (-self.min_target + self.tolerance):
+            elif self.actual_position <= (abs(self.min_target) + self.tolerance):
                 if self.target_temp != self.max_target:
                     # control min movement time
                     if self.moving_time < self.min_time < self.elapsed_time:
@@ -364,8 +363,7 @@ class EMECDrvTester(QTimer):
                         self.stop_test()  # Stop if timeout error
                     else:
                         self.stop_movement()
-                        self.target_temp = self.max_target
-                        self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
+                        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = self.max_target
                         QTimer.singleShot(1500, self.start_movement)
                         self.moving_time = 0  # Reset timer when reaching target position
 
