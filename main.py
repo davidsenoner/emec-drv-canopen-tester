@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
         app.setOrganizationName('EMEC')
         app.setApplicationName('EMEC Drive End-Of-Line Tester')
-        app.setApplicationVersion('1.4.1')
+        app.setApplicationVersion('1.4.2')
 
         w = MainWindow()
         sys.exit(app.exec())
