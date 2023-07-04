@@ -26,6 +26,7 @@ MIN_MOVEMENT_TIME_LIFT = 35
 MAX_MOVEMENT_TIME_LIFT = 50
 MIN_MOVEMENT_TIME_SLEWING = 145
 MAX_MOVEMENT_TIME_SLEWING = 175
+MAX_MOVEMENT_TIME_ABSOLUTE = 500
 
 OD_MANUFACTURER_DEVICE_NAME = 0x1008
 OD_MANUFACTURER_HARDWARE_VERSION = 0x1009
@@ -82,11 +83,12 @@ class EMECDrvTester(QTimer):
     def __init__(self, node: BaseNode402):
         super().__init__()
 
+        self.not_moving_counter = 0
+        self.actual_position_temp = None
         self.node = node
 
         self.moving_time = 0
         self.elapsed_time = 0
-        self.reached_status_timer = 0
         self.test_error_message = None
 
         self.settings = QSettings("EMEC", "Tester")
@@ -95,7 +97,7 @@ class EMECDrvTester(QTimer):
         self.max_target = MAX_TARGET_POSITION_LIFT  # default for Lift
 
         # int a value that cannot be min or max target
-        self.target_temp = (MAX_TARGET_POSITION_LIFT - MIN_TARGET_POSITION_LIFT)/2
+        self.target_temp = (MAX_TARGET_POSITION_LIFT - MIN_TARGET_POSITION_LIFT) / 2
 
         self.tolerance = 0
 
@@ -133,7 +135,7 @@ class EMECDrvTester(QTimer):
             # define min and max movement time
             self.min_time = MIN_MOVEMENT_TIME_LIFT
             self.max_time = MAX_MOVEMENT_TIME_LIFT
-            
+
             self.min_target = MIN_TARGET_POSITION_LIFT
             self.max_target = MAX_TARGET_POSITION_LIFT
 
@@ -333,6 +335,26 @@ class EMECDrvTester(QTimer):
         self.elapsed_time = self.elapsed_time + 1
         self.test_timer_timeout.emit()
 
+        if self.moving_time >= MAX_MOVEMENT_TIME_ABSOLUTE:
+            self.test_error_message = f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!"
+            self.stop_test()  # Stop if timeout error
+            logger.debug(f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!")
+
+        # check if position changes when it should
+        if self.actual_position_temp == self.actual_position:
+            self.not_moving_counter += 1
+            logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
+
+            # if actual position doesn't change for more than 3s emit error
+            if self.not_moving_counter >= 10:
+                self.test_error_message = f"Drive is not moving since 10s"
+                self.stop_test()  # Stop if timeout error
+                logger.debug(f"Drive is not moving error emitted!!")
+
+        else:
+            self.not_moving_counter = 0
+            self.actual_position_temp = self.actual_position
+
         try:
             # max position reached condition
             if (abs(self.max_target) - self.tolerance) <= self.actual_position:
@@ -348,12 +370,6 @@ class EMECDrvTester(QTimer):
                         QTimer.singleShot(1500, self.start_movement)
                         self.moving_time = 0  # Reset timer when reaching target position
 
-                self.reached_status_timer = self.reached_status_timer + 1
-
-                if self.reached_status_timer > 10:
-                    self.test_error_message = f"Driver always in reached status"
-                    self.stop_test()  # Stop if timeout error
-
             # min position reached condition
             elif self.actual_position <= (abs(self.min_target) + self.tolerance):
                 if self.target_temp != self.max_target:
@@ -367,13 +383,7 @@ class EMECDrvTester(QTimer):
                         QTimer.singleShot(1500, self.start_movement)
                         self.moving_time = 0  # Reset timer when reaching target position
 
-                self.reached_status_timer = self.reached_status_timer + 1
-
-                if self.reached_status_timer > 10:
-                    self.test_error_message = f"Driver always in reached status"
-                    self.stop_test()  # Stop if timeout error
-
-            # moving condition
+            # drive is moving condition
             else:
                 # Control max movement time
                 if self.moving_time > self.max_time:
@@ -383,7 +393,6 @@ class EMECDrvTester(QTimer):
                     logger.debug(f"Movement time ({self.moving_time}s) exceeded limit of {self.max_time}s")
 
                 self.moving_time = self.moving_time + 1  # increment timer during movement
-                self.reached_status_timer = 0  # reset timer if out of reached status
 
         except Exception as e:
             logger.debug(f'Exception during testing routine: {e}')
@@ -394,11 +403,11 @@ class EMECDrvTester(QTimer):
             try:
                 # init vars to 0
                 self.moving_time = 0
-                self.reached_status_timer = 0
+                self.not_moving_counter = 0
                 self.test_error_message = None
 
                 # Init target first time min or max depending on actual position
-                mid = (self.max_target - self.min_target) / 2  # get mid position
+                mid = (self.max_target - self.min_target) / 2  # get mid-position
 
                 if self.node.sdo[OD_TARGET_POSITION].raw > mid:
                     self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
@@ -422,7 +431,7 @@ class EMECDrvTester(QTimer):
 
         self.moving_time = 0
         self.elapsed_time = 0
-        self.reached_status_timer = 0
+        self.not_moving_counter = 0
 
         self.stop()  # Stop QTimer
         logger.debug(f"Stop Test on Node {self.node.id}")
@@ -430,7 +439,6 @@ class EMECDrvTester(QTimer):
     def halt_test(self):
         self.moving_time = 0
         self.elapsed_time = 0
-        self.reached_status_timer = 0
         self.stop()  # Stop QTimer
         logger.debug(f'Halt test')
 
