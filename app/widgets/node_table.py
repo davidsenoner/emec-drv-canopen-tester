@@ -2,12 +2,14 @@ import logging
 import time
 from canopen import Network, BaseNode402
 
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox, QDialog
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer, QSettings
 from PyQt5.QtGui import QCursor, QColor, QBrush
 
 from app.modules.emecdrv_tester import EMECDrvTester
 from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
+from app.widgets.add_info_diag import AddInfoDialog
+from app.widgets.add_sn_diag import AddSNDialog
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +20,9 @@ class NodeTableRow(EMECDrvTester):
         self._network = network
         self._channel = channel
         self._node = node
+        self._serial_number = 0
+        self._customer = ""
+        self._comment = ""
 
     @property
     def network(self) -> Network:
@@ -46,6 +51,30 @@ class NodeTableRow(EMECDrvTester):
     @node.setter
     def node(self, value):
         self._node = value
+
+    @property
+    def serial_number(self) -> int:
+        return self._serial_number
+
+    @serial_number.setter
+    def serial_number(self, sn: int) -> None:
+        self._serial_number = sn
+
+    @property
+    def customer(self) -> str:
+        return self._customer
+
+    @customer.setter
+    def customer(self, customer: str) -> None:
+        self._customer = customer
+
+    @property
+    def comment(self) -> str:
+        return self._comment
+
+    @comment.setter
+    def comment(self, comment: str) -> None:
+        self._comment = comment
 
 
 class NodeTable(QObject):
@@ -183,6 +212,8 @@ class NodeTable(QObject):
                 # self.table_rows.clear()
                 network.clear()
                 logging.debug(f'All Nodes removed from network: {e}')
+
+
 
     def draw_cyclic_info(self):
 
@@ -408,13 +439,28 @@ class NodeTable(QObject):
 
         reset_action = menu.addAction("Reset device")
         info_action = menu.addAction("Info")
+        add_info_action = menu.addAction("Add additional information")
+        add_serial_action = menu.addAction("Add serial number")
 
         action = menu.exec_(self.table_widget.mapToGlobal(pos))
 
+        # reset command from context menu
         if action == reset_action:
             self.reset_node(node_table_row)
             self._redraw_table = True
 
+        # add additional information to context menu
+        if action == add_info_action:
+            dialog = AddInfoDialog(customer=node_table_row.customer, comment=node_table_row.comment)
+            node_table_row.customer = dialog.customer
+            node_table_row.comment = dialog.comment
+
+        # add serial number action to context menu
+        if action == add_serial_action:
+            dialog = AddSNDialog(serial_number=node_table_row.serial_number)
+            node_table_row.serial_number = dialog.serial_number
+
+        # node info command from context menu
         if action == info_action:
             logger.debug(f'Info for Node {node_table_row.node_id} on channel {node_table_row.channel}')
             # Create QMessageBox-Dialog
