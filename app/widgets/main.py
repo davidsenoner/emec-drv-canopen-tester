@@ -29,6 +29,7 @@ class MainWindow(QMainWindow):
         # Init canopen logger
         logging.getLogger('can').setLevel(logging.ERROR)
         logging.getLogger('canopen').setLevel(logging.ERROR)
+        logging.getLogger('canopen.sdo.client').setLevel(logging.CRITICAL)
 
         # Init default widgets
         network_status_list = [
