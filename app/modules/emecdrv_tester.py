@@ -315,12 +315,12 @@ class EMECDrvTester(QTimer):
             if state == 'OPERATION ENABLED':
                 state = "Test running"
             elif state == 'FAULT':
-                state = "Error"
+                state = "Error sent from CANOpen Drive"
         else:
             if state == 'SWITCHED ON':
                 state = "Stopped"
             elif state == 'FAULT':
-                state = "Error"
+                state = " Error sent from CANOpen Drive"
 
         if self.test_error_message is not None:
             state = self.test_error_message
