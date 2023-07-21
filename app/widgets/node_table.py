@@ -49,8 +49,6 @@ class NodeTableRow(EMECDrvTester):
 
 
 class NodeTable(QObject):
-    nodes_changed = pyqtSignal(int)
-
     def __init__(self,
                  widget: QTableWidget,
                  networks: list
@@ -83,12 +81,11 @@ class NodeTable(QObject):
         self.table_widget.customContextMenuRequested.connect(self.on_context_menu)
 
         self.refresh_table_timer = QTimer()
-        self.refresh_table_timer.setObjectName("refresh_timer")
-        self.refresh_table_timer.start(3500)
+        self.refresh_table_timer.start(1000)
         self.refresh_table_timer.timeout.connect(self.refresh)
 
         self.refresh_table_timer1 = QTimer()
-        self.refresh_table_timer1.start(1000)
+        self.refresh_table_timer1.start(800)
         self.refresh_table_timer1.timeout.connect(self.draw_table)
 
     @staticmethod
@@ -165,10 +162,6 @@ class NodeTable(QObject):
                     if str(key).startswith(f'{channel}_'):
                         node_id = int(key.replace(f'{channel}_', '', 1))
 
-                        # network.scanner.reset()
-                        # network.scanner.search()
-                        # time.sleep(0.05)
-
                         if node_id not in network.scanner.nodes:
                             key_to_remove.append(key)
 
@@ -194,7 +187,7 @@ class NodeTable(QObject):
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
             except Exception as e:
-                logger.debug(f'cw_movements: {e}')
+                #logger.debug(f'cw_movements: {e}')
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
                 # node_table_row.halt_test()
                 # self.refresh()
@@ -206,7 +199,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'ccw_movements: {e}')
+                #logger.debug(f'ccw_movements: {e}')
                 # node_table_row.halt_test()
                 # self.refresh()
                 # break
@@ -217,7 +210,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'actual_position: {e}')
+                #logger.debug(f'actual_position: {e}')
                 # node_table_row.halt_test()
                 # self.refresh()
                 # break
@@ -234,7 +227,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'current_actual_value: {e}')
+                #logger.debug(f'current_actual_value: {e}')
                 # node_table_row.halt_test()
                 # self.refresh()
                 # break
@@ -245,7 +238,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'status: {e}')
+                #logger.debug(f'status: {e}')
                 # node_table_row.halt_test()
                 # self.refresh()
                 # break
@@ -313,7 +306,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'cw_movements: {e}')
+                # logger.debug(f'cw_movements: {e}')
                 # node_table_row.halt_test()
                 # break
 
@@ -323,7 +316,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'ccw_movements: {e}')
+                # logger.debug(f'ccw_movements: {e}')
                 # node_table_row.halt_test()
                 # break
 
@@ -333,7 +326,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'actual_position: {e}')
+                # logger.debug(f'actual_position: {e}')
                 # node_table_row.halt_test()
                 # break
 
@@ -349,7 +342,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'current_actual_value: {e}')
+                # logger.debug(f'current_actual_value: {e}')
                 # node_table_row.halt_test()
                 # self.refresh()
                 # break
@@ -370,7 +363,7 @@ class NodeTable(QObject):
 
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'manufacturer_software_version: {e}')
+                # logger.debug(f'manufacturer_software_version: {e}')
                 # node_table_row.halt_test()
                 # break
 
@@ -380,7 +373,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-                logger.debug(f'status: {e}')
+                # logger.debug(f'status: {e}')
                 # node_table_row.halt_test()
                 # break
 
@@ -509,6 +502,7 @@ class NodeTable(QObject):
 
             except Exception as e:
                 pass
-                #logger.debug(f"Error during node refresh: {e}")
+                # logger.debug(f"Error during node refresh: {e}")
+                # logger.debug(network.scanner.nodes)
 
         self._redraw_table = True

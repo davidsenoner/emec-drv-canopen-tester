@@ -22,8 +22,8 @@ MIN_TARGET_POSITION_SLEWING = -100  # NEGATIVE VALUE FOR CCW MOVEMENT
 MAX_TARGET_POSITION_SLEWING = 1900  # POSITIVE VALUE FOR CW MOVEMENT
 
 #  MIN AND MAX TIME FOR MOVEMENT
-MIN_MOVEMENT_TIME_LIFT = 35
-MAX_MOVEMENT_TIME_LIFT = 50
+MIN_MOVEMENT_TIME_LIFT = 20
+MAX_MOVEMENT_TIME_LIFT = 65
 MIN_MOVEMENT_TIME_SLEWING = 145
 MAX_MOVEMENT_TIME_SLEWING = 175
 MAX_MOVEMENT_TIME_ABSOLUTE = 500
@@ -315,12 +315,12 @@ class EMECDrvTester(QTimer):
             if state == 'OPERATION ENABLED':
                 state = "Test running"
             elif state == 'FAULT':
-                state = "Error"
+                state = "Error sent from CANOpen Drive"
         else:
             if state == 'SWITCHED ON':
                 state = "Stopped"
             elif state == 'FAULT':
-                state = "Error"
+                state = " Error sent from CANOpen Drive"
 
         if self.test_error_message is not None:
             state = self.test_error_message

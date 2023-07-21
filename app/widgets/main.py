@@ -24,11 +24,12 @@ class MainWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.showMaximized()
-        self.setWindowTitle("EMEC Drive End-Of-Line Tester v1.4.3")  # Window title bar
+        self.setWindowTitle("EMEC Drive End-Of-Line Tester v1.4.4")  # Window title bar
 
         # Init canopen logger
         logging.getLogger('can').setLevel(logging.ERROR)
         logging.getLogger('canopen').setLevel(logging.ERROR)
+        logging.getLogger('canopen.sdo.client').setLevel(logging.CRITICAL)
 
         # Init default widgets
         network_status_list = [
