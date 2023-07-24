@@ -370,7 +370,7 @@ class EMECDrvTester(QTimer):
                 logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
 
                 # if actual position doesn't change for more than 3s emit error
-                if self.not_moving_counter >= 10:
+                if self.not_moving_counter >= 5:
                     self.test_error_message = f"Drive is not moving since 10s"
                     self.stop_test()  # Stop if timeout error
                     logger.debug(f"Drive is not moving error emitted!!")
