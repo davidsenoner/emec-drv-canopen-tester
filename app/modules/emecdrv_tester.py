@@ -76,6 +76,10 @@ PROFILE_VELOCITY_OPERATING_MODE = 0x03
 PROFILE_TORQUE_OPERATING_MODE = 0x04
 HOMING_OPERATING_MODE = 0x06
 
+STOPPED = 0
+CW = 1
+CCW = 2
+
 
 class EMECDrvTester(QTimer):
     test_timer_timeout = pyqtSignal()
@@ -83,13 +87,15 @@ class EMECDrvTester(QTimer):
     def __init__(self, node: BaseNode402):
         super().__init__()
 
-        self.not_moving_counter = 0
+        self.not_moving_counter = 0  # counter for detection of no movement error
+        self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = None
         self.node = node
 
         self.moving_time = 0
         self.elapsed_time = 0
         self.test_error_message = None
+        self.moving_direction = None  # CCW, CW, STOPPED
 
         self.settings = QSettings("EMEC", "Tester")
 
@@ -327,6 +333,23 @@ class EMECDrvTester(QTimer):
 
         return state
 
+    def goto_target_position(self, position: int):
+        if self.actual_position > abs(position):  # abs() because slewing have negative value when turning CCW
+            self.moving_direction = CCW
+        elif self.actual_position < abs(position):
+            self.moving_direction = CW
+        else:
+            self.moving_direction = STOPPED
+            self.test_error_message = f"Internal error: New target position same  as actual"
+            self.stop_test()  # Stop if timeout error
+            logger.debug(f"Internal error: New target position same  as actual")
+
+        self.stop_movement()  # stop movement
+        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = position
+        # wait 1,5s until restart movement in opposite direction
+        QTimer.singleShot(1500, self.start_movement)
+        self.moving_time = 0  # Reset timer when reaching target position
+
     def timeout_test(self):
         """
         Timer is running if test have been started
@@ -335,14 +358,14 @@ class EMECDrvTester(QTimer):
         self.elapsed_time = self.elapsed_time + 1
         self.test_timer_timeout.emit()
 
+        # detect max movement time exceeded
         if self.moving_time >= MAX_MOVEMENT_TIME_ABSOLUTE:
             self.test_error_message = f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!"
             self.stop_test()  # Stop if timeout error
             logger.debug(f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!")
 
         try:
-            # check if position changes when it should
-            if self.actual_position_temp == self.actual_position:
+            if self.actual_position_temp == self.actual_position:  # is not moving??
                 self.not_moving_counter += 1
                 logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
 
@@ -352,9 +375,28 @@ class EMECDrvTester(QTimer):
                     self.stop_test()  # Stop if timeout error
                     logger.debug(f"Drive is not moving error emitted!!")
 
-            else:
-                self.not_moving_counter = 0
-                self.actual_position_temp = self.actual_position
+            else:  # drive is moving
+                self.not_moving_counter = 0  # reset counter for detection "not moving" error
+
+                if self.actual_position_temp is not None and self.actual_position is not None:
+                    if self.actual_position_temp > self.actual_position:  # is drive moving CCW?
+                        if self.moving_direction != CCW:  # if moving CCW but should CW
+                            self.wrong_movement_counter += 1
+                        else:
+                            self.wrong_movement_counter = 0  # moving in correct direction
+                    else:
+                        if self.moving_direction != CW:  # if moving CW but should CCW
+                            self.wrong_movement_counter += 1
+                        else:
+                            self.wrong_movement_counter = 0  # moving in correct direction
+
+                # moving in wrong direction timer control
+                if self.wrong_movement_counter >= 5:
+                    self.test_error_message = f"Drive is moving in wrong direction since {self.wrong_movement_counter}"
+                    self.stop_test()  # Stop if timeout error
+                    logger.debug(f"Drive is moving in wrong direction")
+
+                self.actual_position_temp = self.actual_position  # update temp for actual position
 
             # max position reached condition
             if (abs(self.max_target) - self.tolerance) <= self.actual_position:
@@ -364,11 +406,7 @@ class EMECDrvTester(QTimer):
                         self.test_error_message = f"Movement ({self.moving_time}s) time under limit of {self.min_time}s"
                         self.stop_test()  # Stop if timeout error
                     else:
-                        self.stop_movement()
-                        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = self.min_target
-                        # wait 1,5s until restart movement in opposite direction
-                        QTimer.singleShot(1500, self.start_movement)
-                        self.moving_time = 0  # Reset timer when reaching target position
+                        self.goto_target_position(self.min_target)  # go to the new position
 
             # min position reached condition
             elif self.actual_position <= (abs(self.min_target) + self.tolerance):
@@ -378,10 +416,7 @@ class EMECDrvTester(QTimer):
                         self.test_error_message = f"Movement time ({self.moving_time}s) under limit of {self.min_time}s"
                         self.stop_test()  # Stop if timeout error
                     else:
-                        self.stop_movement()
-                        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = self.max_target
-                        QTimer.singleShot(1500, self.start_movement)
-                        self.moving_time = 0  # Reset timer when reaching target position
+                        self.goto_target_position(self.max_target)  # go to the new position
 
             # drive is moving condition
             else:
@@ -403,16 +438,21 @@ class EMECDrvTester(QTimer):
             try:
                 # init vars to 0
                 self.moving_time = 0
-                self.not_moving_counter = 0
+                self.not_moving_counter = 0  # counter for detection of no movement error
+                self.wrong_movement_counter = 0  # counter for detection of wrong movement error
                 self.test_error_message = None
 
                 # Init target first time min or max depending on actual position
                 mid = (self.max_target - self.min_target) / 2  # get mid-position
 
                 if self.node.sdo[OD_TARGET_POSITION].raw > mid:
+                    # move in CW direction
                     self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
+                    self.moving_direction = CW
                 else:
+                    # move in CCW direction
                     self.node.sdo[OD_TARGET_POSITION].raw = self.min_target
+                    self.moving_direction = CCW
 
                 self.start_movement()
 
