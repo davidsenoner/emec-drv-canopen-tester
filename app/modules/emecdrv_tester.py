@@ -1,6 +1,8 @@
 import logging
 import time
 from canopen import BaseNode402, RemoteNode, LocalNode
+from collections import deque
+import numpy as np
 
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QSettings, QTimer
@@ -93,6 +95,7 @@ class EMECDrvTester(QTimer):
         self.node = node
 
         self.moving_time = 0
+        self.current_actual_value_fifo = deque(maxlen=100)
         self.elapsed_time = 0
         self.test_error_message = None
         self.moving_direction = None  # CCW, CW, STOPPED
@@ -137,6 +140,7 @@ class EMECDrvTester(QTimer):
         # Connect Signals
         if node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
             self.timeout.connect(self.timeout_test)
+            self.timeout.connect(self.timeout_stat)
 
             # define min and max movement time
             self.min_time = MIN_MOVEMENT_TIME_LIFT
@@ -149,6 +153,7 @@ class EMECDrvTester(QTimer):
 
         elif node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.timeout.connect(self.timeout_test)
+            self.timeout.connect(self.timeout_stat)
 
             # define min and max movement time
             self.min_time = MIN_MOVEMENT_TIME_SLEWING  # minimum movement time in seconds
@@ -252,6 +257,32 @@ class EMECDrvTester(QTimer):
         return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw * factor  # added factor to raw value
 
     @property
+    def current_mean_value(self):
+        """
+        Calculates mean value of last 100 measured values during movement
+        :return: Mean value
+        """
+        if len(self.current_actual_value_fifo) > 0:
+            mean = np.mean(self.current_actual_value_fifo)
+        else:
+            mean = 0
+
+        return mean
+
+    @property
+    def current_std_value(self):
+        """
+        Calculates standard deviation of last 100 measured values during movement
+        :return: Standard deviation
+        """
+        if len(self.current_actual_value_fifo) > 0:
+            mean = np.std(self.current_actual_value_fifo)
+        else:
+            mean = 0
+
+        return mean
+
+    @property
     def dc_link_circuit_voltage(self):
         return self.node.sdo[OD_DC_LINK_CIRCUIT_VOLTAGE].raw
 
@@ -347,6 +378,12 @@ class EMECDrvTester(QTimer):
         # wait 1,5s until restart movement in opposite direction
         QTimer.singleShot(1500, self.start_movement)
         self.moving_time = 0  # Reset timer when reaching target position
+
+    def timeout_stat(self):
+        try:
+            self.current_actual_value_fifo.append(self.current_actual_value)  # append actual current value to fifo
+        except Exception as e:
+            logger.debug(e)
 
     def timeout_test(self):
         """
@@ -467,6 +504,7 @@ class EMECDrvTester(QTimer):
         self.moving_time = 0
         self.elapsed_time = 0
         self.not_moving_counter = 0
+        self.current_actual_value_fifo.clear()  # clear fifo with measured current values for stat calculation
 
         self.stop()  # Stop QTimer
 

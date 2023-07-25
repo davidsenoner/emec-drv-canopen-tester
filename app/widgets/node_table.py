@@ -225,6 +225,9 @@ class NodeTable(QObject):
 
             i += 1
 
+            #logger.debug(f"Mean current: {node_table_row.current_mean_value}")
+            #logger.debug(f"Std current: {node_table_row.current_std_value}")
+
     def draw_table(self):
 
         if not self._redraw_table:
