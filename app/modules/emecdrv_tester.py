@@ -365,6 +365,11 @@ class EMECDrvTester(QTimer):
             logger.debug(f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!")
 
         try:
+            if self.node.state == 'FAULT':
+                self.test_error_message = f"Error sent from CANOpen Drive"
+                self.stop_test()
+                logger.debug("Error sent from CANOpen Drive")
+
             if self.actual_position_temp == self.actual_position:  # is not moving??
                 self.not_moving_counter += 1
                 logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
