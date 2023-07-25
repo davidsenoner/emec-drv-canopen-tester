@@ -362,7 +362,7 @@ class EMECDrvTester(QTimer):
 
         try:
             if self.node.state == 'FAULT':
-                self.stop_test("Error sent from CANOpen Drive")
+                self.stop_test("Error sent by CANOpen slave")
 
             if self.actual_position_temp == self.actual_position:  # is not moving??
                 self.not_moving_counter += 1
