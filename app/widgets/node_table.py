@@ -99,7 +99,7 @@ class NodeTable(QObject):
     @staticmethod
     def stop_node(node_table_row: NodeTableRow):
         try:
-            node_table_row.stop_test("Stopped by customer")
+            node_table_row.stop_test("Stopped by user")
         except Exception as e:
             logger.debug(f'Error during stop test command: {e}')
 
