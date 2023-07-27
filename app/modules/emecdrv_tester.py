@@ -96,6 +96,7 @@ class EMECDrvTester(QTimer):
 
         self.moving_time = 0
         self.elapsed_time = 0
+        self._max_error_current = 0
         self.test_error_message = None  # Message to show to screen
         self.moving_direction = None  # CCW, CW, STOPPED
 
@@ -176,6 +177,23 @@ class EMECDrvTester(QTimer):
 
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
         logger.debug(f'min_movement: {self.min_time}, max_movement: {self.max_time}')
+
+    @property
+    def max_error_current(self):
+        """
+        Max current in mA for over-current detection
+        :return: Current in mA
+        """
+        return self._max_error_current
+
+    @max_error_current.setter
+    def max_error_current(self, current: int):
+        """
+        Max current in mA for over-current detection
+        :param current: Current limit in mA
+        :return:
+        """
+        self._max_error_current = current
 
     @property
     def min_target(self):
@@ -485,6 +503,12 @@ class EMECDrvTester(QTimer):
                 self.not_moving_counter = 0  # counter for detection of no movement error
                 self.wrong_movement_counter = 0  # counter for detection of wrong movement error
                 self.test_error_message = None
+
+                if self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+                    self.max_error_current = int(self.settings.value("max_error_current_lift", 800))
+
+                elif self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+                    self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
 
                 # Init target first time min or max depending on actual position
                 mid = (self.max_target - self.min_target) / 2  # get mid-position
