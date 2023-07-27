@@ -1,6 +1,8 @@
 import logging
 import time
 from canopen import BaseNode402, RemoteNode, LocalNode
+from collections import deque
+import numpy as np
 
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QSettings, QTimer
@@ -76,6 +78,10 @@ PROFILE_VELOCITY_OPERATING_MODE = 0x03
 PROFILE_TORQUE_OPERATING_MODE = 0x04
 HOMING_OPERATING_MODE = 0x06
 
+STOPPED = 0
+CW = 1
+CCW = 2
+
 
 class EMECDrvTester(QTimer):
     test_timer_timeout = pyqtSignal()
@@ -83,13 +89,16 @@ class EMECDrvTester(QTimer):
     def __init__(self, node: BaseNode402):
         super().__init__()
 
-        self.not_moving_counter = 0
+        self.not_moving_counter = 0  # counter for detection of no movement error
+        self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = None
         self.node = node
 
         self.moving_time = 0
         self.elapsed_time = 0
-        self.test_error_message = None
+        self._max_error_current = 0
+        self.test_error_message = None  # Message to show to screen
+        self.moving_direction = None  # CCW, CW, STOPPED
 
         self.settings = QSettings("EMEC", "Tester")
 
@@ -100,6 +109,13 @@ class EMECDrvTester(QTimer):
         self.target_temp = (MAX_TARGET_POSITION_LIFT - MIN_TARGET_POSITION_LIFT) / 2
 
         self.tolerance = 0
+
+        # Init FIFO for measured current values
+        self.current_actual_value_fifo = deque(maxlen=20)
+
+        # fill current value fifo with zero
+        for _ in range(self.current_actual_value_fifo.maxlen):
+            self.current_actual_value_fifo.append(0)
 
         # Node initialisation
         node.nmt.state = 'OPERATIONAL'
@@ -131,6 +147,7 @@ class EMECDrvTester(QTimer):
         # Connect Signals
         if node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
             self.timeout.connect(self.timeout_test)
+            self.timeout.connect(self.timeout_stat)
 
             # define min and max movement time
             self.min_time = MIN_MOVEMENT_TIME_LIFT
@@ -141,8 +158,11 @@ class EMECDrvTester(QTimer):
 
             self.tolerance = 0
 
+            self.max_error_current = int(self.settings.value("max_error_current_lift", 800))
+
         elif node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.timeout.connect(self.timeout_test)
+            self.timeout.connect(self.timeout_stat)
 
             # define min and max movement time
             self.min_time = MIN_MOVEMENT_TIME_SLEWING  # minimum movement time in seconds
@@ -153,8 +173,27 @@ class EMECDrvTester(QTimer):
 
             self.tolerance = 10
 
+            self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
+
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
         logger.debug(f'min_movement: {self.min_time}, max_movement: {self.max_time}')
+
+    @property
+    def max_error_current(self):
+        """
+        Max current in mA for over-current detection
+        :return: Current in mA
+        """
+        return self._max_error_current
+
+    @max_error_current.setter
+    def max_error_current(self, current: int):
+        """
+        Max current in mA for over-current detection
+        :param current: Current limit in mA
+        :return:
+        """
+        self._max_error_current = current
 
     @property
     def min_target(self):
@@ -246,6 +285,32 @@ class EMECDrvTester(QTimer):
         return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw * factor  # added factor to raw value
 
     @property
+    def current_mean_value(self):
+        """
+        Calculates mean value of last measured values during movement
+        :return: Mean value
+        """
+        if len(self.current_actual_value_fifo) > 0:
+            mean = np.mean(self.current_actual_value_fifo)
+        else:
+            mean = 0
+
+        return mean
+
+    @property
+    def current_std_value(self):
+        """
+        Calculates standard deviation of last measured values during movement
+        :return: Standard deviation
+        """
+        if len(self.current_actual_value_fifo) > 0:
+            mean = np.std(self.current_actual_value_fifo)
+        else:
+            mean = 0
+
+        return mean
+
+    @property
     def dc_link_circuit_voltage(self):
         return self.node.sdo[OD_DC_LINK_CIRCUIT_VOLTAGE].raw
 
@@ -327,6 +392,27 @@ class EMECDrvTester(QTimer):
 
         return state
 
+    def goto_target_position(self, position: int):
+        if self.actual_position > abs(position):  # abs() because slewing have negative value when turning CCW
+            self.moving_direction = CCW
+        elif self.actual_position < abs(position):
+            self.moving_direction = CW
+        else:
+            self.moving_direction = STOPPED
+            self.stop_test("Internal error: New target position same  as actual")
+
+        self.stop_movement()  # stop movement
+        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = position
+        # wait 1,5s until restart movement in opposite direction
+        QTimer.singleShot(1500, self.start_movement)
+        self.moving_time = 0  # Reset timer when reaching target position
+
+    def timeout_stat(self):
+        try:
+            self.current_actual_value_fifo.append(self.current_actual_value)  # append actual current value to fifo
+        except Exception as e:
+            logger.debug(e)
+
     def timeout_test(self):
         """
         Timer is running if test have been started
@@ -335,62 +421,73 @@ class EMECDrvTester(QTimer):
         self.elapsed_time = self.elapsed_time + 1
         self.test_timer_timeout.emit()
 
+        # detect max movement time exceeded
         if self.moving_time >= MAX_MOVEMENT_TIME_ABSOLUTE:
-            self.test_error_message = f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!"
-            self.stop_test()  # Stop if timeout error
-            logger.debug(f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!")
+            self.stop_test(f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!")
 
         try:
-            # check if position changes when it should
-            if self.actual_position_temp == self.actual_position:
+            # check max current limit
+
+            if self.current_mean_value > self.max_error_current:
+                self.stop_test(f"Current limit exceeded (Imean= {self.current_mean_value} mA)")
+
+            # check if error from CANOpen
+            if self.node.state == 'FAULT':
+                self.stop_test("Error sent by CANOpen slave")
+
+            # check if drive is moving
+            if self.actual_position_temp == self.actual_position:  # is not moving??
                 self.not_moving_counter += 1
                 logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
 
                 # if actual position doesn't change for more than 3s emit error
-                if self.not_moving_counter >= 10:
-                    self.test_error_message = f"Drive is not moving since 10s"
-                    self.stop_test()  # Stop if timeout error
-                    logger.debug(f"Drive is not moving error emitted!!")
+                if self.not_moving_counter >= 5:
+                    self.stop_test(f"Drive is not moving since {self.not_moving_counter}s")
 
-            else:
-                self.not_moving_counter = 0
-                self.actual_position_temp = self.actual_position
+            else:  # drive is moving
+                self.not_moving_counter = 0  # reset counter for detection "not moving" error
+
+                if self.actual_position_temp is not None and self.actual_position is not None:
+                    if self.actual_position_temp > self.actual_position:  # is drive moving CCW?
+                        if self.moving_direction != CCW:  # if moving CCW but should CW
+                            self.wrong_movement_counter += 1
+                        else:
+                            self.wrong_movement_counter = 0  # moving in correct direction
+                    else:
+                        if self.moving_direction != CW:  # if moving CW but should CCW
+                            self.wrong_movement_counter += 1
+                        else:
+                            self.wrong_movement_counter = 0  # moving in correct direction
+
+                # moving in wrong direction timer control
+                if self.wrong_movement_counter >= 5:
+                    self.stop_test(f"Drive is moving in wrong direction since {self.wrong_movement_counter}")
+
+                self.actual_position_temp = self.actual_position  # update temp for actual position
 
             # max position reached condition
             if (abs(self.max_target) - self.tolerance) <= self.actual_position:
                 if self.target_temp != self.min_target:
                     # control min movement time
                     if self.moving_time < self.min_time < self.elapsed_time:
-                        self.test_error_message = f"Movement ({self.moving_time}s) time under limit of {self.min_time}s"
-                        self.stop_test()  # Stop if timeout error
+                        self.stop_test(f"Movement ({self.moving_time}s) time under limit of {self.min_time}s")
                     else:
-                        self.stop_movement()
-                        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = self.min_target
-                        # wait 1,5s until restart movement in opposite direction
-                        QTimer.singleShot(1500, self.start_movement)
-                        self.moving_time = 0  # Reset timer when reaching target position
+                        self.goto_target_position(self.min_target)  # go to the new position
 
             # min position reached condition
             elif self.actual_position <= (abs(self.min_target) + self.tolerance):
                 if self.target_temp != self.max_target:
                     # control min movement time
                     if self.moving_time < self.min_time < self.elapsed_time:
-                        self.test_error_message = f"Movement time ({self.moving_time}s) under limit of {self.min_time}s"
-                        self.stop_test()  # Stop if timeout error
+                        self.stop_test(f"Movement time ({self.moving_time}s) under limit of {self.min_time}s")
                     else:
-                        self.stop_movement()
-                        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = self.max_target
-                        QTimer.singleShot(1500, self.start_movement)
-                        self.moving_time = 0  # Reset timer when reaching target position
+                        self.goto_target_position(self.max_target)  # go to the new position
 
             # drive is moving condition
             else:
                 # Control max movement time
                 if self.moving_time > self.max_time:
-                    self.test_error_message = f"Movement time ({self.moving_time}s) exceeded limit of {self.max_time}s"
-                    self.stop_test()  # Stop if timeout error
-
-                    logger.debug(f"Movement time ({self.moving_time}s) exceeded limit of {self.max_time}s")
+                    self.stop_test(f"Movement time ({self.moving_time}s) exceeded limit of {self.max_time}s")
 
                 self.moving_time = self.moving_time + 1  # increment timer during movement
 
@@ -403,16 +500,27 @@ class EMECDrvTester(QTimer):
             try:
                 # init vars to 0
                 self.moving_time = 0
-                self.not_moving_counter = 0
+                self.not_moving_counter = 0  # counter for detection of no movement error
+                self.wrong_movement_counter = 0  # counter for detection of wrong movement error
                 self.test_error_message = None
+
+                if self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+                    self.max_error_current = int(self.settings.value("max_error_current_lift", 800))
+
+                elif self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+                    self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
 
                 # Init target first time min or max depending on actual position
                 mid = (self.max_target - self.min_target) / 2  # get mid-position
 
                 if self.node.sdo[OD_TARGET_POSITION].raw > mid:
+                    # move in CW direction
                     self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
+                    self.moving_direction = CW
                 else:
+                    # move in CCW direction
                     self.node.sdo[OD_TARGET_POSITION].raw = self.min_target
+                    self.moving_direction = CCW
 
                 self.start_movement()
 
@@ -422,8 +530,13 @@ class EMECDrvTester(QTimer):
             except Exception as e:
                 logger.debug(f"Error starting test: {e}")
 
-    def stop_test(self):
-        # Clear Operating Enabled flag
+    def stop_test(self, message: str = None):
+        if message is not None:
+            self.test_error_message = message
+            logger.debug(f'Stop Test on Node {self.node.id} due to {message}')
+        else:
+            logger.debug(f'Stop Test on Node {self.node.id}')
+
         try:
             self.stop_movement()
         except Exception as e:
@@ -433,14 +546,11 @@ class EMECDrvTester(QTimer):
         self.elapsed_time = 0
         self.not_moving_counter = 0
 
-        self.stop()  # Stop QTimer
-        logger.debug(f"Stop Test on Node {self.node.id}")
+        # fill current value fifo with zero
+        for _ in range(self.current_actual_value_fifo.maxlen):
+            self.current_actual_value_fifo.append(0)
 
-    def halt_test(self):
-        self.moving_time = 0
-        self.elapsed_time = 0
         self.stop()  # Stop QTimer
-        logger.debug(f'Halt test')
 
     def start_movement(self):
 

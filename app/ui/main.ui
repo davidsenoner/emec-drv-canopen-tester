@@ -189,6 +189,36 @@ QTabBar::tab:selected {
   	border: 2px solid rgb(33, 37, 43);
 }
 
+QDoubleSpinBox{
+	background-color: rgb(27, 29, 35);
+	border-radius: 5px;
+	border: 2px solid rgb(33, 37, 43);
+	padding: 5px;
+	padding-left: 10px;
+}
+QDoubleSpinBox:hover{
+	border: 2px solid rgb(64, 71, 88);
+}
+QDoubleSpinBox::drop-down {
+	subcontrol-origin: padding;
+	subcontrol-position: top right;
+	width: 25px;
+	border-left-width: 3px;
+	border-left-color: rgba(39, 44, 54, 150);
+	border-left-style: solid;
+	border-top-right-radius: 3px;
+	border-bottom-right-radius: 3px;
+	background-image: url(:/icons/cil-arrow-bottom.png);
+	background-position: center;
+	background-repeat: no-reperat;
+ }
+QDoubleSpinBox QAbstractItemView {
+	color:  rgb(37, 183, 188);
+	background-color: rgb(33, 37, 43);
+	padding: 10px;
+	selection-background-color: rgb(39, 44, 54);
+}
+
 /* /////////////////////////////////////////////////////////////////////////////////////////////////
 QTreeView */
 QTreeView {
@@ -593,6 +623,10 @@ QPushButton:pressed {
 	border: 2px solid rgb(43, 50, 61);
 }
 
+QPushButton:disabled {
+	border: 1px solid rgb(43, 50, 61);
+	color: grey;
+}
 
 </string>
   </property>
@@ -775,29 +809,35 @@ QPushButton:pressed {
           </layout>
          </item>
          <item>
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>&lt;h4&gt;Min. software version&lt;/h4&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <layout class="QGridLayout" name="gridLayout_3">
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_8">
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_6">
              <property name="text">
-              <string>&lt;b&gt;Lift:&lt;/b&gt;</string>
+              <string>&lt;h4&gt;Min. software version&lt;/h4&gt;</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="0">
+           <item row="1" column="3">
+            <widget class="QLineEdit" name="led_min_sw_ver_lift">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="maxLength">
+              <number>20</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
             <widget class="QLabel" name="label_7">
              <property name="text">
               <string>&lt;b&gt;Slewing:&lt;/b&gt;</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
+           <item row="1" column="1">
             <widget class="QLineEdit" name="led_min_sw_ver_slewing">
              <property name="minimumSize">
               <size>
@@ -810,16 +850,43 @@ QPushButton:pressed {
              </property>
             </widget>
            </item>
-           <item row="0" column="3">
-            <widget class="QLineEdit" name="led_min_sw_ver_lift">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>30</height>
-              </size>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>&lt;h4&gt;Max. current&lt;/h4&gt;</string>
              </property>
-             <property name="maxLength">
-              <number>20</number>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>&lt;b&gt;Lift:&lt;/b&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QSpinBox" name="spb_max_lift_current">
+             <property name="suffix">
+              <string> mA</string>
+             </property>
+             <property name="maximum">
+              <number>3000</number>
+             </property>
+             <property name="value">
+              <number>0</number>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="spb_max_slewing_current">
+             <property name="suffix">
+              <string> mA</string>
+             </property>
+             <property name="maximum">
+              <number>3000</number>
+             </property>
+             <property name="value">
+              <number>0</number>
              </property>
             </widget>
            </item>
@@ -848,11 +915,6 @@ QPushButton:pressed {
     </item>
    </layout>
   </widget>
-  <action name="actionImpostazioni">
-   <property name="text">
-    <string>Impostazioni</string>
-   </property>
-  </action>
  </widget>
  <resources>
   <include location="../resources/images/resources.qrc"/>
