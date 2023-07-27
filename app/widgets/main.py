@@ -64,8 +64,8 @@ class MainWindow(QMainWindow):
         # init min sw version to UI
         self._ui.led_min_sw_ver_slewing.setText(min_sw_version_slewing)
         self._ui.led_min_sw_ver_lift.setText(min_sw_version_lift)
-        self._ui.spb_max_slewing_current.setValue(max_error_current_slewing)
-        self._ui.spb_max_lift_current.setValue(max_error_current_lift)
+        self._ui.spb_max_slewing_current.setValue(int(max_error_current_slewing))
+        self._ui.spb_max_lift_current.setValue(int(max_error_current_lift))
 
         # Signals for min software version
         self._ui.led_min_sw_ver_lift.editingFinished.connect(self.update_qsettings)

@@ -873,7 +873,7 @@ QPushButton:disabled {
               <number>3000</number>
              </property>
              <property name="value">
-              <number>800</number>
+              <number>0</number>
              </property>
             </widget>
            </item>
@@ -886,7 +886,7 @@ QPushButton:disabled {
               <number>3000</number>
              </property>
              <property name="value">
-              <number>600</number>
+              <number>0</number>
              </property>
             </widget>
            </item>
@@ -915,11 +915,6 @@ QPushButton:disabled {
     </item>
    </layout>
   </widget>
-  <action name="actionImpostazioni">
-   <property name="text">
-    <string>Impostazioni</string>
-   </property>
-  </action>
  </widget>
  <resources>
   <include location="../resources/images/resources.qrc"/>
