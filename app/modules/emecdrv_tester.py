@@ -95,9 +95,8 @@ class EMECDrvTester(QTimer):
         self.node = node
 
         self.moving_time = 0
-        self.current_actual_value_fifo = deque(maxlen=20)
         self.elapsed_time = 0
-        self.test_error_message = None
+        self.test_error_message = None  # Message to show to screen
         self.moving_direction = None  # CCW, CW, STOPPED
 
         self.settings = QSettings("EMEC", "Tester")
@@ -109,6 +108,13 @@ class EMECDrvTester(QTimer):
         self.target_temp = (MAX_TARGET_POSITION_LIFT - MIN_TARGET_POSITION_LIFT) / 2
 
         self.tolerance = 0
+
+        # Init FIFO for measured current values
+        self.current_actual_value_fifo = deque(maxlen=20)
+
+        # fill current value fifo with zero
+        for _ in range(self.current_actual_value_fifo.maxlen):
+            self.current_actual_value_fifo.append(0)
 
         # Node initialisation
         node.nmt.state = 'OPERATIONAL'
@@ -151,6 +157,8 @@ class EMECDrvTester(QTimer):
 
             self.tolerance = 0
 
+            self.max_error_current = int(self.settings.value("max_error_current_lift", 800))
+
         elif node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.timeout.connect(self.timeout_test)
             self.timeout.connect(self.timeout_stat)
@@ -163,6 +171,8 @@ class EMECDrvTester(QTimer):
             self.max_target = MAX_TARGET_POSITION_SLEWING
 
             self.tolerance = 10
+
+            self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
 
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
         logger.debug(f'min_movement: {self.min_time}, max_movement: {self.max_time}')
@@ -398,6 +408,10 @@ class EMECDrvTester(QTimer):
             self.stop_test(f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!")
 
         try:
+            # check max current limit
+
+            if self.current_mean_value > self.max_error_current:
+                self.stop_test(f"Current limit exceeded (Imean= {self.current_mean_value} mA)")
 
             # check if error from CANOpen
             if self.node.state == 'FAULT':
@@ -507,7 +521,10 @@ class EMECDrvTester(QTimer):
         self.moving_time = 0
         self.elapsed_time = 0
         self.not_moving_counter = 0
-        self.current_actual_value_fifo.clear()  # clear fifo with measured current values for stat calculation
+
+        # fill current value fifo with zero
+        for _ in range(self.current_actual_value_fifo.maxlen):
+            self.current_actual_value_fifo.append(0)
 
         self.stop()  # Stop QTimer
 
