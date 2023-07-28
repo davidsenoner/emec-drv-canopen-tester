@@ -179,6 +179,9 @@ class NodeTable(QObject):
 
                         self.table_rows.update({key: node_table_row})
 
+                        dialog = AddSNDialog(channel=channel, node_id=node_id, serial_number=node_table_row.serial_number)
+                        node_table_row.serial_number = dialog.serial_number
+
                     except Exception as e:
                         logger.debug(e)
 
@@ -414,7 +417,11 @@ class NodeTable(QObject):
 
         # add serial number action to context menu
         if action == add_serial_action:
-            dialog = AddSNDialog(serial_number=node_table_row.serial_number)
+            dialog = AddSNDialog(
+                channel=node_table_row.channel,
+                node_id=node_table_row.node_id,
+                serial_number=node_table_row.serial_number
+            )
             node_table_row.serial_number = dialog.serial_number
 
         # node info command from context menu
@@ -506,6 +513,7 @@ class NodeTable(QObject):
                     time.sleep(0.05)
 
                     for node_id in network.scanner.nodes:
+                        # check if node already in list otherwise add it
                         if node_id not in network:
                             self.add_node(network, node_id)
                             self._start_node_id.append(f'{channel}_{node_id}')
