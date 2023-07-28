@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.showMaximized()
-        self.setWindowTitle("EMEC Drive End-Of-Line Tester v2.0.0")  # Window title bar
+        self.setWindowTitle("EMEC Drive End-Of-Line Tester v1.5.0")  # Window title bar
 
         # Init canopen logger
         logging.getLogger('can').setLevel(logging.ERROR)
@@ -58,14 +58,20 @@ class MainWindow(QMainWindow):
 
         min_sw_version_slewing = self.settings.value("min_sw_version_slewing", "v1.25")
         min_sw_version_lift = self.settings.value("min_sw_version_lift", "v3.16")
+        max_error_current_slewing = self.settings.value("max_error_current_slewing", 600)
+        max_error_current_lift = self.settings.value("max_error_current_lift", 800)
 
         # init min sw version to UI
         self._ui.led_min_sw_ver_slewing.setText(min_sw_version_slewing)
         self._ui.led_min_sw_ver_lift.setText(min_sw_version_lift)
+        self._ui.spb_max_slewing_current.setValue(int(max_error_current_slewing))
+        self._ui.spb_max_lift_current.setValue(int(max_error_current_lift))
 
         # Signals for min software version
         self._ui.led_min_sw_ver_lift.editingFinished.connect(self.update_qsettings)
         self._ui.led_min_sw_ver_slewing.editingFinished.connect(self.update_qsettings)
+        self._ui.spb_max_lift_current.valueChanged.connect(self.update_qsettings)
+        self._ui.spb_max_slewing_current.valueChanged.connect(self.update_qsettings)
 
         self.show()
 
@@ -78,5 +84,11 @@ class MainWindow(QMainWindow):
 
         if lne == self._ui.led_min_sw_ver_slewing:
             self.settings.setValue("min_sw_version_slewing", lne.text())
+
+        if lne == self._ui.spb_max_lift_current:
+            self.settings.setValue("max_error_current_lift", lne.value())
+
+        if lne == self._ui.spb_max_slewing_current:
+            self.settings.setValue("max_error_current_slewing", lne.value())
 
         logger.debug(f'{lneName} modified to {lne.text()}')

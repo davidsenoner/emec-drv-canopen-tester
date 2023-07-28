@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainMTculg.ui'
+## Form generated from reading UI file 'maincLcyms.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.5.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
+from PyQt5.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PyQt5.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout,
+    QHBoxLayout, QHeaderView, QLabel, QLineEdit,
+    QMainWindow, QSizePolicy, QSpinBox, QTableWidget,
+    QTableWidgetItem, QVBoxLayout, QWidget)
 from . resources_rc import *
 
 class Ui_MainWindow(object):
@@ -199,6 +206,37 @@ class Ui_MainWindow(object):
 "  	border: 2px solid rgb(33, 37, 43);\n"
 "}\n"
 "\n"
+"QDoubleSpinBox{\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(33, 37, 43);\n"
+"	padding: 5px;\n"
+"	padding-left: 10px;\n"
+"}\n"
+"QDoubleSpinBox:hover{\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"QDoubleSpinBox::drop-down {\n"
+"	subcontrol-origin: padding;\n"
+"	subcontrol-position: top right;\n"
+"	width: 25px;\n"
+"	border-left-width: 3px;\n"
+"	border-left-color: rgba(39, 44, 54, 150);\n"
+"	border-left-style: solid;\n"
+"	border-top-right-radius: 3px;\n"
+"	border-bottom-right-radius: 3px;\n"
+"	background-image: url(:/icons/cil-arrow-bottom.png);\n"
+"	background-position: center;\n"
+"	background-repeat: no-reperat;\n"
+" }\n"
+"QDoubleSpinBox QAbstract"
+                        "ItemView {\n"
+"	color:  rgb(37, 183, 188);\n"
+"	background-color: rgb(33, 37, 43);\n"
+"	padding: 10px;\n"
+"	selection-background-color: rgb(39, 44, 54);\n"
+"}\n"
+"\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "QTreeView */\n"
 "QTreeView {\n"
@@ -220,8 +258,7 @@ class Ui_MainWindow(object):
 "	border-color: rgb(44, 49, 60);\n"
 "	padding-left: 5px;\n"
 "	padding-right: 5px;\n"
-"	gridline-color: rgb(44, 49, 6"
-                        "0);\n"
+"	gridline-color: rgb(44, 49, 60);\n"
 "}\n"
 "QTableWidget::item:selected{\n"
 "	background-color: rgb(37, 183, 188);\n"
@@ -229,7 +266,8 @@ class Ui_MainWindow(object):
 "\n"
 "QHeaderView {\n"
 "	border-top-left-radius: 5px;\n"
-"    border-top-right-radius: 5px;\n"
+""
+                        "    border-top-right-radius: 5px;\n"
 "}\n"
 "\n"
 "QHeaderView::section{\n"
@@ -261,13 +299,13 @@ class Ui_MainWindow(object):
 "	background-color: rgb(44, 49, 60);\n"
 "	padding: 10px;\n"
 "	border-radius: 5px;\n"
-"	gridline"
-                        "-color: rgb(44, 49, 58);\n"
+"	gridline-color: rgb(44, 49, 58);\n"
 "	border: 1px solid rgb(33, 37, 43);\n"
 "}\n"
 "QTableView::item{\n"
 "	border-color: rgb(44, 49, 60);\n"
-"	padding-left: 5px;\n"
+"	padding-left: 5px;"
+                        "\n"
 "	padding-right: 5px;\n"
 "	gridline-color: rgb(44, 49, 60);\n"
 "}\n"
@@ -297,12 +335,12 @@ class Ui_MainWindow(object):
 "LineEdit */\n"
 "QLineEdit {\n"
 "	background-color: rgb(33, 37, 43);\n"
-"	border-radiu"
-                        "s: 5px;\n"
+"	border-radius: 5px;\n"
 "	border: 2px solid rgb(33, 37, 43);\n"
 "	padding-left: 10px;\n"
 "	selection-color: rgb(255, 255, 255);\n"
-"	selection-background-color: rgba(37, 183, 188, 0.5);\n"
+"	selection-background-color: rgba"
+                        "(37, 183, 188, 0.5);\n"
 "}\n"
 "QLineEdit:hover {\n"
 "	border: 2px solid rgb(64, 71, 88);\n"
@@ -331,14 +369,14 @@ class Ui_MainWindow(object):
 "    width: 8px;\n"
 " }\n"
 "QPlainTextEdit  QScrollBar:horizontal {\n"
-""
-                        "    height: 8px;\n"
+"    height: 8px;\n"
 " }\n"
 "QPlainTextEdit:hover {\n"
 "	border: 2px solid rgb(64, 71, 88);\n"
 "}\n"
 "QPlainTextEdit:focus {\n"
-"	border: 2px solid rgb(91, 101, 124);\n"
+"	border: 2px solid rgb(9"
+                        "1, 101, 124);\n"
 "}\n"
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
@@ -369,12 +407,12 @@ class Ui_MainWindow(object):
 "    background: rgb(55, 63, 77);\n"
 "    width: 20px;\n"
 "	border-top-left-radius: 4px;\n"
-""
-                        "    border-bottom-left-radius: 4px;\n"
+"    border-bottom-left-radius: 4px;\n"
 "    subcontrol-position: left;\n"
 "    subcontrol-origin: margin;\n"
 "}\n"
-"QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal\n"
+"QScrollBar::up-arrow:horizontal,"
+                        " QScrollBar::down-arrow:horizontal\n"
 "{\n"
 "     background: none;\n"
 "}\n"
@@ -407,13 +445,13 @@ class Ui_MainWindow(object):
 "	border: none;\n"
 "    background: rgb(55, 63, 77);\n"
 "     height: 20px;\n"
-"	b"
-                        "order-top-left-radius: 4px;\n"
+"	border-top-left-radius: 4px;\n"
 "    border-top-right-radius: 4px;\n"
 "     subcontrol-position: top;\n"
 "     subcontrol-origin: margin;\n"
 " }\n"
-" QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {\n"
+""
+                        " QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {\n"
 "     background: none;\n"
 " }\n"
 "\n"
@@ -439,14 +477,14 @@ class Ui_MainWindow(object):
 "	background-image: url(:/icons/cil-check-alt.png);\n"
 "}\n"
 "\n"
-"/* ///////////////////////////////////////////////////////////////////////////////////////////"
-                        "//////\n"
+"/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "RadioButton */\n"
 "QRadioButton::indicator {\n"
 "    border: 3px solid rgb(52, 59, 72);\n"
 "	width: 15px;\n"
 "	height: 15px;\n"
-"	border-radius: 10px;\n"
+"	border-"
+                        "radius: 10px;\n"
 "    background: rgb(44, 49, 60);\n"
 "}\n"
 "QRadioButton::indicator:hover {\n"
@@ -476,12 +514,12 @@ class Ui_MainWindow(object):
 "	border-left-width: 3px;\n"
 "	border-left-color: rgba(39, 44, 54, 150);\n"
 "	border-left-style: solid;\n"
-"	border-top-r"
-                        "ight-radius: 3px;\n"
+"	border-top-right-radius: 3px;\n"
 "	border-bottom-right-radius: 3px;\n"
 "	background-image: url(:/icons/cil-arrow-bottom.png);\n"
 "	background-position: center;\n"
-"	background-repeat: no-reperat;\n"
+""
+                        "	background-repeat: no-reperat;\n"
 " }\n"
 "QComboBox QAbstractItemView {\n"
 "	color:  rgb(37, 183, 188);\n"
@@ -510,13 +548,13 @@ class Ui_MainWindow(object):
 "	border-left-color: rgba(39, 44, 54, 150);\n"
 "	border-left-style: solid;\n"
 "	border-top-right-radius: 3px;\n"
-"	border-bottom-right-radius: 3p"
-                        "x;\n"
+"	border-bottom-right-radius: 3px;\n"
 "	background-image: url(:/icons/cil-arrow-bottom.png);\n"
 "	background-position: center;\n"
 "	background-repeat: no-reperat;\n"
 " }\n"
-"QSpinBox QAbstractItemView {\n"
+"QSpinBox Q"
+                        "AbstractItemView {\n"
 "	color:  rgb(37, 183, 188);	\n"
 "	background-color: rgb(33, 37, 43);\n"
 "	padding: 10px;\n"
@@ -546,15 +584,15 @@ class Ui_MainWindow(object):
 "    background-color: rgb(37, 183, 188);\n"
 "}\n"
 "QSlider::handle:horizontal:pressed {\n"
-"    background-col"
-                        "or: rgb(44, 219, 222);\n"
+"    background-color: rgb(44, 219, 222);\n"
 "}\n"
 "\n"
 "QSlider::groove:vertical {\n"
 "    border-radius: 5px;\n"
 "    width: 20px;\n"
 "    margin: 0px;\n"
-"	background-color: rgb(52, 59, 72);\n"
+"	background-c"
+                        "olor: rgb(52, 59, 72);\n"
 "}\n"
 "QSlider::groove:vertical:hover {\n"
 "	background-color: rgb(55, 62, 76);\n"
@@ -586,11 +624,11 @@ class Ui_MainWindow(object):
 "}\n"
 "QCommandLinkButton:pressed {	\n"
 "	color: rgb(37, 183, 188);\n"
-""
-                        "	background-color: rgb(52, 58, 71);\n"
+"	background-color: rgb(52, 58, 71);\n"
 "}\n"
 "\n"
-"/*//////////////////////////////////////////////////////////////////////////////////////////////////\n"
+"/*////////////////////////////////////////////////////////////////////////////////////////////////"
+                        "//\n"
 "QGroupBox*/\n"
 "QGroupBox {\n"
 "    color: rgb(90, 102, 125);\n"
@@ -614,10 +652,12 @@ class Ui_MainWindow(object):
 "	border: 2px solid rgb(43, 50, 61);\n"
 "}\n"
 "\n"
+"QPushButton:disabled {\n"
+"	border: 1px solid rgb(43, 50, 61);\n"
+"	color: grey;\n"
+"}\n"
 "\n"
 "")
-        self.actionImpostazioni = QAction(MainWindow)
-        self.actionImpostazioni.setObjectName(u"actionImpostazioni")
         self.bgApp = QWidget(MainWindow)
         self.bgApp.setObjectName(u"bgApp")
         self.bgApp.setStyleSheet(u"")
@@ -723,36 +763,55 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
+        self.gridLayout_3 = QGridLayout()
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.label_6 = QLabel(self.gridFrame)
         self.label_6.setObjectName(u"label_6")
 
-        self.verticalLayout_2.addWidget(self.label_6)
-
-        self.gridLayout_3 = QGridLayout()
-        self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.label_8 = QLabel(self.gridFrame)
-        self.label_8.setObjectName(u"label_8")
-
-        self.gridLayout_3.addWidget(self.label_8, 0, 2, 1, 1)
-
-        self.label_7 = QLabel(self.gridFrame)
-        self.label_7.setObjectName(u"label_7")
-
-        self.gridLayout_3.addWidget(self.label_7, 0, 0, 1, 1)
-
-        self.led_min_sw_ver_slewing = QLineEdit(self.gridFrame)
-        self.led_min_sw_ver_slewing.setObjectName(u"led_min_sw_ver_slewing")
-        self.led_min_sw_ver_slewing.setMinimumSize(QSize(0, 30))
-        self.led_min_sw_ver_slewing.setMaxLength(20)
-
-        self.gridLayout_3.addWidget(self.led_min_sw_ver_slewing, 0, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.label_6, 1, 0, 1, 1)
 
         self.led_min_sw_ver_lift = QLineEdit(self.gridFrame)
         self.led_min_sw_ver_lift.setObjectName(u"led_min_sw_ver_lift")
         self.led_min_sw_ver_lift.setMinimumSize(QSize(0, 30))
         self.led_min_sw_ver_lift.setMaxLength(20)
 
-        self.gridLayout_3.addWidget(self.led_min_sw_ver_lift, 0, 3, 1, 1)
+        self.gridLayout_3.addWidget(self.led_min_sw_ver_lift, 1, 3, 1, 1)
+
+        self.label_7 = QLabel(self.gridFrame)
+        self.label_7.setObjectName(u"label_7")
+
+        self.gridLayout_3.addWidget(self.label_7, 0, 1, 1, 1)
+
+        self.led_min_sw_ver_slewing = QLineEdit(self.gridFrame)
+        self.led_min_sw_ver_slewing.setObjectName(u"led_min_sw_ver_slewing")
+        self.led_min_sw_ver_slewing.setMinimumSize(QSize(0, 30))
+        self.led_min_sw_ver_slewing.setMaxLength(20)
+
+        self.gridLayout_3.addWidget(self.led_min_sw_ver_slewing, 1, 1, 1, 1)
+
+        self.label_10 = QLabel(self.gridFrame)
+        self.label_10.setObjectName(u"label_10")
+
+        self.gridLayout_3.addWidget(self.label_10, 2, 0, 1, 1)
+
+        self.label_8 = QLabel(self.gridFrame)
+        self.label_8.setObjectName(u"label_8")
+
+        self.gridLayout_3.addWidget(self.label_8, 0, 3, 1, 1)
+
+        self.spb_max_lift_current = QSpinBox(self.gridFrame)
+        self.spb_max_lift_current.setObjectName(u"spb_max_lift_current")
+        self.spb_max_lift_current.setMaximum(3000)
+        self.spb_max_lift_current.setValue(0)
+
+        self.gridLayout_3.addWidget(self.spb_max_lift_current, 2, 3, 1, 1)
+
+        self.spb_max_slewing_current = QSpinBox(self.gridFrame)
+        self.spb_max_slewing_current.setObjectName(u"spb_max_slewing_current")
+        self.spb_max_slewing_current.setMaximum(3000)
+        self.spb_max_slewing_current.setValue(0)
+
+        self.gridLayout_3.addWidget(self.spb_max_slewing_current, 2, 1, 1, 1)
 
 
         self.verticalLayout_2.addLayout(self.gridLayout_3)
@@ -781,7 +840,6 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EMEC Drive EOL Tester", None))
-        self.actionImpostazioni.setText(QCoreApplication.translate("MainWindow", u"Impostazioni", None))
         self.label.setText("")
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"<h4>Channels</h4>", None))
         self.lbl_can2_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
@@ -793,7 +851,10 @@ class Ui_MainWindow(object):
         self.lbl_can1_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"<b>CH1</b>", None))
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"<h4>Min. software version</h4>", None))
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"<b>Lift:</b>", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"<b>Slewing:</b>", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"<h4>Max. current</h4>", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"<b>Lift:</b>", None))
+        self.spb_max_lift_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
+        self.spb_max_slewing_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
     # retranslateUi
 
