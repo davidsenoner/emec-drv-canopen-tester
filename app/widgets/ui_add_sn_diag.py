@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'add_sn_diagyOVuJB.ui'
+## Form generated from reading UI file 'add_sn_diagkNbExu.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.5.1
 ##
@@ -23,13 +23,13 @@ class Ui_AddSNDialog(object):
     def setupUi(self, AddSNDialog):
         if not AddSNDialog.objectName():
             AddSNDialog.setObjectName(u"AddSNDialog")
-        AddSNDialog.resize(400, 94)
+        AddSNDialog.resize(400, 72)
         self.verticalLayout = QVBoxLayout(AddSNDialog)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.lbl_title = QLabel(AddSNDialog)
-        self.lbl_title.setObjectName(u"lbl_title")
+        self.lbl_drive_id = QLabel(AddSNDialog)
+        self.lbl_drive_id.setObjectName(u"lbl_drive_id")
 
-        self.verticalLayout.addWidget(self.lbl_title)
+        self.verticalLayout.addWidget(self.lbl_drive_id)
 
         self.gridLayout_2 = QGridLayout()
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -63,8 +63,8 @@ class Ui_AddSNDialog(object):
     # setupUi
 
     def retranslateUi(self, AddSNDialog):
-        AddSNDialog.setWindowTitle(QCoreApplication.translate("AddSNDialog", u"Add Info Dialog", None))
-        self.lbl_title.setText(QCoreApplication.translate("AddSNDialog", u"Serial number", None))
+        AddSNDialog.setWindowTitle(QCoreApplication.translate("AddSNDialog", u"Drive serial number", None))
+        self.lbl_drive_id.setText(QCoreApplication.translate("AddSNDialog", u"TextLabel", None))
         self.label_2.setText(QCoreApplication.translate("AddSNDialog", u"Serial number", None))
     # retranslateUi
 
