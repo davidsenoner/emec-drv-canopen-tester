@@ -1,6 +1,7 @@
 import logging
 import time
 from canopen import BaseNode402, RemoteNode, LocalNode
+from canopen.emcy import EmcyError
 from collections import deque
 import numpy as np
 
@@ -33,6 +34,7 @@ MAX_MOVEMENT_TIME_ABSOLUTE = 500
 OD_MANUFACTURER_DEVICE_NAME = 0x1008
 OD_MANUFACTURER_HARDWARE_VERSION = 0x1009
 OD_MANUFACTURER_SOFTWARE_VERSION = 0x100A
+OD_DEVICE_ERROR_FLAGS = 0x2100
 
 OD_MODES_OF_OPERATION = 0x6060
 OD_POSITION_ACTUAL_VALUE = 0x6064
@@ -116,6 +118,9 @@ class EMECDrvTester(QTimer):
         # fill current value fifo with zero
         for _ in range(self.current_actual_value_fifo.maxlen):
             self.current_actual_value_fifo.append(0)
+
+        # register emergency error callback that will stop with error message from canopen
+        self.node.emcy.add_callback(self.emcy_callback)
 
         # Node initialisation
         node.nmt.state = 'OPERATIONAL'
@@ -346,6 +351,74 @@ class EMECDrvTester(QTimer):
         """
         return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
 
+    def get_device_error_message(self) -> str:
+        """
+        Get Error message from CANOpen reading from register 0x2100
+
+        Bit Description                 M/O
+        0   Overcurrent error           M
+        1   Overtemperature error       M
+        2   Position controller error   M
+        3   Following error             M
+
+        :return: Concatenated error messages separated by ","
+        """
+        errors = []
+        try:
+            flag = self.node.sdo[OD_DEVICE_ERROR_FLAGS].raw
+        except Exception as e:
+            flag = 0
+            logger.debug(e)
+
+        # over-current error
+        if flag & 0x01:
+            errors.append("Overcurrent error")
+
+        # over-temperature error
+        if flag & 0x02:
+            errors.append("Overtemperature error")
+
+        # position controller error
+        if flag & 0x04:
+            errors.append("Position controller error")
+
+        # following error
+        if flag & 0x04:
+            errors.append("Following error")
+
+        error_msg = ""
+        for error in errors:
+            if len(error_msg):
+                error_msg = error_msg + ", " + error
+            else:
+                error_msg = error
+
+        return error_msg
+
+    def emcy_callback(self, error: EmcyError):
+        if error.code == 0x0000:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): Fault reset")
+        if error.code == 0x2310:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): Overcurrent on motor driver")
+        if error.code == 0x4310:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): Overtemperature error")
+        if error.code == 0x8110:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): CAN controller overflow")
+        if error.code == 0x8120:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): CAN error passive")
+        if error.code == 0x8130:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): Life guard error or heartbeat error")
+        if error.code == 0x8140:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): CAN controller recovered from bus-off state")
+        if error.code == 0x8210:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): PDO not processed due to length error")
+        if error.code == 0x8220:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): PDO length exceeded")
+        if error.code == 0x8500:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): Position controller")
+        if error.code == 0x8611:
+            self.stop_test(f"CANOpen error ({hex(error.code)}): Following error")
+
     def get_software_version_ok(self) -> bool:
         # compare software version
         min_sw_version = 0
@@ -374,23 +447,21 @@ class EMECDrvTester(QTimer):
         Generates a readable status message for UI table
         :return: Message string
         """
-        state = self.node.state
 
-        if self.isActive():
-            if state == 'OPERATION ENABLED':
-                state = "Test running"
-            elif state == 'FAULT':
-                state = "Error sent from CANOpen Drive"
-        else:
-            if state == 'SWITCHED ON':
-                state = "Stopped"
-            elif state == 'FAULT':
-                state = " Error sent from CANOpen Drive"
-
+        # if there is already an error print message set previously
         if self.test_error_message is not None:
-            state = self.test_error_message
+            return self.test_error_message
+        else:
+            state = self.node.state
 
-        return state
+            if self.isActive():
+                if state == 'OPERATION ENABLED':
+                    state = "Test running"
+            else:
+                if state == 'SWITCHED ON':
+                    state = "Stopped"
+
+            return state
 
     def goto_target_position(self, position: int):
         if self.actual_position > abs(position):  # abs() because slewing have negative value when turning CCW
@@ -427,13 +498,12 @@ class EMECDrvTester(QTimer):
 
         try:
             # check max current limit
-
             if self.current_mean_value > self.max_error_current:
                 self.stop_test(f"Current limit exceeded (Imean= {self.current_mean_value} mA)")
 
             # check if error from CANOpen
-            if self.node.state == 'FAULT':
-                self.stop_test("Error sent by CANOpen slave")
+            #if self.node.state == 'FAULT':
+                #self.stop_test("CANOpen error: " + self.get_device_error_message())
 
             # check if drive is moving
             if self.actual_position_temp == self.actual_position:  # is not moving??
@@ -441,7 +511,7 @@ class EMECDrvTester(QTimer):
                 logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
 
                 # if actual position doesn't change for more than 3s emit error
-                if self.not_moving_counter >= 5:
+                if self.not_moving_counter >= 4:
                     self.stop_test(f"Drive is not moving since {self.not_moving_counter}s")
 
             else:  # drive is moving
@@ -460,7 +530,7 @@ class EMECDrvTester(QTimer):
                             self.wrong_movement_counter = 0  # moving in correct direction
 
                 # moving in wrong direction timer control
-                if self.wrong_movement_counter >= 5:
+                if self.wrong_movement_counter >= 4:
                     self.stop_test(f"Drive is moving in wrong direction since {self.wrong_movement_counter}")
 
                 self.actual_position_temp = self.actual_position  # update temp for actual position
