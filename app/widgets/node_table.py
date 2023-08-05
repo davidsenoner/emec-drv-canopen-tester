@@ -10,6 +10,7 @@ from app.modules.emecdrv_tester import EMECDrvTester
 from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 from app.widgets.add_info_diag import AddInfoDialog
 from app.widgets.add_sn_diag import AddSNDialog
+from app.modules.test_report import TestReport
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +18,14 @@ logger = logging.getLogger(__name__)
 class NodeTableRow(EMECDrvTester):
     def __init__(self, network: Network, channel: int, node: BaseNode402):
         super().__init__(node)
+
         self._network = network
         self._channel = channel
         self._node = node
         self._serial_number = 0
         self._customer = ""
         self._comment = ""
+        self._report = None
 
     @property
     def network(self) -> Network:
@@ -75,6 +78,20 @@ class NodeTableRow(EMECDrvTester):
     @comment.setter
     def comment(self, comment: str) -> None:
         self._comment = comment
+
+    def create_test_report(self):
+        """
+        Creates an instance of testreport adding device information to it
+        :return:
+        """
+        self._report = TestReport(f"/var/tmp/{self.serial_number}.pdf")
+        self._report.add_serial_number(self.serial_number)
+        self._report.add_versions(self.manufacturer_software_version, self.manufacturer_hardware_version)
+
+    def build_test_report(self):
+        if self._report is not None:
+            self._report.add_cycles(f"{self.cw_movements_temp}/{self.ccw_movements_temp}")  # add cycles from tmp
+            self._report.build_page()  # create the file
 
 
 class NodeTable(QObject):
@@ -174,13 +191,20 @@ class NodeTable(QObject):
 
                 if key not in self.table_rows:
                     try:
+                        # add table row
                         node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
                         node_table_row.test_timer_timeout.connect(self.draw_cyclic_info)
 
+                        # add row to list
                         self.table_rows.update({key: node_table_row})
 
-                        dialog = AddSNDialog(channel=channel, node_id=node_id, serial_number=node_table_row.serial_number)
-                        node_table_row.serial_number = dialog.serial_number
+                        # ask for serial number input
+                        dialog = AddSNDialog(channel=channel, node_id=node_id)
+
+                        # if a serial number has been assigned create testreport
+                        if dialog.serial_number:
+                            node_table_row.serial_number = dialog.serial_number
+                            node_table_row.create_test_report()  # create testreport
 
                     except Exception as e:
                         logger.debug(e)
@@ -199,8 +223,13 @@ class NodeTable(QObject):
 
                 # remove the keys
                 for key in key_to_remove:
-                    self.pop_node(self.table_rows[key])
-                    self.table_rows.pop(key)
+                    row = self.table_rows[key]
+
+                    row.build_test_report()  # create TestReport-PDF file with info
+
+                    self.pop_node(row)  # pop node from network
+                    self.table_rows.pop(key)  # remove node row
+
                     logging.info(f'Node ID {key} removed')
 
             except Exception as e:
@@ -208,8 +237,6 @@ class NodeTable(QObject):
                 # self.table_rows.clear()
                 network.clear()
                 logging.debug(f'All Nodes removed from network: {e}')
-
-
 
     def draw_cyclic_info(self):
 
@@ -524,3 +551,15 @@ class NodeTable(QObject):
                 # logger.debug(network.scanner.nodes)
 
         self._redraw_table = True
+
+    @staticmethod
+    def print_test_report(node_table_row: NodeTableRow):
+        # create a Report with filename=serial number
+        report = TestReport(f"/var/tmp/{node_table_row.serial_number}.pdf")
+
+        report.add_serial_number(node_table_row.serial_number)
+        report.add_sw_version(node_table_row.manufacturer_software_version)
+        report.add_node_id(node_table_row.node_id)
+        report.add_cycles(f"{node_table_row.cw_movements}/{node_table_row.ccw_movements}")
+
+        report.build_page()  # create the file

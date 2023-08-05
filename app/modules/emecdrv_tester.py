@@ -94,6 +94,8 @@ class EMECDrvTester(QTimer):
         self.not_moving_counter = 0  # counter for detection of no movement error
         self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = None
+        self._cw_movement_temp = 0  # save temporary movement info for testreport
+        self._ccw_movement_temp = 0  # save temporary movement info for testreport
         self.node = node
 
         self.moving_time = 0
@@ -249,8 +251,22 @@ class EMECDrvTester(QTimer):
         self._max_time = max_t
 
     @property
+    def cw_movements(self):
+        self._cw_movement_temp = self.node.sdo[0x2000][2].raw
+        return self._cw_movement_temp
+
+    @property
     def ccw_movements(self):
-        return self.node.sdo[0x2000][1].raw
+        self._ccw_movement_temp = self.node.sdo[0x2000][1].raw
+        return self._ccw_movement_temp
+
+    @property
+    def cw_movements_temp(self):
+        return self._cw_movement_temp
+
+    @property
+    def ccw_movements_temp(self):
+        return self._ccw_movement_temp
 
     @property
     def accumulative_operating_time(self):
@@ -263,10 +279,6 @@ class EMECDrvTester(QTimer):
     @property
     def max_device_temp(self):
         return self.node.sdo[0x2001][1].raw
-
-    @property
-    def cw_movements(self):
-        return self.node.sdo[0x2000][2].raw
 
     @property
     def actual_position(self):

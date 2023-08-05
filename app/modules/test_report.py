@@ -1,59 +1,67 @@
-import pathlib
-from pathlib import Path
+import logging
 
-# imports for report generation
-from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Table, TableStyle, Image, Frame, PageTemplate, \
-    PageBreak, NextPageTemplate
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Frame, PageTemplate
+from reportlab.lib.styles import getSampleStyleSheet, StyleSheet1
 from datetime import datetime
-from reportlab.lib.units import inch
-from reportlab.lib.pagesizes import A4, landscape, portrait
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import landscape, C10
+
+logger = logging.getLogger(__name__)
 
 
 class TestReport(SimpleDocTemplate):
-    def __init__(self, filename: str | Path, **kw):
+    """
+    Generates a QC Approved label for printing
+
+    filename: PDF-file path and name
+    """
+    def __init__(self, filename: str, **kw):
         super().__init__(filename, **kw)
 
-        self.table_style = []
-        self.page_template = []
+        self._filename = filename
 
-        self.table_style.append(
-            TableStyle(
-                [
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 12),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                    ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-                    ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 10),
-                    ('TOPPADDING', (0, 1), (-1, -1), 6),
-                    ('BOTTOMPADDING', (0, -1), (-1, -1), 6)
-                ]
-            )
-        )
-
-        self.addPageTemplates(
-            PageTemplate(
-                id='portrait',
-                pagesize=portrait(A4),
-                frames=[
-                    Frame(50, 50, A4[0] - 100, A4[1] - 100, id='portrait_frame')
-                ]
-            )
-        )
         self.addPageTemplates(
             PageTemplate(
                 id='landscape',
-                pagesize=landscape(A4),
+                pagesize=landscape(C10),
                 frames=[
-                    Frame(50, 50, A4[1] - 100, A4[0] - 100, id='landscape_frame')
+                    Frame(2, 2, C10[1] - 2, C10[0] - 2, id='landscape_frame')
                 ]
             )
         )
+
+        self.content = [
+            Paragraph("QC APPROVED", getSampleStyleSheet()["Normal"]),
+            Spacer(20, 4),
+            Paragraph(f'DATE: {datetime.now():%d/%m/%Y %H:%M}', self.content_style),
+        ]
+
+    @property
+    def content_style(self) -> StyleSheet1:
+        content_style = getSampleStyleSheet()["Normal"]
+        content_style.fontSize = 8
+        return content_style
+
+    def add_serial_number(self, serial: int) -> None:
+        self.content.append(Paragraph(f"SN: {serial}", self.content_style))
+
+    def add_versions(self, sw: str, hw: str) -> None:
+        self.content.append(Paragraph(f"SW: {sw} - HW: {hw}", self.content_style))
+
+    def add_type(self, drive: str) -> None:
+        self.content.append(Paragraph(f"TYPE: {drive}", self.content_style))
+
+    def add_cycles(self, cycles: str) -> None:
+        self.content.append(Paragraph(f"CYCLES: {cycles}", self.content_style))
+
+    def add_node_id(self, node_id: int) -> None:
+        self.content.append(Paragraph(f"ADDR: {node_id}", self.content_style))
+
+    def build_page(self) -> None:
+        """
+        Build a document (file) from content
+        """
+        content = self.content
+        try:
+            self.build(content)
+        except Exception as e:
+            logger.debug(f"Exception during file build: {e}")
