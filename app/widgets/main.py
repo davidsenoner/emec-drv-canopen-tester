@@ -31,25 +31,13 @@ class MainWindow(QMainWindow):
         logging.getLogger('canopen').setLevel(logging.ERROR)
         logging.getLogger('canopen.sdo.client').setLevel(logging.CRITICAL)
 
-        # Init default widgets
-        network_status_list = [
-            self._ui.lbl_can0_status,
-            self._ui.lbl_can1_status,
-            self._ui.lbl_can2_status,
-            self._ui.lbl_can3_Status
-        ]
-
-        for label in network_status_list:
-            label.setText("No connection")
-
         self.network_manager = NetworkManager()
 
-        if len(self.network_manager.network_list) > 0:
+        self._ui.lbl_detected_cahnnels.setText(
+            f"{len(self.network_manager.network_list)} channels"
+        )
 
-            # Print bus status
-            for label, network in enumerate(self.network_manager.network_list):
-                network_status_list[label].setText(network.bus.channel_info)
-
+        if len(self.network_manager.network_list) > 0:  # at least ne channel detected
             # Init Tables
             self.node_table = NodeTable(self._ui.tbl_node_list, self.network_manager.network_list)
 
