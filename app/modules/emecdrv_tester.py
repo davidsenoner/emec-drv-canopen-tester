@@ -27,8 +27,6 @@ MAX_TARGET_POSITION_SLEWING = 1900  # POSITIVE VALUE FOR CW MOVEMENT
 #  MIN AND MAX TIME FOR MOVEMENT
 MIN_MOVEMENT_TIME_LIFT = 20
 MAX_MOVEMENT_TIME_LIFT = 65
-MIN_MOVEMENT_TIME_SLEWING = 145
-MAX_MOVEMENT_TIME_SLEWING = 175
 MAX_MOVEMENT_TIME_ABSOLUTE = 500
 
 OD_MANUFACTURER_DEVICE_NAME = 0x1008
@@ -154,10 +152,6 @@ class EMECDrvTester(QTimer):
             self.timeout.connect(self.timeout_test)
             self.timeout.connect(self.timeout_stat)
 
-            # define min and max movement time
-            self.min_time = MIN_MOVEMENT_TIME_LIFT
-            self.max_time = MAX_MOVEMENT_TIME_LIFT
-
             self.min_target = MIN_TARGET_POSITION_LIFT
             self.max_target = MAX_TARGET_POSITION_LIFT
 
@@ -169,10 +163,6 @@ class EMECDrvTester(QTimer):
             self.timeout.connect(self.timeout_test)
             self.timeout.connect(self.timeout_stat)
 
-            # define min and max movement time
-            self.min_time = MIN_MOVEMENT_TIME_SLEWING  # minimum movement time in seconds
-            self.max_time = MAX_MOVEMENT_TIME_SLEWING  # maximum movement time in seconds
-
             self.min_target = MIN_TARGET_POSITION_SLEWING
             self.max_target = MAX_TARGET_POSITION_SLEWING
 
@@ -181,7 +171,6 @@ class EMECDrvTester(QTimer):
             self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
 
         logger.debug(f"EMECDrvTester created with node_id: {node.id}")
-        logger.debug(f'min_movement: {self.min_time}, max_movement: {self.max_time}')
 
     @property
     def max_error_current(self):
@@ -223,30 +212,6 @@ class EMECDrvTester(QTimer):
     @max_target.setter
     def max_target(self, target: int):
         self._max_target = target
-
-    @property
-    def min_time(self):
-        """
-        Minimum time that need to pass during a movement
-        :return:
-        """
-        return self._min_time
-
-    @min_time.setter
-    def min_time(self, min_t: int):
-        self._min_time = min_t
-
-    @property
-    def max_time(self):
-        """
-        Maximum time that can pass during a movement
-        :return:
-        """
-        return self._max_time
-
-    @max_time.setter
-    def max_time(self, max_t: int):
-        self._max_time = max_t
 
     @property
     def ccw_movements(self):
@@ -538,27 +503,15 @@ class EMECDrvTester(QTimer):
             # max position reached condition
             if (abs(self.max_target) - self.tolerance) <= self.actual_position:
                 if self.target_temp != self.min_target:
-                    # control min movement time
-                    if self.moving_time < self.min_time < self.elapsed_time:
-                        self.stop_test(f"Movement ({self.moving_time}s) time under limit of {self.min_time}s")
-                    else:
-                        self.goto_target_position(self.min_target)  # go to the new position
+                    self.goto_target_position(self.min_target)  # go to the new position
 
             # min position reached condition
             elif self.actual_position <= (abs(self.min_target) + self.tolerance):
                 if self.target_temp != self.max_target:
-                    # control min movement time
-                    if self.moving_time < self.min_time < self.elapsed_time:
-                        self.stop_test(f"Movement time ({self.moving_time}s) under limit of {self.min_time}s")
-                    else:
-                        self.goto_target_position(self.max_target)  # go to the new position
+                    self.goto_target_position(self.max_target)  # go to the new position
 
             # drive is moving condition
             else:
-                # Control max movement time
-                if self.moving_time > self.max_time:
-                    self.stop_test(f"Movement time ({self.moving_time}s) exceeded limit of {self.max_time}s")
-
                 self.moving_time = self.moving_time + 1  # increment timer during movement
 
         except Exception as e:
