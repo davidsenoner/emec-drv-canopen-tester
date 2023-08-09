@@ -1,25 +1,18 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'maincLcyms.ui'
+## Form generated from reading UI file 'mainuBIhVc.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.1
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PyQt5.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect,
-    QSize, QTime, QUrl, Qt)
-from PyQt5.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
-from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout,
-    QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QMainWindow, QSizePolicy, QSpinBox, QTableWidget,
-    QTableWidgetItem, QVBoxLayout, QWidget)
-from . resources_rc import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
+from .resources_rc import *
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -689,73 +682,28 @@ class Ui_MainWindow(object):
         self.verticalLayout_3 = QVBoxLayout(self.verticalFrame)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.label = QLabel(self.verticalFrame)
-        self.label.setObjectName(u"label")
+        self.lbl_logo = QLabel(self.verticalFrame)
+        self.lbl_logo.setObjectName(u"lbl_logo")
         sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy2)
-        self.label.setMaximumSize(QSize(100, 39))
-        self.label.setPixmap(QPixmap(u":/images/logo_emec.png"))
-        self.label.setScaledContents(True)
+        sizePolicy2.setHeightForWidth(self.lbl_logo.sizePolicy().hasHeightForWidth())
+        self.lbl_logo.setSizePolicy(sizePolicy2)
+        self.lbl_logo.setMaximumSize(QSize(100, 39))
+        self.lbl_logo.setPixmap(QPixmap(u":/images/logo_emec.png"))
+        self.lbl_logo.setScaledContents(True)
 
-        self.verticalLayout_3.addWidget(self.label)
+        self.verticalLayout_3.addWidget(self.lbl_logo)
 
         self.label_9 = QLabel(self.verticalFrame)
         self.label_9.setObjectName(u"label_9")
 
         self.verticalLayout_3.addWidget(self.label_9)
 
-        self.gridLayout = QGridLayout()
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(-1, 0, 0, 0)
-        self.lbl_can2_status = QLabel(self.verticalFrame)
-        self.lbl_can2_status.setObjectName(u"lbl_can2_status")
+        self.lbl_detected_cahnnels = QLabel(self.verticalFrame)
+        self.lbl_detected_cahnnels.setObjectName(u"lbl_detected_cahnnels")
 
-        self.gridLayout.addWidget(self.lbl_can2_status, 1, 3, 1, 1)
-
-        self.label_2 = QLabel(self.verticalFrame)
-        self.label_2.setObjectName(u"label_2")
-        sizePolicy2.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
-        self.label_2.setSizePolicy(sizePolicy2)
-
-        self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
-
-        self.label_4 = QLabel(self.verticalFrame)
-        self.label_4.setObjectName(u"label_4")
-        sizePolicy2.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
-        self.label_4.setSizePolicy(sizePolicy2)
-
-        self.gridLayout.addWidget(self.label_4, 1, 2, 1, 1)
-
-        self.label_5 = QLabel(self.verticalFrame)
-        self.label_5.setObjectName(u"label_5")
-
-        self.gridLayout.addWidget(self.label_5, 2, 2, 1, 1)
-
-        self.lbl_can3_Status = QLabel(self.verticalFrame)
-        self.lbl_can3_Status.setObjectName(u"lbl_can3_Status")
-
-        self.gridLayout.addWidget(self.lbl_can3_Status, 2, 3, 1, 1)
-
-        self.lbl_can0_status = QLabel(self.verticalFrame)
-        self.lbl_can0_status.setObjectName(u"lbl_can0_status")
-
-        self.gridLayout.addWidget(self.lbl_can0_status, 1, 1, 1, 1)
-
-        self.lbl_can1_status = QLabel(self.verticalFrame)
-        self.lbl_can1_status.setObjectName(u"lbl_can1_status")
-
-        self.gridLayout.addWidget(self.lbl_can1_status, 2, 1, 1, 1)
-
-        self.label_3 = QLabel(self.verticalFrame)
-        self.label_3.setObjectName(u"label_3")
-
-        self.gridLayout.addWidget(self.label_3, 2, 0, 1, 1)
-
-
-        self.verticalLayout_3.addLayout(self.gridLayout)
+        self.verticalLayout_3.addWidget(self.lbl_detected_cahnnels)
 
 
         self.horizontalLayout.addWidget(self.verticalFrame, 0, Qt.AlignTop)
@@ -840,16 +788,9 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EMEC Drive EOL Tester", None))
-        self.label.setText("")
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"<h4>Channels</h4>", None))
-        self.lbl_can2_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<b>CH0</b>", None))
-        self.label_4.setText(QCoreApplication.translate("MainWindow", u"<b>CH2</b>", None))
-        self.label_5.setText(QCoreApplication.translate("MainWindow", u"<b>CH3</b>", None))
-        self.lbl_can3_Status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lbl_can0_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.lbl_can1_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"<b>CH1</b>", None))
+        self.lbl_logo.setText("")
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"<h4>Detected channels</h4>", None))
+        self.lbl_detected_cahnnels.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"<h4>Min. software version</h4>", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"<b>Slewing:</b>", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"<h4>Max. current</h4>", None))

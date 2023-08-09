@@ -691,7 +691,7 @@ QPushButton:disabled {
                <number>0</number>
               </property>
               <item>
-               <widget class="QLabel" name="label">
+               <widget class="QLabel" name="lbl_logo">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -718,90 +718,16 @@ QPushButton:disabled {
               <item>
                <widget class="QLabel" name="label_9">
                 <property name="text">
-                 <string>&lt;h4&gt;Channels&lt;/h4&gt;</string>
+                 <string>&lt;h4&gt;Detected channels&lt;/h4&gt;</string>
                 </property>
                </widget>
               </item>
               <item>
-               <layout class="QGridLayout" name="gridLayout">
-                <property name="topMargin">
-                 <number>0</number>
+               <widget class="QLabel" name="lbl_detected_cahnnels">
+                <property name="text">
+                 <string>TextLabel</string>
                 </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item row="1" column="3">
-                 <widget class="QLabel" name="lbl_can2_status">
-                  <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_2">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>&lt;b&gt;CH0&lt;/b&gt;</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="2">
-                 <widget class="QLabel" name="label_4">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>&lt;b&gt;CH2&lt;/b&gt;</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="2">
-                 <widget class="QLabel" name="label_5">
-                  <property name="text">
-                   <string>&lt;b&gt;CH3&lt;/b&gt;</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="3">
-                 <widget class="QLabel" name="lbl_can3_Status">
-                  <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QLabel" name="lbl_can0_status">
-                  <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QLabel" name="lbl_can1_status">
-                  <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="0">
-                 <widget class="QLabel" name="label_3">
-                  <property name="text">
-                   <string>&lt;b&gt;CH1&lt;/b&gt;</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+               </widget>
               </item>
              </layout>
             </widget>

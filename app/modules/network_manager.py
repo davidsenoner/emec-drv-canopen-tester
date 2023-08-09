@@ -10,39 +10,22 @@ class NetworkManager:
     def __init__(self):
 
         self._network_list = []
+        baud = 125000  # baudrate
 
-        self.channels = {
-            'can0': {
-                'baud': 125000,
-                'bus_type': 'socketcan'
-            },
-            'can1': {
-                'baud': 125000,
-                'bus_type': 'socketcan'
-            },
-            'can2': {
-                'baud': 125000,
-                'bus_type': 'socketcan'
-            },
-            'can3': {
-                'baud': 125000,
-                'bus_type': 'socketcan'
-            }
-        }
+        # scan for max 16 channel and stop searching at first exception
+        for channel_id in range(16):
+            name = f"can{channel_id}"
 
-        for channel in self.channels:
             try:
-                baud = self.channels[channel]['baud']
-                bus_type = self.channels[channel]['bus_type']
+                self.init_channels(channel=name, baud=baud)
 
-                self.init_channels(channel=channel, baud=baud)
-
-                network = self.network_connect(channel=channel, bus_type=bus_type)
+                network = self.network_connect(channel=name, bus_type='socketcan')
                 if network is not None:
                     self.network_list.append(network)
+                    logger.debug(f"Socketcan Channel {name} (baud: {baud}) found and added to list")
 
             except Exception as e:
-                logger.debug(e)
+                break
 
     @property
     def network_list(self) -> list:
@@ -59,8 +42,4 @@ class NetworkManager:
     def network_connect(channel: str, bus_type: str):
         network = Network()
 
-        try:
-            return network.connect(channel=channel, bustype=bus_type)
-        except Exception as e:
-            logging.debug(f'Error during Network Init: {e}')
-            return None
+        return network.connect(channel=channel, bustype=bus_type)
