@@ -61,6 +61,16 @@ class MainWindow(QMainWindow):
         self._ui.spb_max_lift_current.valueChanged.connect(self.update_qsettings)
         self._ui.spb_max_slewing_current.valueChanged.connect(self.update_qsettings)
 
+        # init menuBar actions
+        def action_settings():
+            print("Action Settings pressed!")
+
+        def action_info():
+            print("Action General pressed!")
+
+        self._ui.actionSettings.triggered.connect(action_settings)
+        self._ui.actionGeneral.triggered.connect(action_info)
+
         self.show()
 
     def update_qsettings(self):
