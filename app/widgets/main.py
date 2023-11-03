@@ -6,6 +6,7 @@ from app.widgets.ui_main import Ui_MainWindow
 
 from app.widgets.node_table import NodeTable
 from app.modules.network_manager import NetworkManager
+from app.widgets.settings_dialog import SettingsDialog
 
 from PyQt5.QtCore import QSettings
 
@@ -63,7 +64,7 @@ class MainWindow(QMainWindow):
 
         # init menuBar actions
         def action_settings():
-            print("Action Settings pressed!")
+            settings_diag = SettingsDialog()
 
         def action_info():
             print("Action General pressed!")
