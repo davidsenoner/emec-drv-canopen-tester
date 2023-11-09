@@ -66,11 +66,7 @@ class MainWindow(QMainWindow):
         def action_settings():
             settings_diag = SettingsDialog()
 
-        def action_info():
-            print("Action General pressed!")
-
         self._ui.actionSettings.triggered.connect(action_settings)
-        self._ui.actionGeneral.triggered.connect(action_info)
 
         self.show()
 

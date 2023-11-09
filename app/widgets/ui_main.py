@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainorlFhc.ui'
+## Form generated from reading UI file 'mainklGitr.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -822,14 +822,10 @@ class Ui_MainWindow(object):
         self.menuBar.setGeometry(QRect(0, 0, 800, 26))
         self.menuEdit = QMenu(self.menuBar)
         self.menuEdit.setObjectName(u"menuEdit")
-        self.menuTest = QMenu(self.menuBar)
-        self.menuTest.setObjectName(u"menuTest")
         MainWindow.setMenuBar(self.menuBar)
 
         self.menuBar.addAction(self.menuEdit.menuAction())
-        self.menuBar.addAction(self.menuTest.menuAction())
         self.menuEdit.addAction(self.actionSettings)
-        self.menuTest.addAction(self.actionGeneral)
 
         self.retranslateUi(MainWindow)
 
@@ -850,6 +846,5 @@ class Ui_MainWindow(object):
         self.spb_max_lift_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.spb_max_slewing_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
-        self.menuTest.setTitle(QCoreApplication.translate("MainWindow", u"Test", None))
     # retranslateUi
 
