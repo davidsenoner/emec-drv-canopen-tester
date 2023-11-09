@@ -2,7 +2,8 @@ import logging
 import time
 from canopen import Network, BaseNode402
 
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox, QDialog
+from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox, \
+    QDialog
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer, QSettings
 from PyQt5.QtGui import QCursor, QColor, QBrush
 
@@ -10,7 +11,7 @@ from app.modules.emecdrv_tester import EMECDrvTester
 from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 from app.widgets.add_info_diag import AddInfoDialog
 from app.widgets.add_sn_diag import AddSNDialog
-from app.modules.test_report import TestReport
+from app.modules.test_report import Label, TestReportManager
 
 logger = logging.getLogger(__name__)
 
@@ -79,19 +80,23 @@ class NodeTableRow(EMECDrvTester):
     def comment(self, comment: str) -> None:
         self._comment = comment
 
-    def create_test_report(self):
+    def create_label(self):
         """
         Creates an instance of testreport adding device information to it
         :return:
         """
-        self._report = TestReport(f"/var/tmp/{self.serial_number}.pdf")
-        self._report.add_serial_number(self.serial_number)
-        self._report.add_versions(self.manufacturer_software_version, self.manufacturer_hardware_version)
+        logger.debug(f"Create Label for serial number {self.serial_number}")
+        self._report = Label(self.serial_number)
+        self._report.versions = (self.manufacturer_software_version, self.manufacturer_hardware_version)
+        self._report.node_id = self.node_id
 
-    def build_test_report(self):
-        if self._report is not None:
-            self._report.add_cycles(f"{self.cw_movements_temp}/{self.ccw_movements_temp}")  # add cycles from tmp
-            self._report.build_page()  # create the file
+        if self.node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+            self._report.type = "LIFT"
+        elif self.node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+            self._report.type = "SLEWING"
+
+    def get_label(self) -> Label:
+        return self._report
 
 
 class NodeTable(QObject):
@@ -106,6 +111,8 @@ class NodeTable(QObject):
         self.networks = networks
         self.table_rows = {}
         self._redraw_table = True
+
+        self.settings = QSettings("EMEC", "Tester")  # init QSettings
 
         _headers = [
             "Ch_Id",
@@ -133,6 +140,8 @@ class NodeTable(QObject):
         self.refresh_table_timer1 = QTimer()
         self.refresh_table_timer1.start(800)
         self.refresh_table_timer1.timeout.connect(self.draw_table)
+
+        self._report_manager = TestReportManager("/var/tmp/")
 
     @staticmethod
     def start_node(node_table_row: NodeTableRow):
@@ -186,11 +195,11 @@ class NodeTable(QObject):
                 continue
 
             # add new nodes if there are some
-            for node_id in network:
-                key = f'{channel}_{node_id}'
+            try:
+                for node_id in network:
+                    key = f'{channel}_{node_id}'
 
-                if key not in self.table_rows:
-                    try:
+                    if key not in self.table_rows:
                         # add table row
                         node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
                         node_table_row.test_timer_timeout.connect(self.draw_cyclic_info)
@@ -198,16 +207,23 @@ class NodeTable(QObject):
                         # add row to list
                         self.table_rows.update({key: node_table_row})
 
-                        # ask for serial number input
-                        dialog = AddSNDialog(channel=channel, node_id=node_id)
+                        sn_active = self.settings.value("sn_mnt_active", True, type=bool)
 
-                        # if a serial number has been assigned create testreport
-                        if dialog.serial_number:
+                        if sn_active:
+                            # ask for serial number input
+                            dialog = AddSNDialog(channel=channel, node_id=node_id)
                             node_table_row.serial_number = dialog.serial_number
-                            node_table_row.create_test_report()  # create testreport
+                        else:
+                            node_table_row.serial_number = 0
 
-                    except Exception as e:
-                        logger.debug(e)
+                        node_table_row.create_label()  # create testreport
+
+                        node_table_row.print_label_signal.connect(
+                            lambda label=node_table_row.get_label(): self._report_manager.add_label(label)
+                        )
+
+            except Exception as e:
+                logger.debug(e)
 
             # remove nodes if they aren't present anymore
             try:
@@ -223,9 +239,7 @@ class NodeTable(QObject):
 
                 # remove the keys
                 for key in key_to_remove:
-                    row = self.table_rows[key]
-
-                    row.build_test_report()  # create TestReport-PDF file with info
+                    row = self.table_rows[key]  # Type NodeTableRow()
 
                     self.pop_node(row)  # pop node from network
                     self.table_rows.pop(key)  # remove node row
@@ -286,8 +300,8 @@ class NodeTable(QObject):
 
             i += 1
 
-            #logger.debug(f"Mean current: {node_table_row.current_mean_value}")
-            #logger.debug(f"Std current: {node_table_row.current_std_value}")
+            # logger.debug(f"Mean current: {node_table_row.current_mean_value}")
+            # logger.debug(f"Std current: {node_table_row.current_std_value}")
 
     def draw_table(self):
 
@@ -416,6 +430,7 @@ class NodeTable(QObject):
         if not index.isValid():
             return
 
+        sn_active = self.settings.value("sn_mnt_active", True, type=bool)
         row = index.row()
 
         key = self.table_widget.item(row, 0).text()  # Column 0 have unique key for channel/node_id
@@ -427,7 +442,9 @@ class NodeTable(QObject):
         reset_action = menu.addAction("Reset device")
         info_action = menu.addAction("Info")
         add_info_action = menu.addAction("Add additional information")
-        add_serial_action = menu.addAction("Add serial number")
+
+        if sn_active:
+            add_serial_action = menu.addAction("Add serial number")
 
         action = menu.exec_(self.table_widget.mapToGlobal(pos))
 
@@ -443,13 +460,14 @@ class NodeTable(QObject):
             node_table_row.comment = dialog.comment
 
         # add serial number action to context menu
-        if action == add_serial_action:
-            dialog = AddSNDialog(
-                channel=node_table_row.channel,
-                node_id=node_table_row.node_id,
-                serial_number=node_table_row.serial_number
-            )
-            node_table_row.serial_number = dialog.serial_number
+        if sn_active:
+            if action == add_serial_action:
+                dialog = AddSNDialog(
+                    channel=node_table_row.channel,
+                    node_id=node_table_row.node_id,
+                    serial_number=node_table_row.serial_number
+                )
+                node_table_row.serial_number = dialog.serial_number
 
         # node info command from context menu
         if action == info_action:
@@ -552,14 +570,3 @@ class NodeTable(QObject):
 
         self._redraw_table = True
 
-    @staticmethod
-    def print_test_report(node_table_row: NodeTableRow):
-        # create a Report with filename=serial number
-        report = TestReport(f"/var/tmp/{node_table_row.serial_number}.pdf")
-
-        report.add_serial_number(node_table_row.serial_number)
-        report.add_sw_version(node_table_row.manufacturer_software_version)
-        report.add_node_id(node_table_row.node_id)
-        report.add_cycles(f"{node_table_row.cw_movements}/{node_table_row.ccw_movements}")
-
-        report.build_page()  # create the file
