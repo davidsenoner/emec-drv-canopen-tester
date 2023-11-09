@@ -6,6 +6,7 @@ from app.widgets.ui_main import Ui_MainWindow
 
 from app.widgets.node_table import NodeTable
 from app.modules.network_manager import NetworkManager
+from app.widgets.settings_dialog import SettingsDialog
 
 from PyQt5.QtCore import QSettings
 
@@ -24,7 +25,7 @@ class MainWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.showMaximized()
-        self.setWindowTitle("EMEC Drive End-Of-Line Tester v1.7.0")  # Window title bar
+        self.setWindowTitle("EMEC Drive End-Of-Line Tester v2.0.0")  # Window title bar
 
         # Init canopen logger
         logging.getLogger('can').setLevel(logging.ERROR)
@@ -60,6 +61,12 @@ class MainWindow(QMainWindow):
         self._ui.led_min_sw_ver_slewing.editingFinished.connect(self.update_qsettings)
         self._ui.spb_max_lift_current.valueChanged.connect(self.update_qsettings)
         self._ui.spb_max_slewing_current.valueChanged.connect(self.update_qsettings)
+
+        # init menuBar actions
+        def action_settings():
+            settings_diag = SettingsDialog()
+
+        self._ui.actionSettings.triggered.connect(action_settings)
 
         self.show()
 

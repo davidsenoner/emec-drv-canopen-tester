@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainuBIhVc.ui'
+## Form generated from reading UI file 'mainklGitr.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -12,7 +12,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from .resources_rc import *
+from . resources_rc import *
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -46,12 +46,44 @@ class Ui_MainWindow(object):
 "	margin: 0px;\n"
 "}\n"
 "\n"
+"QMenuBar {\n"
+"    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"                                      stop:0 darkgray, stop:1  rgb(40, 44, 52));\n"
+"    spacing: 3px; /* spacing b"
+                        "etween menu bar items */\n"
+"	color: white;\n"
+"}\n"
+"\n"
+"QMenuBar::item {\n"
+"    padding: 4px;\n"
+"    background: transparent;\n"
+"}\n"
+"\n"
+"QMenuBar::item:selected { /* when selected using mouse or keyboard */\n"
+"    background: #a8a8a8;\n"
+"}\n"
+"\n"
+"QMenuBar::item:pressed {\n"
+"    background: #888888;\n"
+"}\n"
+"\n"
+"QMenu {\n"
+"	background-color: white;\n"
+"	border: 1px solid rgb(33, 37, 43);\n"
+"	color:  rgb(33, 37, 43);\n"
+"	margin: 4px;\n"
+"}\n"
+"\n"
+"QMenu::Item {\n"
+"	padding: 4px 25px 4px 20px;\n"
+"	border: 1px solid transparent; \n"
+"}\n"
+"\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "Bg App */\n"
 "#bgApp {	\n"
 "	background-color: rgb(40, 44, 52);\n"
-"	border: 1px solid rgb("
-                        "44, 49, 58);\n"
+"	border: 1px solid rgb(44, 49, 58);\n"
 "}\n"
 "\n"
 "QProgressBar {\n"
@@ -59,7 +91,8 @@ class Ui_MainWindow(object):
 "    border-left: 2px solid rgb(52, 59, 72);\n"
 "    border-right: 0px solid rgb(52, 59, 72);\n"
 "    border-bottom: 2px solid rgb(52, 59, 72);\n"
-"    background-color: rgb(33, 37, 43);\n"
+"    background-colo"
+                        "r: rgb(33, 37, 43);\n"
 "    text-align: right;\n"
 "    margin-right: 2em;\n"
 "}\n"
@@ -89,11 +122,11 @@ class Ui_MainWindow(object):
 "#extraLabel { color: rgb(255, 255, 255); }\n"
 "\n"
 "/* Btn Close */\n"
-"#extraCloseColumnBtn { background-color: rgba(255, 255, 255, 0); border: non"
-                        "e;  border-radius: 5px; }\n"
+"#extraCloseColumnBtn { background-color: rgba(255, 255, 255, 0); border: none;  border-radius: 5px; }\n"
 "#extraCloseColumnBtn:hover { background-color: rgb(196, 161, 249); border-style: solid; border-radius: 4px; }\n"
 "#extraCloseColumnBtn:pressed { background-color: rgb(180, 141, 238); border-style: solid; border-radius: 4px; }\n"
-"\n"
+""
+                        "\n"
 "/* Extra Content */\n"
 "#extraContent{\n"
 "	border-top: 3px solid rgb(40, 44, 52);\n"
@@ -120,8 +153,7 @@ class Ui_MainWindow(object):
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "Content App */\n"
 "#contentTopBg{\n"
-"	background-color: rgb("
-                        "33, 37, 43);\n"
+"	background-color: rgb(33, 37, 43);\n"
 "}\n"
 "#contentBottom{\n"
 "	border-top: 3px solid rgb(44, 49, 58);\n"
@@ -129,7 +161,8 @@ class Ui_MainWindow(object):
 "\n"
 "/* Top Buttons */\n"
 "#rightButtons .QPushButton { background-color: rgba(255, 255, 255, 0); border: none;  border-radius: 5px; }\n"
-"#rightButtons .QPushButton:hover { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
+"#rightButtons .QPushButton:h"
+                        "over { background-color: rgb(44, 49, 57); border-style: solid; border-radius: 4px; }\n"
 "#rightButtons .QPushButton:pressed { background-color: rgb(23, 26, 30); border-style: solid; border-radius: 4px; }\n"
 "\n"
 "/* Theme Settings */\n"
@@ -147,8 +180,7 @@ class Ui_MainWindow(object):
 "/* MENUS */\n"
 "#contentSettings .QPushButton {\n"
 "	background-position: left center;\n"
-"    backgro"
-                        "und-repeat: no-repeat;\n"
+"    background-repeat: no-repeat;\n"
 "	border: none;\n"
 "	border-left: 22px solid transparent;\n"
 "	background-color:transparent;\n"
@@ -157,7 +189,8 @@ class Ui_MainWindow(object):
 "}\n"
 "#contentSettings .QPushButton:hover {\n"
 "	background-color: rgb(40, 44, 52);\n"
-"}\n"
+"}"
+                        "\n"
 "#contentSettings .QPushButton:pressed {\n"
 "	background-color: rgb(37, 183, 188);\n"
 "	color: rgb(255, 255, 255);\n"
@@ -184,8 +217,7 @@ class Ui_MainWindow(object):
 "	padding-right: 10px;\n"
 "	border-top-left-radius: 5px;\n"
 "    border-top-right-radius: 5px;\n"
-""
-                        "	margin-bottom: -3px;\n"
+"	margin-bottom: -3px;\n"
 "}\n"
 "\n"
 "QTabBar::tab:selected {\n"
@@ -195,7 +227,8 @@ class Ui_MainWindow(object):
 "	padding-left: 10px;\n"
 "	padding-right: 10px;\n"
 "	border-top-left-radius: 5px;\n"
-"	border-top-right-radius: 5px;\n"
+"	border-top-right-radius: "
+                        "5px;\n"
 "  	border: 2px solid rgb(33, 37, 43);\n"
 "}\n"
 "\n"
@@ -222,15 +255,15 @@ class Ui_MainWindow(object):
 "	background-position: center;\n"
 "	background-repeat: no-reperat;\n"
 " }\n"
-"QDoubleSpinBox QAbstract"
-                        "ItemView {\n"
+"QDoubleSpinBox QAbstractItemView {\n"
 "	color:  rgb(37, 183, 188);\n"
 "	background-color: rgb(33, 37, 43);\n"
 "	padding: 10px;\n"
 "	selection-background-color: rgb(39, 44, 54);\n"
 "}\n"
 "\n"
-"/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
+"/* //////////////////////////////////////////////////////////////////////////////////////"
+                        "///////////\n"
 "QTreeView */\n"
 "QTreeView {\n"
 "	background-color: rgb(44, 49, 60);\n"
@@ -259,8 +292,7 @@ class Ui_MainWindow(object):
 "\n"
 "QHeaderView {\n"
 "	border-top-left-radius: 5px;\n"
-""
-                        "    border-top-right-radius: 5px;\n"
+"    border-top-right-radius: 5px;\n"
 "}\n"
 "\n"
 "QHeaderView::section{\n"
@@ -269,7 +301,8 @@ class Ui_MainWindow(object):
 "	border: 1px solid rgb(44, 49, 58);\n"
 "	border-style: none;\n"
 "    border-bottom: 1px solid rgb(44, 49, 60);\n"
-"    border-right: 1px solid rgb(44, 49, 60);\n"
+"    "
+                        "border-right: 1px solid rgb(44, 49, 60);\n"
 "}\n"
 "QTableWidget::horizontalHeader {\n"
 "	background-color: rgb(33, 37, 43);\n"
@@ -297,8 +330,7 @@ class Ui_MainWindow(object):
 "}\n"
 "QTableView::item{\n"
 "	border-color: rgb(44, 49, 60);\n"
-"	padding-left: 5px;"
-                        "\n"
+"	padding-left: 5px;\n"
 "	padding-right: 5px;\n"
 "	gridline-color: rgb(44, 49, 60);\n"
 "}\n"
@@ -308,7 +340,8 @@ class Ui_MainWindow(object):
 "QTableView::horizontalHeader {\n"
 "	background-color: rgb(33, 37, 43);\n"
 "}\n"
-"QTableView::indicator {\n"
+"QTableView::indicator "
+                        "{\n"
 "    border: 3px solid rgb(52, 59, 72);\n"
 "	width: 15px;\n"
 "	height: 15px;\n"
@@ -332,8 +365,7 @@ class Ui_MainWindow(object):
 "	border: 2px solid rgb(33, 37, 43);\n"
 "	padding-left: 10px;\n"
 "	selection-color: rgb(255, 255, 255);\n"
-"	selection-background-color: rgba"
-                        "(37, 183, 188, 0.5);\n"
+"	selection-background-color: rgba(37, 183, 188, 0.5);\n"
 "}\n"
 "QLineEdit:hover {\n"
 "	border: 2px solid rgb(64, 71, 88);\n"
@@ -342,7 +374,8 @@ class Ui_MainWindow(object):
 "	border: 2px solid rgb(91, 101, 124);\n"
 "}\n"
 "\n"
-"/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
+"/* ///////////////////////////////////////////////////////////////////////////////"
+                        "//////////////////\n"
 "LineEdit */\n"
 "QTextEdit {\n"
 "	selection-color: rgb(255, 255, 255);\n"
@@ -368,8 +401,7 @@ class Ui_MainWindow(object):
 "	border: 2px solid rgb(64, 71, 88);\n"
 "}\n"
 "QPlainTextEdit:focus {\n"
-"	border: 2px solid rgb(9"
-                        "1, 101, 124);\n"
+"	border: 2px solid rgb(91, 101, 124);\n"
 "}\n"
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
@@ -378,7 +410,8 @@ class Ui_MainWindow(object):
 "    border: none;\n"
 "    background: rgb(52, 59, 72);\n"
 "    height: 8px;\n"
-"    margin: 0px 21px 0 21px;\n"
+""
+                        "    margin: 0px 21px 0 21px;\n"
 "	border-radius: 0px;\n"
 "}\n"
 "QScrollBar::handle:horizontal {\n"
@@ -404,8 +437,7 @@ class Ui_MainWindow(object):
 "    subcontrol-position: left;\n"
 "    subcontrol-origin: margin;\n"
 "}\n"
-"QScrollBar::up-arrow:horizontal,"
-                        " QScrollBar::down-arrow:horizontal\n"
+"QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal\n"
 "{\n"
 "     background: none;\n"
 "}\n"
@@ -415,7 +447,8 @@ class Ui_MainWindow(object):
 "}\n"
 " QScrollBar:vertical {\n"
 "	border: none;\n"
-"    background: rgb(52, 59, 72);\n"
+"    background: rgb(52, 59, "
+                        "72);\n"
 "    width: 8px;\n"
 "    margin: 21px 0 21px 0;\n"
 "	border-radius: 0px;\n"
@@ -443,8 +476,7 @@ class Ui_MainWindow(object):
 "     subcontrol-position: top;\n"
 "     subcontrol-origin: margin;\n"
 " }\n"
-""
-                        " QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {\n"
+" QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {\n"
 "     background: none;\n"
 " }\n"
 "\n"
@@ -452,7 +484,8 @@ class Ui_MainWindow(object):
 "     background: none;\n"
 " }\n"
 "\n"
-"/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
+"/* /////////////////////////////////////////"
+                        "////////////////////////////////////////////////////////\n"
 "CheckBox */\n"
 "QCheckBox::indicator {\n"
 "    border: 3px solid rgb(52, 59, 72);\n"
@@ -476,8 +509,7 @@ class Ui_MainWindow(object):
 "    border: 3px solid rgb(52, 59, 72);\n"
 "	width: 15px;\n"
 "	height: 15px;\n"
-"	border-"
-                        "radius: 10px;\n"
+"	border-radius: 10px;\n"
 "    background: rgb(44, 49, 60);\n"
 "}\n"
 "QRadioButton::indicator:hover {\n"
@@ -485,7 +517,8 @@ class Ui_MainWindow(object):
 "}\n"
 "QRadioButton::indicator:checked {\n"
 "    background: 3px solid rgb(94, 106, 130);\n"
-"	border: 3px solid rgb(52, 59, 72);\n"
+"	border: 3px solid rgb(52, "
+                        "59, 72);\n"
 "}\n"
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
@@ -511,8 +544,7 @@ class Ui_MainWindow(object):
 "	border-bottom-right-radius: 3px;\n"
 "	background-image: url(:/icons/cil-arrow-bottom.png);\n"
 "	background-position: center;\n"
-""
-                        "	background-repeat: no-reperat;\n"
+"	background-repeat: no-reperat;\n"
 " }\n"
 "QComboBox QAbstractItemView {\n"
 "	color:  rgb(37, 183, 188);\n"
@@ -521,7 +553,8 @@ class Ui_MainWindow(object):
 "	selection-background-color: rgb(39, 44, 54);\n"
 "}\n"
 "\n"
-"/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
+"/* ///////////////////////"
+                        "//////////////////////////////////////////////////////////////////////////\n"
 "ComboBox */\n"
 "QSpinBox{\n"
 "	background-color: rgb(27, 29, 35);\n"
@@ -546,15 +579,15 @@ class Ui_MainWindow(object):
 "	background-position: center;\n"
 "	background-repeat: no-reperat;\n"
 " }\n"
-"QSpinBox Q"
-                        "AbstractItemView {\n"
+"QSpinBox QAbstractItemView {\n"
 "	color:  rgb(37, 183, 188);	\n"
 "	background-color: rgb(33, 37, 43);\n"
 "	padding: 10px;\n"
 "	selection-background-color: rgb(39, 44, 54);\n"
 "}\n"
 "\n"
-"/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
+"/* ////////////////////////////////////////////////////////////////////////////"
+                        "/////////////////////\n"
 "Sliders */\n"
 "QSlider::groove:horizontal {\n"
 "    border-radius: 5px;\n"
@@ -584,8 +617,7 @@ class Ui_MainWindow(object):
 "    border-radius: 5px;\n"
 "    width: 20px;\n"
 "    margin: 0px;\n"
-"	background-c"
-                        "olor: rgb(52, 59, 72);\n"
+"	background-color: rgb(52, 59, 72);\n"
 "}\n"
 "QSlider::groove:vertical:hover {\n"
 "	background-color: rgb(55, 62, 76);\n"
@@ -595,7 +627,8 @@ class Ui_MainWindow(object):
 "	border: none;\n"
 "    height: 20px;\n"
 "    width: 15px;\n"
-"    margin: 0px;\n"
+"  "
+                        "  margin: 0px;\n"
 "	border-radius: 5px;\n"
 "}\n"
 "QSlider::handle:vertical:hover {\n"
@@ -620,8 +653,7 @@ class Ui_MainWindow(object):
 "	background-color: rgb(52, 58, 71);\n"
 "}\n"
 "\n"
-"/*////////////////////////////////////////////////////////////////////////////////////////////////"
-                        "//\n"
+"/*//////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "QGroupBox*/\n"
 "QGroupBox {\n"
 "    color: rgb(90, 102, 125);\n"
@@ -630,7 +662,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
-"Button */\n"
+"Bu"
+                        "tton */\n"
 "QPushButton {\n"
 "	border: 2px solid rgb(52, 59, 72);\n"
 "	border-radius: 5px;	\n"
@@ -651,6 +684,10 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "")
+        self.actionGeneral = QAction(MainWindow)
+        self.actionGeneral.setObjectName(u"actionGeneral")
+        self.actionSettings = QAction(MainWindow)
+        self.actionSettings.setObjectName(u"actionSettings")
         self.bgApp = QWidget(MainWindow)
         self.bgApp.setObjectName(u"bgApp")
         self.bgApp.setStyleSheet(u"")
@@ -780,6 +817,15 @@ class Ui_MainWindow(object):
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.bgApp)
+        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar.setObjectName(u"menuBar")
+        self.menuBar.setGeometry(QRect(0, 0, 800, 26))
+        self.menuEdit = QMenu(self.menuBar)
+        self.menuEdit.setObjectName(u"menuEdit")
+        MainWindow.setMenuBar(self.menuBar)
+
+        self.menuBar.addAction(self.menuEdit.menuAction())
+        self.menuEdit.addAction(self.actionSettings)
 
         self.retranslateUi(MainWindow)
 
@@ -788,6 +834,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EMEC Drive EOL Tester", None))
+        self.actionGeneral.setText(QCoreApplication.translate("MainWindow", u"General", None))
+        self.actionSettings.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.lbl_logo.setText("")
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"<h4>Detected channels</h4>", None))
         self.lbl_detected_cahnnels.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
@@ -797,5 +845,6 @@ class Ui_MainWindow(object):
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"<b>Lift:</b>", None))
         self.spb_max_lift_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.spb_max_slewing_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
+        self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
     # retranslateUi
 

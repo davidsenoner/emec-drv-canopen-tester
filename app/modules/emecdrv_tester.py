@@ -85,13 +85,16 @@ CCW = 2
 
 class EMECDrvTester(QTimer):
     test_timer_timeout = pyqtSignal()
+    print_label_signal = pyqtSignal()
 
     def __init__(self, node: BaseNode402):
         super().__init__()
 
+        self.label_print_timeout = None
         self.not_moving_counter = 0  # counter for detection of no movement error
         self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = None
+        self.label_printed = False  # status bit True=Label already printed
         self.node = node
 
         self.moving_time = 0
@@ -467,8 +470,8 @@ class EMECDrvTester(QTimer):
                 self.stop_test(f"Current limit exceeded (Imean= {self.current_mean_value} mA)")
 
             # check if error from CANOpen
-            #if self.node.state == 'FAULT':
-                #self.stop_test("CANOpen error: " + self.get_device_error_message())
+            # if self.node.state == 'FAULT':
+            # self.stop_test("CANOpen error: " + self.get_device_error_message())
 
             # check if drive is moving
             if self.actual_position_temp == self.actual_position:  # is not moving??
@@ -514,6 +517,11 @@ class EMECDrvTester(QTimer):
             else:
                 self.moving_time = self.moving_time + 1  # increment timer during movement
 
+            # print after timeout if not already done
+            if self.elapsed_time > self.label_print_timeout and not self.label_printed:
+                self.print_label_signal.emit()
+                self.label_printed = True
+
         except Exception as e:
             logger.debug(f'Exception during testing routine: {e}')
             self.stop()
@@ -532,6 +540,9 @@ class EMECDrvTester(QTimer):
 
                 elif self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
                     self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
+
+                # at every start take setting of label printer timer
+                self.label_print_timeout = int(self.settings.value("label_print_timer", 60))
 
                 # Init target first time min or max depending on actual position
                 mid = (self.max_target - self.min_target) / 2  # get mid-position

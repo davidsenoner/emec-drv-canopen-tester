@@ -41,6 +41,38 @@ QToolTip {
 	margin: 0px;
 }
 
+QMenuBar {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                      stop:0 darkgray, stop:1  rgb(40, 44, 52));
+    spacing: 3px; /* spacing between menu bar items */
+	color: white;
+}
+
+QMenuBar::item {
+    padding: 4px;
+    background: transparent;
+}
+
+QMenuBar::item:selected { /* when selected using mouse or keyboard */
+    background: #a8a8a8;
+}
+
+QMenuBar::item:pressed {
+    background: #888888;
+}
+
+QMenu {
+	background-color: white;
+	border: 1px solid rgb(33, 37, 43);
+	color:  rgb(33, 37, 43);
+	margin: 4px;
+}
+
+QMenu::Item {
+	padding: 4px 25px 4px 20px;
+	border: 1px solid transparent; 
+}
+
 /* /////////////////////////////////////////////////////////////////////////////////////////////////
 Bg App */
 #bgApp {	
@@ -841,6 +873,33 @@ QPushButton:disabled {
     </item>
    </layout>
   </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionSettings"/>
+   </widget>
+   <addaction name="menuEdit"/>
+  </widget>
+  <action name="actionGeneral">
+   <property name="text">
+    <string>General</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../resources/images/resources.qrc"/>
