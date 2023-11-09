@@ -180,11 +180,13 @@ class NodeTable(QObject):
     def add_node(network: Network, node_id: int):
         # Create node from ID
         try:
+            eds = 'app/resources/eds/emecdrv5.eds'
             # Add new node to network
-            network.add_node(BaseNode402(node_id, 'app/resources/eds/emecdrv5.eds'))
+            network.add_node(BaseNode402(node_id, eds))
             time.sleep(0.05)
 
             logging.debug(f'Node ID {node_id} added to network')
+            logging.debug(f"EDS file loaded {eds}")
         except Exception as e:
             logger.debug(f'Error when adding node to network: {e}')
 
