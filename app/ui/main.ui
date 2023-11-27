@@ -768,13 +768,6 @@ QPushButton:disabled {
          </item>
          <item>
           <layout class="QGridLayout" name="gridLayout_3">
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>&lt;h4&gt;Min. software version&lt;/h4&gt;</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="3">
             <widget class="QLineEdit" name="led_min_sw_ver_lift">
              <property name="minimumSize">
@@ -783,35 +776,11 @@ QPushButton:disabled {
                <height>30</height>
               </size>
              </property>
-             <property name="maxLength">
-              <number>20</number>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>&lt;b&gt;Slewing:&lt;/b&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="led_min_sw_ver_slewing">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>30</height>
-              </size>
+             <property name="focusPolicy">
+              <enum>Qt::StrongFocus</enum>
              </property>
              <property name="maxLength">
               <number>20</number>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>&lt;h4&gt;Max. current&lt;/h4&gt;</string>
              </property>
             </widget>
            </item>
@@ -819,19 +788,6 @@ QPushButton:disabled {
             <widget class="QLabel" name="label_8">
              <property name="text">
               <string>&lt;b&gt;Lift:&lt;/b&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QSpinBox" name="spb_max_lift_current">
-             <property name="suffix">
-              <string> mA</string>
-             </property>
-             <property name="maximum">
-              <number>3000</number>
-             </property>
-             <property name="value">
-              <number>0</number>
              </property>
             </widget>
            </item>
@@ -848,23 +804,104 @@ QPushButton:disabled {
              </property>
             </widget>
            </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>&lt;b&gt;Slewing:&lt;/b&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>&lt;h4&gt;Max. current&lt;/h4&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="led_min_sw_ver_slewing">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::StrongFocus</enum>
+             </property>
+             <property name="maxLength">
+              <number>20</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>&lt;h4&gt;Min. software version&lt;/h4&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QSpinBox" name="spb_max_lift_current">
+             <property name="suffix">
+              <string> mA</string>
+             </property>
+             <property name="maximum">
+              <number>3000</number>
+             </property>
+             <property name="value">
+              <number>0</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="led_print_label_with_serial">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="maxLength">
+              <number>20</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Print label with SN:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="3">
+            <widget class="QLabel" name="lbl_print_lbl_detection_status">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
-          <widget class="QTableWidget" name="tbl_node_list">
-           <property name="editTriggers">
-            <set>QAbstractItemView::EditKeyPressed</set>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::NoSelection</enum>
-           </property>
-           <property name="selectionBehavior">
-            <enum>QAbstractItemView::SelectRows</enum>
-           </property>
-           <attribute name="verticalHeaderVisible">
-            <bool>false</bool>
-           </attribute>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QTableWidget" name="tbl_node_list">
+             <property name="editTriggers">
+              <set>QAbstractItemView::EditKeyPressed</set>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::NoSelection</enum>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </widget>
@@ -884,7 +921,7 @@ QPushButton:disabled {
    </property>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
-     <string>Edit</string>
+     <string>Label Printer</string>
     </property>
     <addaction name="actionSettings"/>
    </widget>

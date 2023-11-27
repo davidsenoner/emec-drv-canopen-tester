@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainklGitr.ui'
+## Form generated from reading UI file 'mainxBFVBI.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -750,46 +750,18 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3 = QGridLayout()
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.label_6 = QLabel(self.gridFrame)
-        self.label_6.setObjectName(u"label_6")
-
-        self.gridLayout_3.addWidget(self.label_6, 1, 0, 1, 1)
-
         self.led_min_sw_ver_lift = QLineEdit(self.gridFrame)
         self.led_min_sw_ver_lift.setObjectName(u"led_min_sw_ver_lift")
         self.led_min_sw_ver_lift.setMinimumSize(QSize(0, 30))
+        self.led_min_sw_ver_lift.setFocusPolicy(Qt.StrongFocus)
         self.led_min_sw_ver_lift.setMaxLength(20)
 
         self.gridLayout_3.addWidget(self.led_min_sw_ver_lift, 1, 3, 1, 1)
-
-        self.label_7 = QLabel(self.gridFrame)
-        self.label_7.setObjectName(u"label_7")
-
-        self.gridLayout_3.addWidget(self.label_7, 0, 1, 1, 1)
-
-        self.led_min_sw_ver_slewing = QLineEdit(self.gridFrame)
-        self.led_min_sw_ver_slewing.setObjectName(u"led_min_sw_ver_slewing")
-        self.led_min_sw_ver_slewing.setMinimumSize(QSize(0, 30))
-        self.led_min_sw_ver_slewing.setMaxLength(20)
-
-        self.gridLayout_3.addWidget(self.led_min_sw_ver_slewing, 1, 1, 1, 1)
-
-        self.label_10 = QLabel(self.gridFrame)
-        self.label_10.setObjectName(u"label_10")
-
-        self.gridLayout_3.addWidget(self.label_10, 2, 0, 1, 1)
 
         self.label_8 = QLabel(self.gridFrame)
         self.label_8.setObjectName(u"label_8")
 
         self.gridLayout_3.addWidget(self.label_8, 0, 3, 1, 1)
-
-        self.spb_max_lift_current = QSpinBox(self.gridFrame)
-        self.spb_max_lift_current.setObjectName(u"spb_max_lift_current")
-        self.spb_max_lift_current.setMaximum(3000)
-        self.spb_max_lift_current.setValue(0)
-
-        self.gridLayout_3.addWidget(self.spb_max_lift_current, 2, 3, 1, 1)
 
         self.spb_max_slewing_current = QSpinBox(self.gridFrame)
         self.spb_max_slewing_current.setObjectName(u"spb_max_slewing_current")
@@ -798,9 +770,58 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.spb_max_slewing_current, 2, 1, 1, 1)
 
+        self.label_7 = QLabel(self.gridFrame)
+        self.label_7.setObjectName(u"label_7")
+
+        self.gridLayout_3.addWidget(self.label_7, 0, 1, 1, 1)
+
+        self.label_10 = QLabel(self.gridFrame)
+        self.label_10.setObjectName(u"label_10")
+
+        self.gridLayout_3.addWidget(self.label_10, 2, 0, 1, 1)
+
+        self.led_min_sw_ver_slewing = QLineEdit(self.gridFrame)
+        self.led_min_sw_ver_slewing.setObjectName(u"led_min_sw_ver_slewing")
+        self.led_min_sw_ver_slewing.setMinimumSize(QSize(0, 30))
+        self.led_min_sw_ver_slewing.setFocusPolicy(Qt.StrongFocus)
+        self.led_min_sw_ver_slewing.setMaxLength(20)
+
+        self.gridLayout_3.addWidget(self.led_min_sw_ver_slewing, 1, 1, 1, 1)
+
+        self.label_6 = QLabel(self.gridFrame)
+        self.label_6.setObjectName(u"label_6")
+
+        self.gridLayout_3.addWidget(self.label_6, 1, 0, 1, 1)
+
+        self.spb_max_lift_current = QSpinBox(self.gridFrame)
+        self.spb_max_lift_current.setObjectName(u"spb_max_lift_current")
+        self.spb_max_lift_current.setMaximum(3000)
+        self.spb_max_lift_current.setValue(0)
+
+        self.gridLayout_3.addWidget(self.spb_max_lift_current, 2, 3, 1, 1)
+
+        self.led_print_label_with_serial = QLineEdit(self.gridFrame)
+        self.led_print_label_with_serial.setObjectName(u"led_print_label_with_serial")
+        self.led_print_label_with_serial.setMinimumSize(QSize(0, 30))
+        self.led_print_label_with_serial.setMaxLength(20)
+
+        self.gridLayout_3.addWidget(self.led_print_label_with_serial, 3, 1, 1, 1)
+
+        self.label = QLabel(self.gridFrame)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout_3.addWidget(self.label, 3, 0, 1, 1)
+
+        self.lbl_print_lbl_detection_status = QLabel(self.gridFrame)
+        self.lbl_print_lbl_detection_status.setObjectName(u"lbl_print_lbl_detection_status")
+
+        self.gridLayout_3.addWidget(self.lbl_print_lbl_detection_status, 3, 3, 1, 1)
+
 
         self.verticalLayout_2.addLayout(self.gridLayout_3)
 
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.tbl_node_list = QTableWidget(self.gridFrame)
         self.tbl_node_list.setObjectName(u"tbl_node_list")
         self.tbl_node_list.setEditTriggers(QAbstractItemView.EditKeyPressed)
@@ -808,7 +829,10 @@ class Ui_MainWindow(object):
         self.tbl_node_list.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tbl_node_list.verticalHeader().setVisible(False)
 
-        self.verticalLayout_2.addWidget(self.tbl_node_list)
+        self.horizontalLayout_2.addWidget(self.tbl_node_list)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
 
         self.verticalLayout.addWidget(self.gridFrame)
@@ -839,12 +863,14 @@ class Ui_MainWindow(object):
         self.lbl_logo.setText("")
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"<h4>Detected channels</h4>", None))
         self.lbl_detected_cahnnels.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
-        self.label_6.setText(QCoreApplication.translate("MainWindow", u"<h4>Min. software version</h4>", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"<b>Lift:</b>", None))
+        self.spb_max_slewing_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"<b>Slewing:</b>", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"<h4>Max. current</h4>", None))
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"<b>Lift:</b>", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindow", u"<h4>Min. software version</h4>", None))
         self.spb_max_lift_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
-        self.spb_max_slewing_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
-        self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-weight:600;\">Print label with SN:</span></p></body></html>", None))
+        self.lbl_print_lbl_detection_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Label Printer", None))
     # retranslateUi
 

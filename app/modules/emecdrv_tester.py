@@ -85,7 +85,7 @@ CCW = 2
 
 class EMECDrvTester(QTimer):
     test_timer_timeout = pyqtSignal()
-    print_label_signal = pyqtSignal()
+    generate_label_signal = pyqtSignal()
 
     def __init__(self, node: BaseNode402):
         super().__init__()
@@ -517,9 +517,9 @@ class EMECDrvTester(QTimer):
             else:
                 self.moving_time = self.moving_time + 1  # increment timer during movement
 
-            # print after timeout if not already done
-            if self.elapsed_time > self.label_print_timeout and not self.label_printed:
-                self.print_label_signal.emit()
+            # generate signal for printing/generating a label
+            if not self.label_printed and self.elapsed_time > self.label_print_timeout:
+                self.generate_label_signal.emit()
                 self.label_printed = True
 
         except Exception as e:
