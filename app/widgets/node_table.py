@@ -1,5 +1,6 @@
 import logging
 import time
+import platform
 from canopen import Network, BaseNode402
 
 from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox, \
@@ -11,12 +12,14 @@ from app.modules.emecdrv_tester import EMECDrvTester
 from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 from app.widgets.add_info_diag import AddInfoDialog
 from app.widgets.add_sn_diag import AddSNDialog
-from app.modules.test_report import Label, TestReportManager
+from app.modules.test_report import Label, TestReportManager, keep_latest_files
 
 logger = logging.getLogger(__name__)
 
 
 class NodeTableRow(EMECDrvTester):
+    label_present_signal = pyqtSignal(Label)
+
     def __init__(self, network: Network, channel: int, node: BaseNode402):
         super().__init__(node)
 
@@ -27,6 +30,8 @@ class NodeTableRow(EMECDrvTester):
         self._customer = ""
         self._comment = ""
         self._report = None
+
+        self.generate_label_signal.connect(self.on_label_present)
 
     @property
     def network(self) -> Network:
@@ -80,23 +85,23 @@ class NodeTableRow(EMECDrvTester):
     def comment(self, comment: str) -> None:
         self._comment = comment
 
-    def create_label(self):
+    def on_label_present(self):
         """
-        Creates an instance of testreport adding device information to it
+        Create a label and send a signal passing the label
+        This method should be connected to a singnal (es. timeout signal)
         :return:
         """
         logger.debug(f"Create Label for serial number {self.serial_number}")
-        self._report = Label(self.serial_number)
-        self._report.versions = (self.manufacturer_software_version, self.manufacturer_hardware_version)
-        self._report.node_id = self.node_id
+        label = Label(self.serial_number)
+        label.node_id = self.node_id
+        label.mean_current = self.current_mean_value
 
         if self.node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
-            self._report.type = "LIFT"
+            label.type = "LIFT"
         elif self.node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
-            self._report.type = "SLEWING"
+            label.type = "SLEWING"
 
-    def get_label(self) -> Label:
-        return self._report
+        self.label_present_signal.emit(label)
 
 
 class NodeTable(QObject):
@@ -141,7 +146,30 @@ class NodeTable(QObject):
         self.refresh_table_timer1.start(800)
         self.refresh_table_timer1.timeout.connect(self.draw_table)
 
-        self._report_manager = TestReportManager("/var/tmp/")
+        layout = {
+            "columns": self.settings.value("label_paper_columns", 2, type=int),
+            "column_width": self.settings.value("label_column_width", 60, type=int),
+            "column_height": self.settings.value("label_column_height", 30, type=int),
+
+            "top_padding": self.settings.value("label_column_top", 8, type=int),
+            "bottom_padding": self.settings.value("label_column_bottom", 8, type=int),
+            "left_padding": self.settings.value("label_column_left", 10, type=int),
+            "right_padding": self.settings.value("label_column_right", 10, type=int),
+        }
+        os = platform.system()
+
+        label_temp_folder = "/var/tmp/labels/"
+        if os == "Windows":
+            label_temp_folder = "C:/tmp/labels/"
+        elif os == "Linux":
+            label_temp_folder = "/var/tmp/labels/"
+
+        # delete old files in temp folder
+        settings = QSettings("EMEC", "Tester")  # init QSettings
+        max_labels = settings.value("label_files_cache", 50, type=int)
+        keep_latest_files(label_temp_folder, max_labels)
+
+        self._report_manager = TestReportManager(label_temp_folder, **layout)
 
     @staticmethod
     def start_node(node_table_row: NodeTableRow):
@@ -215,14 +243,8 @@ class NodeTable(QObject):
                             # ask for serial number input
                             dialog = AddSNDialog(channel=channel, node_id=node_id)
                             node_table_row.serial_number = dialog.serial_number
-                        else:
-                            node_table_row.serial_number = 0
-
-                        node_table_row.create_label()  # create testreport
-
-                        node_table_row.print_label_signal.connect(
-                            lambda label=node_table_row.get_label(): self._report_manager.add_label(label)
-                        )
+                            # add label to list after a timeout
+                            node_table_row.label_present_signal.connect(self._report_manager.add_label)
 
             except Exception as e:
                 logger.debug(e)
@@ -571,4 +593,8 @@ class NodeTable(QObject):
                 # logger.debug(network.scanner.nodes)
 
         self._redraw_table = True
+
+    @property
+    def report_manager(self):
+        return self._report_manager
 

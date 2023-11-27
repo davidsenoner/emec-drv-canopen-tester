@@ -1,6 +1,7 @@
 import logging
 
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView
+from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtCore import QTimer
 
 from app.widgets.ui_main import Ui_MainWindow
 
@@ -25,7 +26,8 @@ class MainWindow(QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.showMaximized()
-        self.setWindowTitle("EMEC Drive End-Of-Line Tester v2.0.0")  # Window title bar
+        self.setWindowTitle("EMEC Drive End-Of-Line Tester v2.1.0")  # Window title bar
+        self.node_table = None
 
         # Init canopen logger
         logging.getLogger('can').setLevel(logging.ERROR)
@@ -62,6 +64,10 @@ class MainWindow(QMainWindow):
         self._ui.spb_max_lift_current.valueChanged.connect(self.update_qsettings)
         self._ui.spb_max_slewing_current.valueChanged.connect(self.update_qsettings)
 
+        self._ui.led_print_label_with_serial.setFocus()  # set focus automatically on label serial number to print
+        self._ui.led_print_label_with_serial.returnPressed.connect(self.on_print_label)
+        self._ui.lbl_print_lbl_detection_status.setText("")
+
         # init menuBar actions
         def action_settings():
             settings_diag = SettingsDialog()
@@ -69,6 +75,26 @@ class MainWindow(QMainWindow):
         self._ui.actionSettings.triggered.connect(action_settings)
 
         self.show()
+
+    def on_print_label(self) -> None:
+        """
+        Print label method, will display serial number found on label and clear Text edit automatically for next input
+        :return:
+        """
+        serial = self._ui.led_print_label_with_serial.text()
+        logger.debug(f"Print label command detected for serial number {serial}")
+
+        if self.node_table is None:
+            return
+
+        ret = self.node_table.report_manager.print_label_from_serial_number(serial)
+        if ret == 0:
+            self._ui.lbl_print_lbl_detection_status.setText("No label to print detected")
+        else:
+            self._ui.lbl_print_lbl_detection_status.setText(f"Label SN: {ret}")
+
+        QTimer.singleShot(1000, self._ui.led_print_label_with_serial.clear) # clear text edit widget
+        QTimer.singleShot(3000, self._ui.lbl_print_lbl_detection_status.clear)  # clear label widget
 
     def update_qsettings(self):
         lne = self.sender()
@@ -85,5 +111,7 @@ class MainWindow(QMainWindow):
 
         if lne == self._ui.spb_max_slewing_current:
             self.settings.setValue("max_error_current_slewing", lne.value())
+
+        self._ui.led_print_label_with_serial.setFocus()  # switch focus automatically to serial to print
 
         logger.debug(f'{lneName} modified to {lne.text()}')

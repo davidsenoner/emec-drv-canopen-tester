@@ -3,10 +3,10 @@ import cups
 
 from PyQt5.QtCore import QSettings
 
-from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Frame, PageTemplate, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Image, Frame, PageTemplate, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, StyleSheet1
+from reportlab.lib import colors
 from datetime import datetime
-from reportlab.lib.pagesizes import landscape, C10, A4
 from reportlab.lib.units import mm
 from pathlib import Path
 
@@ -36,6 +36,7 @@ class Label:
         self._versions = None
         self._serial_number = serial_number
         self._datetime = f"{datetime.now():%d/%m/%Y %H:%M}"
+        self._mean_current = 0
 
     @property
     def serial_number(self):
@@ -81,6 +82,54 @@ class Label:
     def node_id(self, c: int) -> None:
         self._node_id = c
 
+    @property
+    def mean_current(self) -> float:
+        return self._mean_current
+
+    @mean_current.setter
+    def mean_current(self, current: float) -> None:
+        self._mean_current = current
+
+
+def print_pdf(path: str, printer: str) -> None:
+    """
+    Print PDF with selected printer
+    :param path: PDF path
+    :param printer: printer where PDF should be printed
+    :return: None
+    """
+    path = Path(path)
+    if path.exists():
+        try:
+            cups_conn = cups.Connection()
+            cups_conn.printFile(printer, path, f"{path.name}", {})
+        except Exception as e:
+            logger.debug(f"Error printing PDF: {e}")
+    else:
+        logger.debug(f"{path} does not exist")
+
+
+def keep_latest_files(folder_path: str, keep_count: int) -> None:
+    """
+    This method will delete older files when keep_count has ben reached
+    :param folder_path: path of folder to delete files
+    :param keep_count: files to keep in folder until delete older files
+    :return: None
+    """
+    folder = Path(folder_path)
+
+    # List all files in the folder and sort them by modification time
+    files = list(folder.glob('*'))
+    files.sort(key=lambda x: x.stat().st_mtime)
+
+    # Calculate the number of files to delete
+    to_delete_count = max(0, len(files) - keep_count)
+
+    # Delete the older files
+    for i in range(to_delete_count):
+        files[i].unlink()
+        logger.debug(f"Deleted: {files[i]}")
+
 
 class TestReportManager(SimpleDocTemplate):
     """
@@ -89,45 +138,50 @@ class TestReportManager(SimpleDocTemplate):
     filename: PDF-file path and name
     """
 
-    def __init__(self, temp_folder: str):
+    def __init__(self,
+                 temp_folder: str,
+                 columns: int = 1,
+                 column_width: float = 60,
+                 column_height: float = 40,
+                 top_padding: float = 0,
+                 bottom_padding: float = 0,
+                 left_padding: float = 0,
+                 right_padding: float = 0
+                 ):
         super().__init__(self)
 
-        self._cups_conn = cups.Connection()
-        self.settings = QSettings("EMEC", "Tester")  # init QSettings
-        self._printer = self.settings.value("printer", "None")
-
         self._temp_folder = Path(temp_folder)
+
+        if not self._temp_folder.exists():
+            try:
+                self._temp_folder.mkdir(parents=False, exist_ok=True)
+            except Exception as e:
+                logger.debug(e)
+
         self._labels = []
+        self.filename = None
 
         # label layout settings
-        self._columns = self.settings.value("label_paper_columns", 2, type=int)
-        column_width = self.settings.value("label_column_width", 60, type=int) * mm
-        column_height = self.settings.value("label_column_height", 30, type=int) * mm
-
-        # label padding
-        top_padding = self.settings.value("label_column_top", 8, type=int) * mm
-        bottom_padding = self.settings.value("label_column_bottom", 8, type=int) * mm
-        left_padding = self.settings.value("label_column_left", 10, type=int) * mm
-        right_padding = self.settings.value("label_column_right", 10, type=int) * mm
+        self._columns = columns
 
         frames = []
 
         for column_id in range(self._columns):
             frames.append(
                 Frame(
-                    x1=column_id * column_width,
+                    x1=column_id * column_width * mm,
                     y1=0,
-                    width=column_width,
-                    height=column_height,
-                    leftPadding=left_padding,
-                    topPadding=top_padding,
-                    bottomPadding=bottom_padding,
-                    rightPadding=right_padding
+                    width=column_width * mm,
+                    height=column_height * mm,
+                    leftPadding=left_padding * mm,
+                    topPadding=top_padding * mm,
+                    bottomPadding=bottom_padding * mm,
+                    rightPadding=right_padding * mm
                 )
             )
 
-        width = self._columns * column_width
-        height = column_height
+        width = self._columns * column_width * mm
+        height = column_height * mm
 
         self.addPageTemplates(
             PageTemplate(
@@ -143,6 +197,14 @@ class TestReportManager(SimpleDocTemplate):
         content_style.fontSize = 8
         return content_style
 
+    @property
+    def columns_count(self) -> int:
+        return self._columns
+
+    @property
+    def last_label_path(self):
+        return self.filename
+
     def add_label(self, label: Label):
         self._labels.append(label)
 
@@ -150,48 +212,62 @@ class TestReportManager(SimpleDocTemplate):
 
         # when we have x labels ready -> print
         if len(self._labels) == self._columns:
-            self.build_page()
+            self.build_page()  # generate label file (.PDF)
 
-    def build_page(self) -> None:
-        """
-        Build a document (file) from content
-        """
-        content = []
-        printer_active = self.settings.value("printer_active", True, type=bool)
+    def print_label_from_serial_number(self, serial_number: int):
+        label_file = self._temp_folder.glob(f"**/*{serial_number}*.pdf")
+        ret = 0
 
-        # iterate over passed labels
+        if label_file:
+            for file in label_file:
+                settings = QSettings("EMEC", "Tester")  # init QSettings
+                printer = settings.value("printer", "None")
+                print_pdf(path=str(file), printer=printer)
+
+                ret = file.name
+        else:
+            logger.debug(f"No label with serial number {serial_number} found")
+        return ret
+
+    def build_page(self):
+
+        tables = []
+
         for frame_id, label in enumerate(self._labels):
             logger.debug(f"Build Label ID {frame_id}")
 
-            sw, hw = label.versions  # get software versions
+            logo = 'app/resources/images/emec_logo_sw.png'
+            image_ratio = 0.005
+            width = 8086 * image_ratio
+            height = 2492 * image_ratio
 
-            content.append(Paragraph("QC APPROVED", getSampleStyleSheet()["Normal"]))
-            content.append(Spacer(20, 4))
-            content.append(Paragraph(f'DATE: {label.datetime}', self.content_style))
-            content.append(Paragraph(f"SN: {label.serial_number}", self.content_style))
-            content.append(Paragraph(f"SW: {sw} - HW: {hw}", self.content_style))
-            content.append(Paragraph(f"TYPE: {label.type} (NODE: {label.node_id})", self.content_style))
+            data = [[Image(logo, width=width, height=height), "QC APPROVED"],
+                    ["DATE:", f'{label.datetime}'],
+                    ["SN:", f"{label.serial_number}"],
+                    ["TYPE(ID):", f"{label.type} ({label.node_id})"],
+                    ["Imean", "{:.1f}mA".format(label.mean_current)]]
 
-        if self._temp_folder.exists():
-            # str_serials = '_'.join(str(label.serial_number) for label in self._labels)   # concatenate SN to string
-            filename = Path("label_temp").with_suffix(".pdf")   # add PDF suffix to filename
-            self.filename = str(self._temp_folder.joinpath(filename))
+            table = Table(data)
 
-            self._labels.clear()
+            style = TableStyle(
+                [('BACKGROUND', (0, 0), (1, 0), colors.black),
+                 # ('SPAN', (0, 0), (1, 0)),  #
+                 ('FONT', (0, 0), (1, 0), 'Helvetica-Bold'),
+                 ('FONTSIZE', (0, 0), (1, 0), 10),
+                 ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
+                 ('GRID', (0, 0), (-1, -1), 1, colors.black)])
 
-            try:
-                self.build(content)
-                logger.debug(f"Label saved to file {self.filename}")
-            except Exception as e:
-                logger.debug(f"Exception during file build: {e}")
+            table.setStyle(style)
+            tables.append(table)
 
-            if printer_active:
-                if Path(self.filename).exists() and self._printer != "None":
-                    self._cups_conn.printFile(self._printer, self.filename, f"{filename}", {})
-                else:
-                    logger.debug(f"{self.filename} does not exist or {self._printer}")
-            else:
-                logger.debug("Printer not active. Check printer settings (Edit->Settings)")
+        str_serials = '_'.join(str(label.serial_number) for label in self._labels)  # concatenate SN to string
+        filename = Path(str_serials).with_suffix(".pdf")  # add PDF suffix to filename
+        self.filename = str(self._temp_folder.joinpath(filename))
 
-        else:
-            logger.error(f"{self._temp_folder} not existing! Cannot save temp label for printing")
+        self._labels.clear()
+
+        try:
+            self.build(tables)
+            logger.debug(f"Label saved to file {self.filename}")
+        except Exception as e:
+            logger.debug(f"Exception during file build: {e}")
