@@ -99,10 +99,11 @@ def print_pdf(path: str, printer: str) -> None:
     :return: None
     """
     path = Path(path)
+    logger.debug(f"Print PDF: {path}")
     if path.exists():
         try:
             cups_conn = cups.Connection()
-            cups_conn.printFile(printer, path, f"{path.name}", {})
+            cups_conn.printFile(printer, str(path), f"{path.name}", {})
         except Exception as e:
             logger.debug(f"Error printing PDF: {e}")
     else:
