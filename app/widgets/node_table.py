@@ -130,6 +130,7 @@ class NodeTable(QObject):
             "Duration",
             "Current",
             "SW-Version",
+            "Serial number",
             "State"
         ]
 
@@ -265,6 +266,9 @@ class NodeTable(QObject):
                 for key in key_to_remove:
                     row = self.table_rows[key]  # Type NodeTableRow()
 
+                    # print label before disconnect
+                    self.report_manager.print_label_from_serial_number(row.serial_number)
+
                     self.pop_node(row)  # pop node from network
                     self.table_rows.pop(key)  # remove node row
 
@@ -316,7 +320,7 @@ class NodeTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN STATUS
-            _column = 10
+            _column = 11
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
             except Exception as e:
@@ -433,8 +437,12 @@ class NodeTable(QObject):
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
-            # COLUMN STATUS
+            # COLUMN SERIAL
             _column = 10
+            self.table_widget.setItem(i, _column, QTableWidgetItem(f"{node_table_row.serial_number}"))
+
+            # COLUMN STATUS
+            _column = 11
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
             except Exception as e:
