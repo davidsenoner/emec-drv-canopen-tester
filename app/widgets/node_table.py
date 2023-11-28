@@ -265,6 +265,9 @@ class NodeTable(QObject):
                 for key in key_to_remove:
                     row = self.table_rows[key]  # Type NodeTableRow()
 
+                    # print label before disconnect
+                    self.report_manager.print_label_from_serial_number(row.serial_number)
+
                     self.pop_node(row)  # pop node from network
                     self.table_rows.pop(key)  # remove node row
 
