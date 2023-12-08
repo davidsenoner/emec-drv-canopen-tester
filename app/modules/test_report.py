@@ -216,19 +216,19 @@ class TestReportManager(SimpleDocTemplate):
             self.build_page()  # generate label file (.PDF)
 
     def print_label_from_serial_number(self, serial_number: int):
-        label_file = self._temp_folder.glob(f"**/*{serial_number}*.pdf")
-        ret = 0
 
-        if label_file:
-            for file in label_file:
-                settings = QSettings("EMEC", "Tester")  # init QSettings
-                printer = settings.value("printer", "None")
-                print_pdf(path=str(file), printer=printer)
+        # check if serial number is valid
+        if serial_number < 1000:
+            return 0
 
-                ret = file.name
-        else:
-            logger.debug(f"No label with serial number {serial_number} found")
-        return ret
+        for file in self._temp_folder.glob(f"**/*{serial_number}*.pdf"):
+            settings = QSettings("EMEC", "Tester")  # init QSettings
+            printer = settings.value("printer", "None")
+            print_pdf(path=str(file), printer=printer)
+
+            return file.name  # print only fist file found than exit
+
+        return 0  # return 0 if no file was found
 
     def build_page(self):
 
@@ -242,11 +242,13 @@ class TestReportManager(SimpleDocTemplate):
             width = 8086 * image_ratio
             height = 2492 * image_ratio
 
+            imean_out = label.mean_current / 1000  # print in Amps
+
             data = [[Image(logo, width=width, height=height), "QC APPROVED"],
                     ["DATE:", f'{label.datetime}'],
                     ["SN:", f"{label.serial_number}"],
                     ["TYPE(ID):", f"{label.type} ({label.node_id})"],
-                    ["Imean", "{:.1f}mA".format(label.mean_current)]]
+                    ["Imean", "{:.2f}A".format(imean_out)]]  # 2 digits
 
             table = Table(data)
 
