@@ -153,7 +153,6 @@ class EMECDrvTester(QTimer):
         # Connect Signals
         if node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
             self.timeout.connect(self.timeout_test)
-            self.timeout.connect(self.timeout_stat)
 
             self.min_target = MIN_TARGET_POSITION_LIFT
             self.max_target = MAX_TARGET_POSITION_LIFT
@@ -164,7 +163,6 @@ class EMECDrvTester(QTimer):
 
         elif node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.timeout.connect(self.timeout_test)
-            self.timeout.connect(self.timeout_stat)
 
             self.min_target = MIN_TARGET_POSITION_SLEWING
             self.max_target = MAX_TARGET_POSITION_SLEWING
@@ -558,7 +556,7 @@ class EMECDrvTester(QTimer):
 
                 self.start_movement()
 
-                self.start(1000)  # Start QTimer with Timeout period
+                self.start(1000)  # Start QTimer of EMECDrvTester(QTimer)
                 logger.debug(f"Start Test Node: {self.node.id} on network {self.node.network}")
 
             except Exception as e:
@@ -595,6 +593,9 @@ class EMECDrvTester(QTimer):
             # A rising flank starts a movement order
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_START_MOVEMENT_ORDER
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_START_MOVEMENT_ORDER
+
+            self.timeout.connect(self.timeout_stat)
+
         except Exception as e:
             logger.debug(f'Cannot start movement: {e}')
 
@@ -603,6 +604,8 @@ class EMECDrvTester(QTimer):
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_ENABLE_OPERATION
         except Exception as e:
             logger.debug(f'Cannot stop movement: {e}')
+
+        self.timeout.disconnect(self.timeout_stat)
 
     def ack_error(self):
         """
