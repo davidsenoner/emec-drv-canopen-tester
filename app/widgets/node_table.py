@@ -111,7 +111,7 @@ class SlewingNodeTableRow(SlewingTester):
         self.label_present_signal.emit(label)
 
 
-class LiftNodeTableRow(SlewingTester):
+class LiftNodeTableRow(LiftTester):
     label_present_signal = pyqtSignal(Label)
 
     def __init__(self, network: Network, channel: int, node: BaseNode402):
@@ -209,12 +209,14 @@ class NodeTable(QObject):
 
         self.settings = QSettings("EMEC", "Tester")
         self._headers = ["Ch_Id", "Type", "Start", "Stop", "CW", "CCW", "Pos", "Duration", "Current", "SW-Version",
-                         "Serial number", "State"]
+                         "Serial number", "State", "Test mode"]
 
         self.table_widget.setColumnCount(len(self._headers))
         self.table_widget.setHorizontalHeaderLabels(self._headers)
+        self.table_widget.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
         self.table_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_widget.customContextMenuRequested.connect(self.on_context_menu)
+        self.table_widget.horizontalHeader().setContentsMargins(10, 0, 10, 0)
 
         self.refresh_table_timer = QTimer()
         self.refresh_table_timer.start(1000)
@@ -352,6 +354,11 @@ class NodeTable(QObject):
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
             i += 1
 
+            # COLUMN TESTING MODE
+            _column = 12
+            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
+            i += 1
+
             # logger.debug(f"Mean current: {node_table_row.current_stat.mean()}")  # mean current
             # logger.debug(f"Std current: {node_table_row.current_stat.stdev()}")  # standard deviation
 
@@ -459,6 +466,11 @@ class NodeTable(QObject):
             # COLUMN STATUS
             _column = 11
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
+
+            # COLUMN TESTING MODE
+            _column = 12
+            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
+            i += 1
 
             # start automatically node if just added
             if key in self._start_node_id:

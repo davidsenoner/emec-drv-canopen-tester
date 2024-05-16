@@ -4,8 +4,8 @@ from canopen import BaseNode402
 from canopen.emcy import EmcyError
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QSettings, QTimer
 
-from defines import *
-from utils import CurrentStatistics, compare_versions
+from app.modules.defines import *
+from app.modules.utils import CurrentStatistics, compare_versions
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,9 @@ class EMECDrvTester(QTimer):
         self.not_moving_counter = 0  # counter for detection of no movement error
         self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = None
+        self.test_modes = [0]  # define available testmodes (0=normal running, 1=CW blocked, 2=CCW blocked)
+        self.actual_test_mode_idx = 0  # index for actual test mode, will select a mode if from self.test_modes
+
         self.label_printed = False  # status bit True=Label already printed
         self.node = node
 
@@ -55,6 +58,9 @@ class EMECDrvTester(QTimer):
             if time.time() > timeout:
                 raise Exception(f'Timeout when trying to change state to {state}')
             time.sleep(0.001)
+
+    def get_test_mode_description(self) -> str:
+        return TEST_MODES_DEFINITION.get(self.test_modes[self.actual_test_mode_idx], -1)
 
     def get_ccw_movements(self):
         """ Return's CCW movements red from canopen registers """
@@ -187,19 +193,22 @@ class EMECDrvTester(QTimer):
         return status_mapping.get((self.isActive(), state), state)
 
     def goto_target_position(self, position: int):
-        actual_position = self.get_actual_position()
-        if actual_position > abs(position):  # abs() because slewing have negative value when turning CCW
-            self.moving_direction = CCW
-        elif actual_position < abs(position):
-            self.moving_direction = CW
-        else:
-            self.moving_direction = STOPPED
-            self.stop_test("Internal error: New target position same  as actual")
+        try:
+            actual_position = self.get_actual_position()
+            if actual_position > abs(position):  # abs() because slewing have negative value when turning CCW
+                self.moving_direction = CCW
+            elif actual_position < abs(position):
+                self.moving_direction = CW
+            else:
+                self.moving_direction = STOPPED
+                self.stop_test("Internal error: New target position same  as actual")
 
-        self.stop_movement()
-        self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = position  # set new target position
-        QTimer.singleShot(1500, self.start_movement)  # wait 1,5s until restart movement in opposite direction
-        self.moving_time = 0  # Reset timer when reaching target position
+            self.stop_movement()
+            self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = position  # set new target position
+            QTimer.singleShot(1500, self.start_movement)  # wait 1,5s until restart movement in opposite direction
+            self.moving_time = 0  # Reset timer when reaching target position
+        except Exception as e:
+            logger.debug(f'Cannot go to target position: {e}')
 
     def timeout_stat(self):
         try:
@@ -207,10 +216,9 @@ class EMECDrvTester(QTimer):
         except Exception as e:
             logger.debug(f'Cannot read actual current from SDO: {e}')
 
-
     def stop_test(self, message: str = None):
         self.test_error_message = message if message else None
-        logger.debug(f'Stop Test on Node {self.node.id} due to {message if message else ""}')
+        logger.debug(f'Stop Test on Node {self.node.id} {f"due to {message}" if message else ""}')
 
         try:
             self.stop_movement()
@@ -223,11 +231,11 @@ class EMECDrvTester(QTimer):
 
     def start_movement(self):
         try:
-            control_word = self.node.sdo[OD_CONTROL_WORD].raw
-            control_word |= CONTROL_ENABLE_OPERATION
-            control_word &= ~CONTROL_START_MOVEMENT_ORDER
-            control_word |= CONTROL_START_MOVEMENT_ORDER
-            self.node.sdo[OD_CONTROL_WORD].raw = control_word
+            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_ENABLE_OPERATION
+
+            # A rising flank starts a movement order
+            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_START_MOVEMENT_ORDER
+            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_START_MOVEMENT_ORDER
 
             self.timeout.connect(self.timeout_stat)
         except Exception as e:
@@ -235,11 +243,11 @@ class EMECDrvTester(QTimer):
 
     def stop_movement(self):
         try:
-            self.node.sdo[OD_CONTROL_WORD].raw &= ~CONTROL_ENABLE_OPERATION
+            self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_ENABLE_OPERATION
         except Exception as e:
             logger.debug(f'Cannot stop movement: {e}')
-        finally:
-            self.timeout.disconnect(self.timeout_stat)
+
+        self.timeout.disconnect(self.timeout_stat)
 
     def ack_error(self):
         try:
@@ -255,10 +263,12 @@ class SlewingTester(EMECDrvTester):
     def __init__(self, node: BaseNode402):
         super().__init__(node)
 
+        self.test_modes = [0, 1, 2]  # define available testmodes (0=normal running, 1=CW blocked, 2=CCW blocked)
+
+        self.tolerance = 10
         self.min_target = MIN_TARGET_POSITION_SLEWING
         self.max_target = MAX_TARGET_POSITION_SLEWING
         self.target_temp = (self.max_target - self.min_target) / 2 + self.min_target  # get mid-position
-        self.tolerance = 10
         self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
 
         logger.debug(f"SlewingTester created with node_id: {node.id}")
@@ -267,7 +277,7 @@ class SlewingTester(EMECDrvTester):
 
     def get_software_version_ok(self) -> bool:
         version = self.settings.value("min_sw_version_slewing", "v1.25")
-        return compare_versions(self.manufacturer_software_version, version) >= 0
+        return compare_versions(self.get_manufacturer_software_version(), version) >= 0
 
     def start_test(self):
         if not self.isActive():
@@ -275,6 +285,7 @@ class SlewingTester(EMECDrvTester):
                 self.moving_time = 0
                 self.not_moving_counter = 0  # counter for detection of no movement error
                 self.wrong_movement_counter = 0  # counter for detection of wrong movement error
+                self.actual_test_mode_idx = 0  # start with normal running test mode 0
                 self.test_error_message = None
 
                 self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
@@ -304,10 +315,13 @@ class LiftTester(EMECDrvTester):
     def __init__(self, node: BaseNode402):
         super().__init__(node)
 
+        # define test modes for lift
+        self.test_modes = [0]  # define available testmodes (0=normal running, 1=CW blocked, 2=CCW blocked)
+
+        self.tolerance = 0
         self.min_target = MIN_TARGET_POSITION_LIFT
         self.max_target = MAX_TARGET_POSITION_LIFT
         self.target_temp = (self.max_target - self.min_target) / 2 + self.min_target  # get mid-position
-        self.tolerance = 0
         self.max_error_current = int(self.settings.value("max_error_current_lift", 800))
 
         logger.debug(f"LiftTester created with node_id: {node.id}")
@@ -316,7 +330,7 @@ class LiftTester(EMECDrvTester):
 
     def get_software_version_ok(self) -> bool:
         version = self.settings.value("min_sw_version_lift", "v3.16")
-        return compare_versions(self.manufacturer_software_version, version) >= 0
+        return compare_versions(self.get_manufacturer_software_version(), version) >= 0
 
     def start_test(self):
         if not self.isActive():
@@ -324,6 +338,7 @@ class LiftTester(EMECDrvTester):
                 self.moving_time = 0
                 self.not_moving_counter = 0  # counter for detection of no movement error
                 self.wrong_movement_counter = 0  # counter for detection of wrong movement error
+                self.actual_test_mode_idx = 0  # start with normal running test mode 0
                 self.test_error_message = None
 
                 self.max_error_current = int(self.settings.value("max_error_current_lift", 800))
@@ -362,68 +377,67 @@ class LiftTester(EMECDrvTester):
             -This method also manages target position change when min/max position is reached
         """
 
-        self.elapsed_time = self.elapsed_time + 1
+        self.elapsed_time += 1
         self.on_test_timer_timeout.emit()
 
-        actual_position = self.get_actual_position()
+        try:
+            actual_position = self.get_actual_position()
+        except Exception as e:
+            self.stop()
+            logger.debug(f'Cannot read actual position from SDO: {e}')
+            return
 
         # detect max movement time exceeded
         if self.moving_time >= MAX_MOVEMENT_TIME_ABSOLUTE:
             self.stop_test(f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE}s exceeded!!")
 
-        try:
-            # check max current limit
-            mean = self.current_stat.mean()
-            if mean > self.max_error_current:
-                self.stop_test(f"Current limit exceeded (Imean= {mean} mA)")
+        # check max current limit
+        mean = self.current_stat.mean()
+        if mean > self.max_error_current:
+            self.stop_test(f"Current limit exceeded (Imean= {mean} mA)")
 
-            # check if drive is moving
-            if self.actual_position_temp == actual_position:  # is not moving??
-                self.not_moving_counter += 1
-                # logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
-                if self.not_moving_counter >= 4:
-                    self.stop_test(f"Lift is not moving since {self.not_moving_counter}s")
+        # check if drive is moving
+        if self.actual_position_temp == actual_position:  # is not moving??
+            self.not_moving_counter += 1
+            # logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
+            if self.not_moving_counter >= 4:
+                self.stop_test(f"Lift is not moving since {self.not_moving_counter}s")
 
-            else:
-                self.not_moving_counter = 0  # reset counter for detection "not moving" error
-
-                if self.actual_position_temp is not None:
-                    if self.actual_position_temp > actual_position:  # is drive moving CCW?
-                        if self.moving_direction != CCW:  # if moving CCW but should CW
-                            self.wrong_movement_counter += 1
-                        else:
-                            self.wrong_movement_counter = 0  # moving in correct direction
+        else:
+            self.not_moving_counter = 0  # reset counter for detection "not moving" error
+            if self.actual_position_temp is not None:
+                if self.actual_position_temp > actual_position:  # is drive moving CCW?
+                    if self.moving_direction != CCW:  # if moving CCW but should CW
+                        self.wrong_movement_counter += 1
                     else:
-                        if self.moving_direction != CW:  # if moving CW but should CCW
-                            self.wrong_movement_counter += 1
-                        else:
-                            self.wrong_movement_counter = 0  # moving in correct direction
+                        self.wrong_movement_counter = 0  # moving in correct direction
+                else:
+                    if self.moving_direction != CW:  # if moving CW but should CCW
+                        self.wrong_movement_counter += 1
+                    else:
+                        self.wrong_movement_counter = 0  # moving in correct direction
 
-                # moving in wrong direction timer control
-                if self.wrong_movement_counter >= 4:
-                    self.stop_test(f"Lift is moving in wrong direction since {self.wrong_movement_counter}")
+            # moving in wrong direction timer control
+            if self.wrong_movement_counter >= 4:
+                self.stop_test(f"Lift is moving in wrong direction since {self.wrong_movement_counter}")
 
-                self.actual_position_temp = actual_position  # update temp for actual position
+            self.actual_position_temp = actual_position  # update temp for actual position
 
-            # max position reached condition
-            if (abs(self.max_target) - self.tolerance) <= actual_position:
-                if self.target_temp != self.min_target:
-                    self.goto_target_position(self.min_target)  # go to the new position
+        # max position reached condition
+        if (abs(self.max_target) - self.tolerance) <= actual_position:
+            if self.target_temp != self.min_target:
+                self.goto_target_position(self.min_target)  # go to the new position
 
-            # min position reached condition
-            elif actual_position <= (abs(self.min_target) + self.tolerance):
-                if self.target_temp != self.max_target:
-                    self.goto_target_position(self.max_target)  # go to the new position
+        # min position reached condition
+        elif actual_position <= (abs(self.min_target) + self.tolerance):
+            if self.target_temp != self.max_target:
+                self.goto_target_position(self.max_target)  # go to the new position
 
-            # drive is moving condition
-            else:
-                self.moving_time += 1  # increment timer during movement
+        # drive is moving condition
+        else:
+            self.moving_time += 1  # increment timer during movement
 
-            # generate signal for printing/generating a label
-            if not self.label_printed and self.elapsed_time > self.label_print_timeout:
-                self.generate_label_signal.emit()
-                self.label_printed = True
-
-        except Exception as e:
-            logger.debug(f'Exception during testing routine: {e}')
-            self.stop()
+        # generate signal for printing/generating a label
+        if not self.label_printed and self.elapsed_time > self.label_print_timeout:
+            self.generate_label_signal.emit()
+            self.label_printed = True

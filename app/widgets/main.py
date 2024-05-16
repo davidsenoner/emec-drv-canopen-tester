@@ -59,8 +59,8 @@ class MainWindow(QMainWindow):
         self._ui.led_min_sw_ver_lift.editingFinished.connect(self.on_settings_edited)
         self._ui.led_min_sw_ver_slewing.editingFinished.connect(self.on_settings_edited)
         # Signals for max current error
-        self._ui.spb_max_lift_current.valueChanged.connect(self.on_settings_changed)
-        self._ui.spb_max_slewing_current.valueChanged.connect(self.on_settings_changed)
+        self._ui.spb_max_lift_current.editingFinished.connect(self.on_settings_edited)
+        self._ui.spb_max_slewing_current.editingFinished.connect(self.on_settings_edited)
 
         self._ui.led_print_label_with_serial.setFocus()  # set focus automatically on label serial number to print
         self._ui.led_print_label_with_serial.returnPressed.connect(self.on_print_label)
@@ -104,18 +104,12 @@ class MainWindow(QMainWindow):
         if lne == self._ui.led_min_sw_ver_slewing:
             self.settings.setValue("min_sw_version_slewing", lne.text())
 
+        if lne == self._ui.spb_max_lift_current:
+            self.settings.setValue("max_error_current_lift", lne.value())
+
+        if lne == self._ui.spb_max_slewing_current:
+            self.settings.setValue("max_error_current_slewing", lne.value())
+
         self._ui.led_print_label_with_serial.setFocus()  # switch focus automatically to serial to print
 
         logger.debug(f'{lneName} modified to {lne.text()}')
-
-    def on_settings_changed(self):
-        spb = self.sender()
-        spbName = spb.objectName()
-
-        if spb == self._ui.spb_max_lift_current:
-            self.settings.setValue("max_error_current_lift", spb.value())
-
-        if spb == self._ui.spb_max_slewing_current:
-            self.settings.setValue("max_error_current_slewing", spb.value())
-
-        self._ui.led_print_label_with_serial.setFocus()  # switch focus automatically to serial to print

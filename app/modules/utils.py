@@ -1,4 +1,5 @@
 from collections import deque
+import statistics
 
 
 def compare_versions(version1: str, version2: str):
@@ -20,15 +21,11 @@ class CurrentStatistics:
     """ Class to store current values and calculate statistics """
 
     def __init__(self, max_length: int):
-        from statistics import mean, stdev, median
 
         assert max_length > 1, "max_length must be greater than 1"
 
         self.current_values = deque([0] * max_length, maxlen=max_length)
         self.max_length = max_length
-        self.mean = mean
-        self.stdev = stdev
-        self.median = median
 
     def min(self):
         return min(self.current_values)
@@ -37,13 +34,13 @@ class CurrentStatistics:
         return max(self.current_values)
 
     def mean(self):
-        return self.mean(self.current_values)
+        return statistics.mean(self.current_values)
 
     def std_dev(self):
-        return self.stdev(self.current_values)
+        return statistics.stdev(self.current_values)
 
     def median(self):
-        return self.median(self.current_values)
+        return statistics.median(self.current_values)
 
     def add(self, value):
         self.current_values.append(value)
