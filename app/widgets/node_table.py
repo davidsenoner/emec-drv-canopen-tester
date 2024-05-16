@@ -94,7 +94,7 @@ class NodeTableRow(EMECDrvTester):
         logger.debug(f"Create Label for serial number {self.serial_number}")
         label = Label(self.serial_number)
         label.node_id = self.node_id
-        label.mean_current = self.current_mean_value
+        label.mean_current = self.current_stat.mean()
 
         if self.node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
             label.type = "LIFT"
@@ -288,8 +288,8 @@ class NodeTable(QObject):
 
             i += 1
 
-            # logger.debug(f"Mean current: {node_table_row.current_mean_value}")
-            # logger.debug(f"Std current: {node_table_row.current_std_value}")
+            # logger.debug(f"Mean current: {node_table_row.current_stat.mean()}")  # mean current
+            # logger.debug(f"Std current: {node_table_row.current_stat.stdev()}")  # standard deviation
 
     def draw_table(self):
 

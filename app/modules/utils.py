@@ -36,7 +36,7 @@ class CurrentStatistics:
     def max(self):
         return max(self.current_values)
 
-    def avg(self):
+    def mean(self):
         return self.mean(self.current_values)
 
     def std_dev(self):

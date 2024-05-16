@@ -1,91 +1,20 @@
-import logging
 import time
-from canopen import BaseNode402, RemoteNode, LocalNode
+import logging
+from canopen import BaseNode402
 from canopen.emcy import EmcyError
-from collections import deque
-import numpy as np
-
-from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderView, QTableWidget
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QSettings, QTimer
-from PyQt5.QtGui import QCursor
 
-from app.modules.utils import compare_versions
+from defines import *
+from utils import CurrentStatistics, compare_versions
 
 logger = logging.getLogger(__name__)
-
-# EMECDRV SPECIFIC
-
-TITAN40_EMECDRV5_LIFT_NODE_ID = 0x0C
-TITAN40_EMECDRV5_SLEWING_NODE_ID = 0x0D
-
-#  TARGET POSITIONS FOR TESTING MOVEMENT (NOTE: CHANGE MIN/MAX TIME IF TARGET CHANGES)
-MIN_TARGET_POSITION_LIFT = 0  # 0% LIFT POSITION
-MAX_TARGET_POSITION_LIFT = 100  # 100% LIFT POSITION
-MIN_TARGET_POSITION_SLEWING = -100  # NEGATIVE VALUE FOR CCW MOVEMENT
-MAX_TARGET_POSITION_SLEWING = 1900  # POSITIVE VALUE FOR CW MOVEMENT
-
-#  MIN AND MAX TIME FOR MOVEMENT
-MIN_MOVEMENT_TIME_LIFT = 20
-MAX_MOVEMENT_TIME_LIFT = 65
-MAX_MOVEMENT_TIME_ABSOLUTE = 500
-
-OD_MANUFACTURER_DEVICE_NAME = 0x1008
-OD_MANUFACTURER_HARDWARE_VERSION = 0x1009
-OD_MANUFACTURER_SOFTWARE_VERSION = 0x100A
-OD_DEVICE_ERROR_FLAGS = 0x2100
-
-OD_MODES_OF_OPERATION = 0x6060
-OD_POSITION_ACTUAL_VALUE = 0x6064
-OD_MAX_CURRENT = 0x6073
-OD_MOTOR_RATED_CURRENT = 0x6075
-OD_CURRENT_ACTUAL_VALUE = 0x6078  # factor = OD_MOTOR_RATED_CURRENT / 1000
-OD_DC_LINK_CIRCUIT_VOLTAGE = 0x6079  # Battery voltage
-OD_TARGET_POSITION = 0x607A
-
-OD_STATUS_WORD = 0x6041
-OD_CONTROL_WORD = 0x6040
-
-# STATUS WORD MASK
-STATUS_READY_TO_SWITCH_ON = 0x0
-STATUS_READY = 0x02
-STATUS_OPERATION_ENABLED = 0x04
-STATUS_FAULT = 0x08
-STATUS_VOLTAGE_ENABLED = 0x10
-STATUS_QUICK_STOP = 0x20
-STATUS_SWITCH_ON_INHIBIT = 0x40
-STATUS_WARNING_ACTIVE = 0x80
-STATUS_START_FUNCTION = 0x100
-STATUS_BUS_CONTROL_EN = 0x200
-STATUS_TARGET_REACHED = 0x400
-STATUS_INTERNAL_LIMIT_EXCEEDED = 0x800
-
-# CONTROL WORD MASK
-CONTROL_READY = 0x0
-CONTROL_DISABLE_VOLTAGE = 0x02
-CONTROL_QUICK_STOP = 0x04
-CONTROL_ENABLE_OPERATION = 0x08
-CONTROL_OPERATING_MODE_CUSTOM_1 = 0x10
-CONTROL_START_MOVEMENT_ORDER = 0x10
-CONTROL_OPERATING_MODE_CUSTOM_2 = 0x20
-CONTROL_OPERATING_MODE_CUSTOM_3 = 0x40
-CONTROL_ACK_ERROR = 0x80
-CONTROL_STOP = 0x100
-
-# Operating modes
-PROFILE_POSITION_OPERATING_MODE = 0x01
-VELOCITY_OPERATING_MODE = 0x02
-PROFILE_VELOCITY_OPERATING_MODE = 0x03
-PROFILE_TORQUE_OPERATING_MODE = 0x04
-HOMING_OPERATING_MODE = 0x06
-
-STOPPED = 0
-CW = 1
-CCW = 2
 
 
 class EMECDrvTester(QTimer):
     test_timer_timeout = pyqtSignal()
     generate_label_signal = pyqtSignal()
+
+    current_stat = CurrentStatistics(max_length=20)
 
     def __init__(self, node: BaseNode402):
         super().__init__()
@@ -112,13 +41,6 @@ class EMECDrvTester(QTimer):
         self.target_temp = (MAX_TARGET_POSITION_LIFT - MIN_TARGET_POSITION_LIFT) / 2
 
         self.tolerance = 0
-
-        # Init FIFO for measured current values
-        self.current_actual_value_fifo = deque(maxlen=20)
-
-        # fill current value fifo with zero
-        for _ in range(self.current_actual_value_fifo.maxlen):
-            self.current_actual_value_fifo.append(0)
 
         # register emergency error callback that will stop with error message from canopen
         self.node.emcy.add_callback(self.emcy_callback)
@@ -254,32 +176,6 @@ class EMECDrvTester(QTimer):
     def current_actual_value(self):
         factor = float(self.rated_current) / 1000
         return self.node.sdo[OD_CURRENT_ACTUAL_VALUE].raw * factor  # added factor to raw value
-
-    @property
-    def current_mean_value(self):
-        """
-        Calculates mean value of last measured values during movement
-        :return: Mean value
-        """
-        if len(self.current_actual_value_fifo) > 0:
-            mean = np.mean(self.current_actual_value_fifo)
-        else:
-            mean = 0
-
-        return mean
-
-    @property
-    def current_std_value(self):
-        """
-        Calculates standard deviation of last measured values during movement
-        :return: Standard deviation
-        """
-        if len(self.current_actual_value_fifo) > 0:
-            mean = np.std(self.current_actual_value_fifo)
-        else:
-            mean = 0
-
-        return mean
 
     @property
     def dc_link_circuit_voltage(self):
@@ -446,9 +342,9 @@ class EMECDrvTester(QTimer):
 
     def timeout_stat(self):
         try:
-            self.current_actual_value_fifo.append(self.current_actual_value)  # append actual current value to fifo
+            self.current_stat.add(self.current_actual_value)  # add current value to statistics
         except Exception as e:
-            logger.debug(e)
+            logger.debug(f'Cannot read actual current from SDO: {e}')
 
     def timeout_test(self):
         """
@@ -472,8 +368,9 @@ class EMECDrvTester(QTimer):
 
         try:
             # check max current limit
-            if self.current_mean_value > self.max_error_current:
-                self.stop_test(f"Current limit exceeded (Imean= {self.current_mean_value} mA)")
+            mean = self.current_stat.mean()
+            if mean > self.max_error_current:
+                self.stop_test(f"Current limit exceeded (Imean= {mean} mA)")
 
             # check if drive is moving
             if self.actual_position_temp == self.actual_position:  # is not moving??
@@ -580,10 +477,7 @@ class EMECDrvTester(QTimer):
         self.elapsed_time = 0
         self.not_moving_counter = 0
 
-        # fill current value fifo with zero
-        for _ in range(self.current_actual_value_fifo.maxlen):
-            self.current_actual_value_fifo.append(0)
-
+        self.current_stat.reset()  # reset current statistics
         self.stop()  # Stop QTimer
 
     def start_movement(self):
