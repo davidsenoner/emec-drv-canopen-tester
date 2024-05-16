@@ -16,6 +16,7 @@ from app.modules.test_report import Label, TestReportManager, keep_latest_files
 
 logger = logging.getLogger(__name__)
 
+
 def get_label_temp_folder():
     os = platform.system()
     if os == "Windows":
@@ -108,6 +109,7 @@ class SlewingNodeTableRow(SlewingTester):
         label.type = str(self)
 
         self.label_present_signal.emit(label)
+
 
 class LiftNodeTableRow(SlewingTester):
     label_present_signal = pyqtSignal(Label)
@@ -314,21 +316,21 @@ class NodeTable(QObject):
             # COLUMN CW MOVEMENTS
             _column = 4
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_cw_movements())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN CCW MOVEMENTS
             _column = 5
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_ccw_movements())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN ACTUAL POSITION
             _column = 6
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_actual_position())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
@@ -341,17 +343,13 @@ class NodeTable(QObject):
             # COLUMN ACTUAL CURRENT
             _column = 8
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_actual_current()} mA'))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN STATUS
             _column = 11
-            try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
-            except Exception as e:
-                self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
-
+            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
             i += 1
 
             # logger.debug(f"Mean current: {node_table_row.current_stat.mean()}")  # mean current
@@ -406,21 +404,21 @@ class NodeTable(QObject):
             # COLUMN CW MOVEMENTS
             _column = 4
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.cw_movements)))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_cw_movements())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN CCW MOVEMENTS
             _column = 5
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.ccw_movements)))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_ccw_movements())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN ACTUAL POSITION
             _column = 6
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.actual_position)))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_actual_position())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
@@ -433,7 +431,7 @@ class NodeTable(QObject):
             # COLUMN ACTUAL CURRENT
             _column = 8
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.current_actual_value} mA'))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_actual_current()} mA'))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
@@ -460,10 +458,7 @@ class NodeTable(QObject):
 
             # COLUMN STATUS
             _column = 11
-            try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.status))
-            except Exception as e:
-                self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
+            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
 
             # start automatically node if just added
             if key in self._start_node_id:
@@ -536,27 +531,27 @@ class NodeTable(QObject):
             except:
                 text += f"Channel: -\n"
             try:
-                text += f"Manufacturer Device Name: {node_table_row.manufacturer_device_name}\n"
+                text += f"Manufacturer Device Name: {node_table_row.get_manufacturer_device_name()}\n"
             except:
                 text += f"Manufacturer Device Name: -\n"
             try:
-                text += f"Manufacturer Hardware Version: {node_table_row.manufacturer_hardware_version}\n"
+                text += f"Manufacturer Hardware Version: {node_table_row.get_manufacturer_hardware_version()}\n"
             except:
                 text += f"Manufacturer Hardware Version: -\n"
             try:
-                text += f"Manufacturer Software Version: {node_table_row.manufacturer_software_version}\n"
+                text += f"Manufacturer Software Version: {node_table_row.get_manufacturer_software_version()}\n"
             except:
                 text += f"Manufacturer Software Version: -\n"
             try:
-                text += f"CW/CCW movements: {str(node_table_row.cw_movements)}/{str(node_table_row.ccw_movements)}\n"
+                text += f"CW/CCW movements: {str(node_table_row.get_cw_movements())}/{str(node_table_row.get_ccw_movements())}\n"
             except:
                 text += f"CW/CCW movements: -/-\n"
             try:
-                text += f"Accumulative operating time: {str(node_table_row.accumulative_operating_time)}\n"
+                text += f"Accumulative operating time: {str(node_table_row.get_accumulative_operating_time())}\n"
             except:
                 text += f"Accumulative operating time: -\n"
             try:
-                text += f"Device temperature: {str(node_table_row.device_temp)} (max: {str(node_table_row.max_device_temp)})\n"
+                text += f"Device temperature: {str(node_table_row.get_device_temp())} (max: {str(node_table_row.get_max_device_temp())})\n"
             except:
                 text += f"Device temperature: - (max: -)\n"
             try:
@@ -564,31 +559,31 @@ class NodeTable(QObject):
             except:
                 text += f"State: -\n"
             try:
-                text += f"Actual position: {str(node_table_row.actual_position)}\n"
+                text += f"Actual position: {str(node_table_row.get_actual_position())}\n"
             except:
                 text += f"Actual position: -\n"
             try:
-                text += f"Target position: {str(node_table_row.target_position)}\n"
+                text += f"Target position: {str(node_table_row.get_target_position())}\n"
             except:
                 text += f"Target position: -\n"
             try:
-                text += f"Control Word: {hex(node_table_row.control_word)}\n"
+                text += f"Control Word: {hex(node_table_row.get_control_word())}\n"
             except:
                 text += f"Control Word: -\n"
             try:
-                text += f"Status Word: {hex(node_table_row.status_word)}\n"
+                text += f"Status Word: {hex(node_table_row.get_status_word())}\n"
             except:
                 text += f"Status Word: -\n"
             try:
-                text += f"Actual current: {str(node_table_row.current_actual_value)}\n"
+                text += f"Actual current: {str(node_table_row.get_actual_current())}\n"
             except:
                 text += f"Actual current: -\n"
             try:
-                text += f"Rated/Max current: {str(node_table_row.rated_current)}/{str(node_table_row.max_current)}\n"
+                text += f"Rated/Max current: {str(node_table_row.get_rated_current())}/{str(node_table_row.get_max_current())}\n"
             except:
                 text += f"Rated/Max current: -/-\n"
             try:
-                text += f"Battery voltage: {hex(node_table_row.dc_link_circuit_voltage)}\n"
+                text += f"Battery voltage: {hex(node_table_row.get_dc_link_circuit_voltage())}\n"
             except:
                 text += f"Battery voltage: -\n"
 
