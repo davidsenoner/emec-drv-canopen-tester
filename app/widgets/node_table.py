@@ -216,7 +216,7 @@ class NodeTable(QObject):
 
             if key not in self.table_rows:
                 node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
-                node_table_row.test_timer_timeout.connect(self.draw_cyclic_info)
+                node_table_row.on_test_timer_timeout.connect(self.draw_cyclic_info)
                 self.table_rows.update({key: node_table_row})
 
                 if self.settings.value("sn_mnt_active", True, type=bool):
