@@ -9,6 +9,7 @@ from utils import CurrentStatistics, compare_versions
 
 logger = logging.getLogger(__name__)
 
+
 class EMECDrvTester(QTimer):
     on_test_timer_timeout = pyqtSignal()
     generate_label_signal = pyqtSignal()
@@ -204,10 +205,6 @@ class EMECDrvTester(QTimer):
             self.stop_test(f"CANOpen error ({hex(error.code)}): {error_messages[error.code]}")
 
     def get_elapsed_time(self) -> int:
-        """
-        Elapsed time since test start
-        :return:
-        """
         return self.elapsed_time
 
     @property
@@ -455,7 +452,7 @@ class LiftTester(EMECDrvTester):
                     self.moving_direction = CCW
 
                 self.start_movement()
-                self.start(1000)  # Start QTimer of EMECDrvTester(QTimer)
+                self.start(1000)
                 logger.debug(f"Start LiftTester for Node: {self.node.id} on network {self.node.network}")
 
             except Exception as e:

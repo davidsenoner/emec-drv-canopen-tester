@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QMainWindow, QTableWidgetItem, QPushButton, QHeaderV
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer, QSettings
 from PyQt5.QtGui import QCursor, QColor, QBrush
 
-from app.modules.emecdrv_tester import EMECDrvTester
+from app.modules.emecdrv_tester import SlewingTester, LiftTester
 from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 from app.widgets.add_info_diag import AddInfoDialog
 from app.widgets.add_sn_diag import AddSNDialog
@@ -16,8 +16,15 @@ from app.modules.test_report import Label, TestReportManager, keep_latest_files
 
 logger = logging.getLogger(__name__)
 
+def get_label_temp_folder():
+    os = platform.system()
+    if os == "Windows":
+        return "C:/tmp/labels/"
+    else:
+        return "/var/tmp/labels/"
 
-class NodeTableRow(EMECDrvTester):
+
+class SlewingNodeTableRow(SlewingTester):
     label_present_signal = pyqtSignal(Label)
 
     def __init__(self, network: Network, channel: int, node: BaseNode402):
@@ -32,6 +39,9 @@ class NodeTableRow(EMECDrvTester):
         self._report = None
 
         self.generate_label_signal.connect(self.on_label_present)
+
+    def __str__(self):
+        return f"Slewing"
 
     @property
     def network(self) -> Network:
@@ -95,21 +105,94 @@ class NodeTableRow(EMECDrvTester):
         label = Label(self.serial_number)
         label.node_id = self.node_id
         label.mean_current = self.current_stat.mean()
-
-        if self.node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
-            label.type = "LIFT"
-        elif self.node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
-            label.type = "SLEWING"
+        label.type = str(self)
 
         self.label_present_signal.emit(label)
 
+class LiftNodeTableRow(SlewingTester):
+    label_present_signal = pyqtSignal(Label)
 
-def get_label_temp_folder():
-    os = platform.system()
-    if os == "Windows":
-        return "C:/tmp/labels/"
-    else:
-        return "/var/tmp/labels/"
+    def __init__(self, network: Network, channel: int, node: BaseNode402):
+        super().__init__(node)
+
+        self._network = network
+        self._channel = channel
+        self._node = node
+        self._serial_number = 0
+        self._customer = ""
+        self._comment = ""
+        self._report = None
+
+        self.generate_label_signal.connect(self.on_label_present)
+
+    def __str__(self):
+        return f"Lift"
+
+    @property
+    def network(self) -> Network:
+        return self._network
+
+    @network.setter
+    def network(self, value: Network):
+        self._network = value
+
+    @property
+    def channel(self) -> int:
+        return self._channel
+
+    @channel.setter
+    def channel(self, value: int):
+        self._channel = value
+
+    @property
+    def node_id(self) -> int:
+        return self._node.id
+
+    @property
+    def node(self) -> BaseNode402:
+        return self._node
+
+    @node.setter
+    def node(self, value):
+        self._node = value
+
+    @property
+    def serial_number(self) -> int:
+        return self._serial_number
+
+    @serial_number.setter
+    def serial_number(self, sn: int) -> None:
+        self._serial_number = sn
+
+    @property
+    def customer(self) -> str:
+        return self._customer
+
+    @customer.setter
+    def customer(self, customer: str) -> None:
+        self._customer = customer
+
+    @property
+    def comment(self) -> str:
+        return self._comment
+
+    @comment.setter
+    def comment(self, comment: str) -> None:
+        self._comment = comment
+
+    def on_label_present(self):
+        """
+        Create a label and send a signal passing the label
+        This method should be connected to a singnal (es. timeout signal)
+        :return:
+        """
+        logger.debug(f"Create Label for serial number {self.serial_number}")
+        label = Label(self.serial_number)
+        label.node_id = self.node_id
+        label.mean_current = self.current_stat.mean()
+        label.type = str(self)
+
+        self.label_present_signal.emit(label)
 
 
 class NodeTable(QObject):
@@ -160,30 +243,7 @@ class NodeTable(QObject):
         }
 
     @staticmethod
-    def start_node(node_table_row: NodeTableRow):
-        try:
-            node_table_row.start_test()
-        except Exception as e:
-            logger.debug(f'Error during start test command: {e}')
-            return
-
-    @staticmethod
-    def stop_node(node_table_row: NodeTableRow):
-        try:
-            node_table_row.stop_test("Stopped by user")
-        except Exception as e:
-            logger.debug(f'Error during stop test command: {e}')
-
-    @staticmethod
-    def reset_node(node_table_row: NodeTableRow):
-        try:
-            node_table_row.ack_error()
-        except Exception as e:
-            logger.debug(f'Error during Ack command: {e}')
-        logger.debug(f'Reset Node ID: {node_table_row.node_id} by user')
-
-    @staticmethod
-    def pop_node(node_table_row: NodeTableRow):
+    def pop_node(node_table_row):
         try:
             # Pop node from network
             if node_table_row.node_id in node_table_row.network:
@@ -215,7 +275,13 @@ class NodeTable(QObject):
             key = f'{channel}_{node_id}'
 
             if key not in self.table_rows:
-                node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
+                if node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+                    node_table_row = SlewingNodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
+                elif node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+                    node_table_row = LiftNodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
+                else:
+                    continue    # Skip unknown nodes
+
                 node_table_row.on_test_timer_timeout.connect(self.draw_cyclic_info)
                 self.table_rows.update({key: node_table_row})
 
@@ -319,21 +385,14 @@ class NodeTable(QObject):
 
             # COLUMN NODE TYPE
             _column = 1
-            if node_table_row.node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Lift'))
-            elif node_table_row.node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Slewing'))
-            else:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'Unknown'))
+            self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row)))
 
             # COLUMN START BUTTON
             _column = 2
             btn_start = QPushButton('Start')
             btn_start.setMaximumSize(QSize(60, 35))
             btn_start.setCursor(QCursor(Qt.PointingHandCursor))
-            btn_start.clicked.connect(
-                lambda arg, n=node_table_row: self.start_node(n)
-            )
+            btn_start.clicked.connect(node_table_row.start_test)
             self.table_widget.setCellWidget(i, _column, btn_start)
 
             # COLUMN STOP BUTTON
@@ -341,9 +400,7 @@ class NodeTable(QObject):
             btn_stop = QPushButton('Stop')
             btn_stop.setMaximumSize(QSize(60, 35))
             btn_stop.setCursor(QCursor(Qt.PointingHandCursor))
-            btn_stop.clicked.connect(
-                lambda arg, n=node_table_row: self.stop_node(n)
-            )
+            btn_stop.clicked.connect(lambda n="Stopped by user": node_table_row.stop_test(n))
             self.table_widget.setCellWidget(i, _column, btn_stop)
 
             # COLUMN CW MOVEMENTS
@@ -410,7 +467,7 @@ class NodeTable(QObject):
 
             # start automatically node if just added
             if key in self._start_node_id:
-                self.start_node(node_table_row)
+                node_table_row.start_test()
                 self._start_node_id.remove(key)
 
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -442,7 +499,8 @@ class NodeTable(QObject):
 
         # reset command from context menu
         if action == reset_action:
-            self.reset_node(node_table_row)
+            node_table_row.ack_error()
+            logger.debug(f'Reset Node ID: {node_table_row.node_id} by user')
             self._redraw_table = True
 
         # add additional information to context menu
@@ -565,4 +623,3 @@ class NodeTable(QObject):
     @property
     def report_manager(self):
         return self._report_manager
-
