@@ -452,8 +452,16 @@ class EMECDrvTester(QTimer):
 
     def timeout_test(self):
         """
-        Timer is running if test have been started
-        :return:
+        Functions in this method:
+            -This method is called every second by QTimer to check conditions of test:
+                - max movement time exceeded
+                - mean current exceeds max current limit
+                - drive is not moving
+                - drive is moving in wrong direction
+
+            -This method also generates signal for printing/generating a label
+            -This method also stops test if error is detected
+            -This method also manages target position change when min/max position is reached
         """
         self.elapsed_time = self.elapsed_time + 1
         self.test_timer_timeout.emit()
@@ -467,20 +475,14 @@ class EMECDrvTester(QTimer):
             if self.current_mean_value > self.max_error_current:
                 self.stop_test(f"Current limit exceeded (Imean= {self.current_mean_value} mA)")
 
-            # check if error from CANOpen
-            # if self.node.state == 'FAULT':
-            # self.stop_test("CANOpen error: " + self.get_device_error_message())
-
             # check if drive is moving
             if self.actual_position_temp == self.actual_position:  # is not moving??
                 self.not_moving_counter += 1
-                logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
-
-                # if actual position doesn't change for more than 3s emit error
+                # logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
                 if self.not_moving_counter >= 4:
                     self.stop_test(f"Drive is not moving since {self.not_moving_counter}s")
 
-            else:  # drive is moving
+            else:
                 self.not_moving_counter = 0  # reset counter for detection "not moving" error
 
                 if self.actual_position_temp is not None and self.actual_position is not None:
@@ -513,7 +515,7 @@ class EMECDrvTester(QTimer):
 
             # drive is moving condition
             else:
-                self.moving_time = self.moving_time + 1  # increment timer during movement
+                self.moving_time += 1  # increment timer during movement
 
             # generate signal for printing/generating a label
             if not self.label_printed and self.elapsed_time > self.label_print_timeout:
