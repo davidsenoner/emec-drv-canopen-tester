@@ -19,14 +19,14 @@ logging.basicConfig(
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, version: str):
         QMainWindow.__init__(self)
 
         # Init UI
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.showMaximized()
-        self.setWindowTitle("EMEC Drive End-Of-Line Tester v2.1.2")  # Window title bar
+        self.setWindowTitle(f"EMEC Drive End-Of-Line Tester {version}")  # Window title bar
         self.node_table = None
 
         # Init canopen logger

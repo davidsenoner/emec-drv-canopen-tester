@@ -1,7 +1,8 @@
 import sys
-
 from PyQt5.QtWidgets import QApplication
-from app.widgets.main import MainWindow
+from app import MainWindow
+
+VERSION = "2.2.0"  # Version number
 
 if __name__ == "__main__":
     if not QApplication.instance():
@@ -9,9 +10,10 @@ if __name__ == "__main__":
 
         app.setOrganizationName('EMEC')
         app.setApplicationName('EMEC Drive End-Of-Line Tester')
-        app.setApplicationVersion('2.1.2')
+        app.setApplicationVersion(VERSION)
 
-        w = MainWindow()
+        w = MainWindow(VERSION)
+
         sys.exit(app.exec())
     else:
         print("QApplication instance already running")

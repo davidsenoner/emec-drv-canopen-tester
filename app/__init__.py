@@ -1,0 +1,1 @@
+from app.widgets.main import MainWindow
