@@ -104,11 +104,16 @@ class NodeTableRow(EMECDrvTester):
         self.label_present_signal.emit(label)
 
 
+def get_label_temp_folder():
+    os = platform.system()
+    if os == "Windows":
+        return "C:/tmp/labels/"
+    else:
+        return "/var/tmp/labels/"
+
+
 class NodeTable(QObject):
-    def __init__(self,
-                 widget: QTableWidget,
-                 networks: list
-                 ):
+    def __init__(self, widget: QTableWidget, networks: list):
         super().__init__()
 
         self._start_node_id = []
@@ -117,25 +122,12 @@ class NodeTable(QObject):
         self.table_rows = {}
         self._redraw_table = True
 
-        self.settings = QSettings("EMEC", "Tester")  # init QSettings
+        self.settings = QSettings("EMEC", "Tester")
+        self._headers = ["Ch_Id", "Type", "Start", "Stop", "CW", "CCW", "Pos", "Duration", "Current", "SW-Version",
+                         "Serial number", "State"]
 
-        _headers = [
-            "Ch_Id",
-            "Type",
-            "Start",
-            "Stop",
-            "CW",
-            "CCW",
-            "Pos",
-            "Duration",
-            "Current",
-            "SW-Version",
-            "Serial number",
-            "State"
-        ]
-
-        self.table_widget.setColumnCount(len(_headers))
-        self.table_widget.setHorizontalHeaderLabels(_headers)
+        self.table_widget.setColumnCount(len(self._headers))
+        self.table_widget.setHorizontalHeaderLabels(self._headers)
         self.table_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_widget.customContextMenuRequested.connect(self.on_context_menu)
 
@@ -147,30 +139,25 @@ class NodeTable(QObject):
         self.refresh_table_timer1.start(800)
         self.refresh_table_timer1.timeout.connect(self.draw_table)
 
-        layout = {
+        layout = self.get_layout_settings()
+        label_temp_folder = get_label_temp_folder()
+
+        settings = QSettings("EMEC", "Tester")
+        max_labels = settings.value("label_files_cache", 50, type=int)
+        keep_latest_files(label_temp_folder, max_labels)
+
+        self._report_manager = TestReportManager(label_temp_folder, **layout)
+
+    def get_layout_settings(self):
+        return {
             "columns": self.settings.value("label_paper_columns", 2, type=int),
             "column_width": self.settings.value("label_column_width", 60, type=int),
             "column_height": self.settings.value("label_column_height", 30, type=int),
-
             "top_padding": self.settings.value("label_column_top", 8, type=int),
             "bottom_padding": self.settings.value("label_column_bottom", 8, type=int),
             "left_padding": self.settings.value("label_column_left", 10, type=int),
             "right_padding": self.settings.value("label_column_right", 10, type=int),
         }
-        os = platform.system()
-
-        label_temp_folder = "/var/tmp/labels/"
-        if os == "Windows":
-            label_temp_folder = "C:/tmp/labels/"
-        elif os == "Linux":
-            label_temp_folder = "/var/tmp/labels/"
-
-        # delete old files in temp folder
-        settings = QSettings("EMEC", "Tester")  # init QSettings
-        max_labels = settings.value("label_files_cache", 50, type=int)
-        keep_latest_files(label_temp_folder, max_labels)
-
-        self._report_manager = TestReportManager(label_temp_folder, **layout)
 
     @staticmethod
     def start_node(node_table_row: NodeTableRow):
@@ -206,79 +193,52 @@ class NodeTable(QObject):
             logger.debug(f'Error removing node from network: {e}')
 
     @staticmethod
-    def add_node(network: Network, node_id: int):
+    def add_node(network: Network, node_id: int, eds: str = 'app/resources/eds/emecdrv5.eds'):
         # Create node from ID
         try:
-            eds = 'app/resources/eds/emecdrv5.eds'
-            # Add new node to network
             network.add_node(BaseNode402(node_id, eds))
             time.sleep(0.05)
-
-            logging.debug(f'Node ID {node_id} added to network')
-            logging.debug(f"EDS file loaded {eds}")
+            logging.debug(f'Node ID {node_id} added to network using EDS: {eds}')
         except Exception as e:
             logger.debug(f'Error when adding node to network: {e}')
 
     def update_node_table_rows(self):
-        # iterate over all channels
         for channel, network in enumerate(self.networks):
             if network is None:
                 continue
 
-            # add new nodes if there are some
-            try:
-                for node_id in network:
-                    key = f'{channel}_{node_id}'
+            self.add_new_nodes(channel, network)
+            self.remove_absent_nodes(channel, network)
 
-                    if key not in self.table_rows:
-                        # add table row
-                        node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
-                        node_table_row.test_timer_timeout.connect(self.draw_cyclic_info)
+    def add_new_nodes(self, channel, network):
+        for node_id in network:
+            key = f'{channel}_{node_id}'
 
-                        # add row to list
-                        self.table_rows.update({key: node_table_row})
+            if key not in self.table_rows:
+                node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
+                node_table_row.test_timer_timeout.connect(self.draw_cyclic_info)
+                self.table_rows.update({key: node_table_row})
 
-                        sn_active = self.settings.value("sn_mnt_active", True, type=bool)
+                if self.settings.value("sn_mnt_active", True, type=bool):
+                    dialog = AddSNDialog(channel=channel, node_id=node_id)
+                    node_table_row.serial_number = dialog.serial_number
+                    node_table_row.label_present_signal.connect(self._report_manager.add_label)
 
-                        if sn_active:
-                            # ask for serial number input
-                            dialog = AddSNDialog(channel=channel, node_id=node_id)
-                            node_table_row.serial_number = dialog.serial_number
-                            # add label to list after a timeout
-                            node_table_row.label_present_signal.connect(self._report_manager.add_label)
+    def remove_absent_nodes(self, channel, network):
+        key_to_remove = []
+        try:
+            key_to_remove = [key for key in self.table_rows if str(key).startswith(f'{channel}_') and int(
+                key.replace(f'{channel}_', '', 1)) not in network.scanner.nodes]
+        except Exception as e:  # If exception (can happen if transmit buffer full) than remove all nodes
+            network.clear()
+            logging.debug(f'All Nodes removed from network: {e}')
 
-            except Exception as e:
-                logger.debug(e)
-
-            # remove nodes if they aren't present anymore
-            try:
-                key_to_remove = []  # temp list of key to remove
-
-                # find dead key to remove
-                for key in self.table_rows:
-                    if str(key).startswith(f'{channel}_'):
-                        node_id = int(key.replace(f'{channel}_', '', 1))
-
-                        if node_id not in network.scanner.nodes:
-                            key_to_remove.append(key)
-
-                # remove the keys
-                for key in key_to_remove:
-                    row = self.table_rows[key]  # Type NodeTableRow()
-
-                    # print label before disconnect
-                    self.report_manager.print_label_from_serial_number(row.serial_number)
-
-                    self.pop_node(row)  # pop node from network
-                    self.table_rows.pop(key)  # remove node row
-
-                    logging.info(f'Node ID {key} removed')
-
-            except Exception as e:
-                # If exception (can happen if transmit buffer full) than remove all nodes
-                # self.table_rows.clear()
-                network.clear()
-                logging.debug(f'All Nodes removed from network: {e}')
+        for key in key_to_remove:
+            row = self.table_rows[key]
+            self.report_manager.print_label_from_serial_number(row.serial_number)
+            self.pop_node(row)
+            self.table_rows.pop(key)
+            logging.info(f'Node ID {key} removed')
 
     def draw_cyclic_info(self):
 

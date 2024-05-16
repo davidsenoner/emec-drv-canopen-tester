@@ -17,6 +17,11 @@ logging.basicConfig(
     format="%(asctime)s - %(name)-11s - %(levelname)-7s - %(message)s",
 )
 
+# Init canopen logger
+logging.getLogger('can').setLevel(logging.ERROR)
+logging.getLogger('canopen').setLevel(logging.ERROR)
+logging.getLogger('canopen.sdo.client').setLevel(logging.CRITICAL)
+
 
 class MainWindow(QMainWindow):
     def __init__(self, version: str):
@@ -29,20 +34,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"EMEC Drive End-Of-Line Tester {version}")  # Window title bar
         self.node_table = None
 
-        # Init canopen logger
-        logging.getLogger('can').setLevel(logging.ERROR)
-        logging.getLogger('canopen').setLevel(logging.ERROR)
-        logging.getLogger('canopen.sdo.client').setLevel(logging.CRITICAL)
-
         self.network_manager = NetworkManager()
 
-        self._ui.lbl_detected_cahnnels.setText(
-            f"{len(self.network_manager.network_list)} channels"
-        )
+        self._ui.lbl_detected_cahnnels.setText(f"{len(self.network_manager.network_list)} channels")
 
         if len(self.network_manager.network_list) > 0:  # at least ne channel detected
-            # Init Tables
-            self.node_table = NodeTable(self._ui.tbl_node_list, self.network_manager.network_list)
+            self.node_table = NodeTable(self._ui.tbl_node_list, self.network_manager.network_list)  # Init Tables
 
         # Settings management
         self.settings = QSettings("EMEC", "Tester")
@@ -59,10 +56,11 @@ class MainWindow(QMainWindow):
         self._ui.spb_max_lift_current.setValue(int(max_error_current_lift))
 
         # Signals for min software version
-        self._ui.led_min_sw_ver_lift.editingFinished.connect(self.update_qsettings)
-        self._ui.led_min_sw_ver_slewing.editingFinished.connect(self.update_qsettings)
-        self._ui.spb_max_lift_current.valueChanged.connect(self.update_qsettings)
-        self._ui.spb_max_slewing_current.valueChanged.connect(self.update_qsettings)
+        self._ui.led_min_sw_ver_lift.editingFinished.connect(self.on_settings_edited)
+        self._ui.led_min_sw_ver_slewing.editingFinished.connect(self.on_settings_edited)
+        # Signals for max current error
+        self._ui.spb_max_lift_current.valueChanged.connect(self.on_settings_changed)
+        self._ui.spb_max_slewing_current.valueChanged.connect(self.on_settings_changed)
 
         self._ui.led_print_label_with_serial.setFocus()  # set focus automatically on label serial number to print
         self._ui.led_print_label_with_serial.returnPressed.connect(self.on_print_label)
@@ -93,10 +91,10 @@ class MainWindow(QMainWindow):
         else:
             self._ui.lbl_print_lbl_detection_status.setText(f"Label SN: {ret}")
 
-        QTimer.singleShot(1000, self._ui.led_print_label_with_serial.clear) # clear text edit widget
+        QTimer.singleShot(1000, self._ui.led_print_label_with_serial.clear)  # clear text edit widget
         QTimer.singleShot(3000, self._ui.lbl_print_lbl_detection_status.clear)  # clear label widget
 
-    def update_qsettings(self):
+    def on_settings_edited(self):
         lne = self.sender()
         lneName = lne.objectName()
 
@@ -106,12 +104,18 @@ class MainWindow(QMainWindow):
         if lne == self._ui.led_min_sw_ver_slewing:
             self.settings.setValue("min_sw_version_slewing", lne.text())
 
-        if lne == self._ui.spb_max_lift_current:
-            self.settings.setValue("max_error_current_lift", lne.value())
-
-        if lne == self._ui.spb_max_slewing_current:
-            self.settings.setValue("max_error_current_slewing", lne.value())
-
         self._ui.led_print_label_with_serial.setFocus()  # switch focus automatically to serial to print
 
         logger.debug(f'{lneName} modified to {lne.text()}')
+
+    def on_settings_changed(self):
+        spb = self.sender()
+        spbName = spb.objectName()
+
+        if spb == self._ui.spb_max_lift_current:
+            self.settings.setValue("max_error_current_lift", spb.value())
+
+        if spb == self._ui.spb_max_slewing_current:
+            self.settings.setValue("max_error_current_slewing", spb.value())
+
+        self._ui.led_print_label_with_serial.setFocus()  # switch focus automatically to serial to print
