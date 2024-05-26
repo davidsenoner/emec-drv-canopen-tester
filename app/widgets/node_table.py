@@ -127,7 +127,7 @@ class NodeTable(QObject):
 
         self.settings = QSettings("EMEC", "Tester")
         self._headers = ["Ch_Id", "Type", "Start", "Stop", "CW", "CCW", "Pos", "Duration", "Current", "SW-Version",
-                         "Serial number", "State", "Test mode"]
+                         "Serial number", "State", "Test mode/result"]
 
         self.table_widget.setColumnCount(len(self._headers))
         self.table_widget.setHorizontalHeaderLabels(self._headers)
@@ -290,13 +290,16 @@ class NodeTable(QObject):
 
             # COLUMN STATUS
             _column = 11
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
-            i += 1
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN TESTING MODE
             _column = 12
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
-            i += 1
+
+            i += 1  # IMPORTANT: increment row counter only once!!!
 
             # logger.debug(f"Mean current: {node_table_row.current_stat.mean()}")  # mean current
             # logger.debug(f"Std current: {node_table_row.current_stat.stdev()}")  # standard deviation
@@ -409,12 +412,16 @@ class NodeTable(QObject):
 
             # COLUMN STATUS
             _column = 11
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN TESTING MODE
             _column = 12
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
-            i += 1
+
+            i += 1  # IMPORTANT: increment row counter only once!!!
 
             # start automatically node if just added
             if key in self._start_node_id:
