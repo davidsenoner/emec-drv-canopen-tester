@@ -17,21 +17,37 @@ CCW_BLOCKED_TEST_MODE = 2
 class EMECDrvTester(QTimer):
     on_test_timer_timeout = pyqtSignal()
     generate_label_signal = pyqtSignal()
-    on_limit_reached = pyqtSignal()
-    on_0_limit_reached = pyqtSignal()
-    on_1_limit_reached = pyqtSignal()
 
     def __init__(self, node: BaseNode402):
         super().__init__()
 
         self.node = node
-        self.settings = QSettings("EMEC", "Tester")
+        self.label_print_timeout = None
         self.not_moving_counter = 0  # counter for detection of no movement error
+        self.wrong_movement_counter = 0  # counter for detection of wrong movement error
+        self.actual_position_temp = 0
+        self.label_printed = False  # status bit True=Label already printed
+
+        self.settings = QSettings("EMEC", "Tester")
+
         self.moving_time = 0
         self.elapsed_time = 0
         self.test_error_message = ""  # Message to show to screen
         self.moving_direction = CW  # CCW, CW, STOPPED
-        self.target_temp = None
+
+        if node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+            self.min_target = MIN_TARGET_POSITION_LIFT,  # default for Lift
+            self.max_target = MAX_TARGET_POSITION_LIFT  # default for Lift
+            self.max_error_current = int(self.settings.value("max_error_current_lift", 600))
+            self.tolerance = 0
+
+        elif node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+            self.min_target = MIN_TARGET_POSITION_SLEWING
+            self.max_target = MAX_TARGET_POSITION_SLEWING
+            self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
+            self.tolerance = 10
+
+        self.target_temp = (self.max_target - self.min_target) / 2 + self.min_target  # get mid-position
 
         self.statistic_timer = QTimer()
         self.statistic_timer.setInterval(1000)
@@ -70,18 +86,7 @@ class EMECDrvTester(QTimer):
                 raise Exception('Timeout when trying to change state to OPERATION ENABLED')
             time.sleep(0.001)
 
-    def stop_test(self, message=""):
-        if message != "":
-            self.test_error_message = message
-            logger.debug(f'Stop Test on Node {self.node.id} due to {message}')
-        else:
-            logger.error(f'Stop Test on Node {self.node.id}')
-
-        self.stop_movement()
-
-        self.moving_time = self.elapsed_time = self.not_moving_counter = 0
-        self.current_stat.reset()
-        self.stop()
+        self.timeout.connect(self.test_routine)  # connect test routine to timeout signal
 
     def get_ccw_movements(self):
         """ Return's CCW movements red from canopen registers """
@@ -147,6 +152,21 @@ class EMECDrvTester(QTimer):
         """ Return's manufacturer software version red from canopen registers """
         return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
 
+    def get_software_version_ok(self) -> bool:
+        # compare software version
+        min_sw_version = 0
+
+        # load min software version from settings depending on drive type
+        if self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+            min_sw_version = self.settings.value("min_sw_version_slewing", "v1.25")
+        elif self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+            min_sw_version = self.settings.value("min_sw_version_lift", "v3.16")
+
+        # compare min sw version with version from drive
+        software_comparison = compare_versions(self.get_manufacturer_software_version(), min_sw_version)
+
+        return software_comparison >= 0
+
     def get_elapsed_time(self) -> int:
         return self.elapsed_time
 
@@ -197,21 +217,19 @@ class EMECDrvTester(QTimer):
             self.stop_test(message=f"CANOpen error ({hex(error.code)}): {error_messages[error.code]}")
 
     def get_status(self) -> str:
-        if self.test_error_message:
+        if self.test_error_message is not None:
             return self.test_error_message
-
-        try:
+        else:
             state = self.node.state
-        except Exception as e:
-            logger.error(f'Cannot read state from SDO: {e}')
-            return "-"
 
-        status_mapping = {
-            (True, 'OPERATION ENABLED'): "Test running",
-            (False, 'SWITCHED ON'): "Stopped"
-        }
+            if self.isActive():
+                if state == 'OPERATION ENABLED':
+                    state = "Test running"
+            else:
+                if state == 'SWITCHED ON':
+                    state = "Stopped"
 
-        return status_mapping.get((self.isActive(), state), state)
+            return state
 
     def goto_target_position(self, position: int):
         try:
@@ -240,6 +258,20 @@ class EMECDrvTester(QTimer):
         except Exception as e:
             logger.error(f'Cannot read actual current from SDO: {e}')
 
+    def stop_test(self, message: str = None):
+        if message is not None:
+            self.test_error_message = message
+            logger.debug(f'Stop Test on Node {self.node.id} due to {message}')
+        else:
+            logger.debug(f'Stop Test on Node {self.node.id}')
+
+        self.stop_movement()
+        self.stop()  # stop timer
+
+        self.moving_time = self.elapsed_time = self.not_moving_counter = 0
+        self.current_stat.reset()  # reset current statistics
+        self.block_current_stat.reset()  # reset current statistics
+
     def start_movement(self):
         try:
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_ENABLE_OPERATION
@@ -248,16 +280,17 @@ class EMECDrvTester(QTimer):
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_START_MOVEMENT_ORDER
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_START_MOVEMENT_ORDER
 
-            self.statistic_timer.start(1000)
+            self.timeout.connect(self.timer_statistics)  # connect statistics timer to timeout signal
         except Exception as e:
             logger.error(f'Cannot start movement: {e}')
 
     def stop_movement(self):
         try:
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_ENABLE_OPERATION
-            self.statistic_timer.stop()
         except Exception as e:
             logger.error(f'Cannot stop movement: {e}')
+
+        self.timeout.disconnect(self.timer_statistics)  # disconnect statistics timer from timeout signal
 
     def ack_error(self):
         try:
@@ -621,15 +654,11 @@ class LiftTester(EMECDrvTester):
         if (abs(self.max_target) - self.tolerance) <= actual_position:
             if self.target_temp != self.min_target:
                 self.goto_target_position(self.min_target)  # go to the new position
-                self.on_limit_reached.emit()
-                self.on_1_limit_reached.emit()
 
         # min position reached condition
         elif actual_position <= (abs(self.min_target) + self.tolerance):
             if self.target_temp != self.max_target:
                 self.goto_target_position(self.max_target)  # go to the new position
-                self.on_limit_reached.emit()
-                self.on_0_limit_reached.emit()
 
         # drive is moving condition
         else:
