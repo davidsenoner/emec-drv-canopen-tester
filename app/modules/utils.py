@@ -20,12 +20,40 @@ def compare_versions(version1: str, version2: str):
 class CurrentStatistics:
     """ Class to store current values and calculate statistics """
 
-    def __init__(self, max_length: int):
+    def __init__(self, max_length: int, threshold: float = 0):
 
         assert max_length > 1, "max_length must be greater than 1"
 
         self.current_values = deque([0] * max_length, maxlen=max_length)
         self.max_length = max_length
+        self.threshold = threshold
+
+    def __repr__(self):
+        return repr(self.current_values)
+
+    def __iter__(self):
+        return iter(self.current_values)
+
+    def set_threshold(self, threshold):
+        self.threshold = threshold
+
+    def get_threshold(self):
+        return self.threshold
+
+    def is_below_threshold(self):
+        return self.last() < self.threshold
+
+    def is_above_threshold(self):
+        return self.last() > self.threshold
+
+    def values_above_threshold(self):
+        count = 0
+        for v in reversed(self.current_values):
+            if v > self.threshold:
+                count += 1
+            else:
+                break
+        return count
 
     def min(self):
         return min(self.current_values)
@@ -41,6 +69,12 @@ class CurrentStatistics:
 
     def median(self):
         return statistics.median(self.current_values)
+
+    def last(self):
+        return self.current_values[-1]
+
+    def first(self):
+        return self.current_values[0]
 
     def add(self, value):
         self.current_values.append(value)

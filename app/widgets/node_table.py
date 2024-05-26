@@ -25,11 +25,16 @@ def get_label_temp_folder():
         return "/var/tmp/labels/"
 
 
-class SlewingNodeTableRow(SlewingTester):
+class NodeTableRow(QObject):
     label_present_signal = pyqtSignal(Label)
 
     def __init__(self, network: Network, channel: int, node: BaseNode402):
-        super().__init__(node)
+        super().__init__()
+
+        if node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+            self.tester = SlewingTester(node)
+        elif node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+            self.tester = LiftTester(node)
 
         self._network = network
         self._channel = channel
@@ -39,10 +44,15 @@ class SlewingNodeTableRow(SlewingTester):
         self._comment = ""
         self._report = None
 
-        self.generate_label_signal.connect(self.on_label_present)
+        self.tester.generate_label_signal.connect(self.on_label_present)
 
     def __str__(self):
-        return f"Slewing"
+        if self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+            return f"Slewing"
+        elif self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+            return f"Lift"
+        else:
+            return f"Unknown"
 
     @property
     def network(self) -> Network:
@@ -105,93 +115,7 @@ class SlewingNodeTableRow(SlewingTester):
         logger.debug(f"Create Label for serial number {self.serial_number}")
         label = Label(self.serial_number)
         label.node_id = self.node_id
-        label.mean_current = self.current_stat.mean()
-        label.type = str(self)
-
-        self.label_present_signal.emit(label)
-
-
-class LiftNodeTableRow(LiftTester):
-    label_present_signal = pyqtSignal(Label)
-
-    def __init__(self, network: Network, channel: int, node: BaseNode402):
-        super().__init__(node)
-
-        self._network = network
-        self._channel = channel
-        self._node = node
-        self._serial_number = 0
-        self._customer = ""
-        self._comment = ""
-        self._report = None
-
-        self.generate_label_signal.connect(self.on_label_present)
-
-    def __str__(self):
-        return f"Lift"
-
-    @property
-    def network(self) -> Network:
-        return self._network
-
-    @network.setter
-    def network(self, value: Network):
-        self._network = value
-
-    @property
-    def channel(self) -> int:
-        return self._channel
-
-    @channel.setter
-    def channel(self, value: int):
-        self._channel = value
-
-    @property
-    def node_id(self) -> int:
-        return self._node.id
-
-    @property
-    def node(self) -> BaseNode402:
-        return self._node
-
-    @node.setter
-    def node(self, value):
-        self._node = value
-
-    @property
-    def serial_number(self) -> int:
-        return self._serial_number
-
-    @serial_number.setter
-    def serial_number(self, sn: int) -> None:
-        self._serial_number = sn
-
-    @property
-    def customer(self) -> str:
-        return self._customer
-
-    @customer.setter
-    def customer(self, customer: str) -> None:
-        self._customer = customer
-
-    @property
-    def comment(self) -> str:
-        return self._comment
-
-    @comment.setter
-    def comment(self, comment: str) -> None:
-        self._comment = comment
-
-    def on_label_present(self):
-        """
-        Create a label and send a signal passing the label
-        This method should be connected to a singnal (es. timeout signal)
-        :return:
-        """
-        logger.debug(f"Create Label for serial number {self.serial_number}")
-        label = Label(self.serial_number)
-        label.node_id = self.node_id
-        label.mean_current = self.current_stat.mean()
+        label.mean_current = self.tester.current_stat.mean()
         label.type = str(self)
 
         self.label_present_signal.emit(label)
@@ -254,17 +178,19 @@ class NodeTable(QObject):
                 node_table_row.network.pop(node_table_row.node_id)
             time.sleep(0.05)
         except Exception as e:
-            logger.debug(f'Error removing node from network: {e}')
+            logger.error(f'Error removing node from network: {e}')
 
     @staticmethod
-    def add_node(network: Network, node_id: int, eds: str = 'app/resources/eds/emecdrv5.eds'):
+    def add_node(network: Network, node_id: int):
         # Create node from ID
         try:
+            eds = 'app/resources/eds/emecdrv5.eds'
+            # Add new node to network
             network.add_node(BaseNode402(node_id, eds))
             time.sleep(0.05)
             logging.debug(f'Node ID {node_id} added to network using EDS: {eds}')
         except Exception as e:
-            logger.debug(f'Error when adding node to network: {e}')
+            logger.error(f'Error when adding node to network: {e}')
 
     def update_node_table_rows(self):
         for channel, network in enumerate(self.networks):
@@ -279,14 +205,9 @@ class NodeTable(QObject):
             key = f'{channel}_{node_id}'
 
             if key not in self.table_rows:
-                if node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
-                    node_table_row = SlewingNodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
-                elif node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
-                    node_table_row = LiftNodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
-                else:
-                    continue    # Skip unknown nodes
+                node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
 
-                node_table_row.on_test_timer_timeout.connect(self.draw_cyclic_info)
+                node_table_row.tester.on_test_timer_timeout.connect(self.draw_cyclic_info)
                 self.table_rows.update({key: node_table_row})
 
                 if self.settings.value("sn_mnt_active", True, type=bool):
@@ -315,48 +236,51 @@ class NodeTable(QObject):
         i = 0
 
         for key, node_table_row in self.table_rows.items():
+
+            tester = node_table_row.tester
+
             # COLUMN CW MOVEMENTS
             _column = 4
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_cw_movements())))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(tester.get_cw_movements())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN CCW MOVEMENTS
             _column = 5
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_ccw_movements())))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(tester.get_ccw_movements())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN ACTUAL POSITION
             _column = 6
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_actual_position())))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(tester.get_actual_position())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN DURATION
             _column = 7
-            seconds = node_table_row.get_elapsed_time()
+            seconds = tester.get_elapsed_time()
             duration = str(seconds // 60) + "m " + str(seconds % 60) + "s"
             self.table_widget.setItem(i, _column, QTableWidgetItem(duration))
 
             # COLUMN ACTUAL CURRENT
             _column = 8
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_actual_current()} mA'))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{tester.get_actual_current()} mA'))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN STATUS
             _column = 11
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
+            self.table_widget.setItem(i, _column, QTableWidgetItem(tester.get_status()))
             i += 1
 
             # COLUMN TESTING MODE
             _column = 12
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
+            self.table_widget.setItem(i, _column, QTableWidgetItem(tester.get_test_mode_description()))
             i += 1
 
             # logger.debug(f"Mean current: {node_table_row.current_stat.mean()}")  # mean current
@@ -378,6 +302,9 @@ class NodeTable(QObject):
             self.table_widget.removeRow(i)
 
         for key, node_table_row in self.table_rows.items():
+
+            tester = node_table_row.tester
+
             i = self.table_widget.rowCount()
 
             self.table_widget.insertRow(i)
@@ -397,7 +324,7 @@ class NodeTable(QObject):
             btn_start = QPushButton('Start')
             btn_start.setMaximumSize(QSize(60, 35))
             btn_start.setCursor(QCursor(Qt.PointingHandCursor))
-            btn_start.clicked.connect(node_table_row.start_test)
+            btn_start.clicked.connect(tester.start_test)
             self.table_widget.setCellWidget(i, _column, btn_start)
 
             # COLUMN STOP BUTTON
@@ -405,52 +332,52 @@ class NodeTable(QObject):
             btn_stop = QPushButton('Stop')
             btn_stop.setMaximumSize(QSize(60, 35))
             btn_stop.setCursor(QCursor(Qt.PointingHandCursor))
-            btn_stop.clicked.connect(lambda n="Stopped by user": node_table_row.stop_test(n))
+            btn_stop.clicked.connect(tester.stop_test)
             self.table_widget.setCellWidget(i, _column, btn_stop)
 
             # COLUMN CW MOVEMENTS
             _column = 4
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_cw_movements())))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(tester.get_cw_movements())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN CCW MOVEMENTS
             _column = 5
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_ccw_movements())))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(tester.get_ccw_movements())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN ACTUAL POSITION
             _column = 6
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(str(node_table_row.get_actual_position())))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(str(tester.get_actual_position())))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN DURATION
             _column = 7
-            seconds = node_table_row.get_elapsed_time()
+            seconds = tester.get_elapsed_time()
             duration = str(seconds // 60) + "m " + str(seconds % 60) + "s"
             self.table_widget.setItem(i, _column, QTableWidgetItem(duration))
 
             # COLUMN ACTUAL CURRENT
             _column = 8
             try:
-                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_actual_current()} mA'))
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{tester.get_actual_current()} mA'))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN SOFTWARE VERSION
             _column = 9
             try:
-                item = QTableWidgetItem(node_table_row.manufacturer_software_version)
+                item = QTableWidgetItem(tester.manufacturer_software_version)
 
                 brush = QBrush(QColor(255, 0, 0, 255))
                 brush.setStyle(Qt.SolidPattern)
 
-                if node_table_row.get_software_version_ok():
+                if tester.get_software_version_ok():
                     item.setForeground(QBrush())
                 else:
                     item.setForeground(brush)
@@ -465,16 +392,16 @@ class NodeTable(QObject):
 
             # COLUMN STATUS
             _column = 11
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
+            self.table_widget.setItem(i, _column, QTableWidgetItem(tester.get_status()))
 
             # COLUMN TESTING MODE
             _column = 12
-            self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
+            self.table_widget.setItem(i, _column, QTableWidgetItem(tester.get_test_mode_description()))
             i += 1
 
             # start automatically node if just added
             if key in self._start_node_id:
-                node_table_row.start_test()
+                tester.start_test()
                 self._start_node_id.remove(key)
 
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -492,6 +419,7 @@ class NodeTable(QObject):
         key = self.table_widget.item(row, 0).text()  # Column 0 have unique key for channel/node_id
 
         node_table_row = self.table_rows[key]
+        tester = node_table_row.tester
 
         menu = QMenu()
 
@@ -506,7 +434,7 @@ class NodeTable(QObject):
 
         # reset command from context menu
         if action == reset_action:
-            node_table_row.ack_error()
+            tester.ack_error()
             logger.debug(f'Reset Node ID: {node_table_row.node_id} by user')
             self._redraw_table = True
 
@@ -543,27 +471,27 @@ class NodeTable(QObject):
             except:
                 text += f"Channel: -\n"
             try:
-                text += f"Manufacturer Device Name: {node_table_row.get_manufacturer_device_name()}\n"
+                text += f"Manufacturer Device Name: {tester.get_manufacturer_device_name()}\n"
             except:
                 text += f"Manufacturer Device Name: -\n"
             try:
-                text += f"Manufacturer Hardware Version: {node_table_row.get_manufacturer_hardware_version()}\n"
+                text += f"Manufacturer Hardware Version: {tester.get_manufacturer_hardware_version()}\n"
             except:
                 text += f"Manufacturer Hardware Version: -\n"
             try:
-                text += f"Manufacturer Software Version: {node_table_row.get_manufacturer_software_version()}\n"
+                text += f"Manufacturer Software Version: {tester.get_manufacturer_software_version()}\n"
             except:
                 text += f"Manufacturer Software Version: -\n"
             try:
-                text += f"CW/CCW movements: {str(node_table_row.get_cw_movements())}/{str(node_table_row.get_ccw_movements())}\n"
+                text += f"CW/CCW movements: {str(tester.get_cw_movements())}/{str(tester.get_ccw_movements())}\n"
             except:
                 text += f"CW/CCW movements: -/-\n"
             try:
-                text += f"Accumulative operating time: {str(node_table_row.get_accumulative_operating_time())}\n"
+                text += f"Accumulative operating time: {str(tester.get_accumulative_operating_time())}\n"
             except:
                 text += f"Accumulative operating time: -\n"
             try:
-                text += f"Device temperature: {str(node_table_row.get_device_temp())} (max: {str(node_table_row.get_max_device_temp())})\n"
+                text += f"Device temperature: {str(tester.get_device_temp())} (max: {str(tester.get_max_device_temp())})\n"
             except:
                 text += f"Device temperature: - (max: -)\n"
             try:
@@ -571,31 +499,31 @@ class NodeTable(QObject):
             except:
                 text += f"State: -\n"
             try:
-                text += f"Actual position: {str(node_table_row.get_actual_position())}\n"
+                text += f"Actual position: {str(tester.get_actual_position())}\n"
             except:
                 text += f"Actual position: -\n"
             try:
-                text += f"Target position: {str(node_table_row.get_target_position())}\n"
+                text += f"Target position: {str(tester.get_target_position())}\n"
             except:
                 text += f"Target position: -\n"
             try:
-                text += f"Control Word: {hex(node_table_row.get_control_word())}\n"
+                text += f"Control Word: {hex(tester.get_control_word())}\n"
             except:
                 text += f"Control Word: -\n"
             try:
-                text += f"Status Word: {hex(node_table_row.get_status_word())}\n"
+                text += f"Status Word: {hex(tester.get_status_word())}\n"
             except:
                 text += f"Status Word: -\n"
             try:
-                text += f"Actual current: {str(node_table_row.get_actual_current())}\n"
+                text += f"Actual current: {str(tester.get_actual_current())}\n"
             except:
                 text += f"Actual current: -\n"
             try:
-                text += f"Rated/Max current: {str(node_table_row.get_rated_current())}/{str(node_table_row.get_max_current())}\n"
+                text += f"Rated/Max current: {str(tester.get_rated_current())}/{str(tester.get_max_current())}\n"
             except:
                 text += f"Rated/Max current: -/-\n"
             try:
-                text += f"Battery voltage: {hex(node_table_row.get_dc_link_circuit_voltage())}\n"
+                text += f"Battery voltage: {hex(tester.get_dc_link_circuit_voltage())}\n"
             except:
                 text += f"Battery voltage: -\n"
 
@@ -622,8 +550,8 @@ class NodeTable(QObject):
 
             except Exception as e:
                 pass
-                # logger.debug(f"Error during node refresh: {e}")
-                # logger.debug(network.scanner.nodes)
+                # logger.error(f"Error during node refresh: {e}")
+                # logger.error(network.scanner.nodes)
 
         self._redraw_table = True
 

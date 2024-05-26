@@ -32,7 +32,7 @@ class SettingsDialog(QDialog):
             conn = cups.Connection()
             printers = conn.getPrinters()
         except Exception as e:
-            logger.debug(f"Exception during connecting CUPS: {e}")
+            logger.error(f"Exception during connecting CUPS: {e}")
 
         self.settings = QSettings("EMEC", "Tester")  # init QSettings
         printer = self.settings.value("printer", "None")  # get printer selection von settings file
@@ -68,6 +68,10 @@ class SettingsDialog(QDialog):
         self._ui.sb_padding_right.setValue(self.settings.value("label_column_right", 0, type=int))
         self._ui.sb_label_file_cache.setValue(self.settings.value("label_files_cache", 50, type=int))
 
+        # test procedure settings
+        self._ui.sb_norm_run_slewing_duration.setValue(self.settings.value("norm_run_slewing_duration", 200, type=int))
+        self._ui.sb_min_block_duration.setValue(self.settings.value("min_tld_block_duration", 5, type=int))
+
         self._ui.btn_print_test_label.clicked.connect(self.on_print_test_label)
 
         ret = self.exec_()
@@ -94,6 +98,10 @@ class SettingsDialog(QDialog):
             self.settings.setValue("label_column_left", self._ui.sb_padding_left.value())
             self.settings.setValue("label_column_right", self._ui.sb_padding_right.value())
             self.settings.setValue("label_files_cache", self._ui.sb_label_file_cache.value())
+
+            # test procedure settings
+            self.settings.setValue("norm_run_slewing_duration", self._ui.sb_norm_run_slewing_duration.value())
+            self.settings.setValue("min_tld_block_duration", self._ui.sb_min_block_duration.value())
 
     def on_print_test_label(self) -> None:
         """
@@ -147,14 +155,8 @@ class SettingsDialog(QDialog):
             label = Label(20231120 + i)
             label.node_id = 12
             label.mean_current = 400
-
-            if label.node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
-                label.type = "LIFT"
-            elif self.node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
-                label.type = "SLEWING"
-
+            label.type = "SLEWING"
             report_manager.add_label(label)
-
             i += 1
 
         return report_manager.last_label_path

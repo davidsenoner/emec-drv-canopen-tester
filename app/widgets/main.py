@@ -48,19 +48,22 @@ class MainWindow(QMainWindow):
         min_sw_version_lift = self.settings.value("min_sw_version_lift", "v3.16")
         max_error_current_slewing = self.settings.value("max_error_current_slewing", 600)
         max_error_current_lift = self.settings.value("max_error_current_lift", 800)
+        block_current_threshold = self.settings.value("block_current_threshold", 1500)
 
         # init min sw version to UI
         self._ui.led_min_sw_ver_slewing.setText(min_sw_version_slewing)
         self._ui.led_min_sw_ver_lift.setText(min_sw_version_lift)
         self._ui.spb_max_slewing_current.setValue(int(max_error_current_slewing))
         self._ui.spb_max_lift_current.setValue(int(max_error_current_lift))
+        self._ui.spb_blocked_current_thr_slewing.setValue(int(block_current_threshold))
 
         # Signals for min software version
-        self._ui.led_min_sw_ver_lift.editingFinished.connect(self.on_settings_edited)
         self._ui.led_min_sw_ver_slewing.editingFinished.connect(self.on_settings_edited)
+        self._ui.led_min_sw_ver_lift.editingFinished.connect(self.on_settings_edited)
         # Signals for max current error
-        self._ui.spb_max_lift_current.editingFinished.connect(self.on_settings_edited)
         self._ui.spb_max_slewing_current.editingFinished.connect(self.on_settings_edited)
+        self._ui.spb_max_lift_current.editingFinished.connect(self.on_settings_edited)
+        self._ui.spb_blocked_current_thr_slewing.editingFinished.connect(self.on_settings_edited)
 
         self._ui.led_print_label_with_serial.setFocus()  # set focus automatically on label serial number to print
         self._ui.led_print_label_with_serial.returnPressed.connect(self.on_print_label)
@@ -109,6 +112,9 @@ class MainWindow(QMainWindow):
 
         if lne == self._ui.spb_max_slewing_current:
             self.settings.setValue("max_error_current_slewing", lne.value())
+
+        if lne == self._ui.spb_blocked_current_thr_slewing:
+            self.settings.setValue("block_current_threshold", lne.value())
 
         self._ui.led_print_label_with_serial.setFocus()  # switch focus automatically to serial to print
 
