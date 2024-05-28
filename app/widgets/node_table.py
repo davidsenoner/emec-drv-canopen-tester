@@ -109,7 +109,9 @@ class NodeTableRow(EMECDrvTester):
         logger.debug(f"Create Label for serial number {self.serial_number}")
         label = Label(self.serial_number)
         label.node_id = self.node_id
-        label.mean_current = self.current_stat.mean()
+        label.mean_current = self.get_mean_current()
+        label.cw_block_current = self.get_cw_block_current()
+        label.ccw_block_current = self.get_ccw_block_current()
         label.type = str(self)
 
         self.label_present_signal.emit(label)

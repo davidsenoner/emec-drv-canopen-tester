@@ -70,7 +70,6 @@ class SettingsDialog(QDialog):
 
         # test procedure settings
         self._ui.sb_norm_run_slewing_duration.setValue(self.settings.value("norm_run_slewing_duration", 200, type=int))
-        self._ui.sb_min_block_duration.setValue(self.settings.value("min_tld_block_duration", 5, type=int))
 
         self._ui.btn_print_test_label.clicked.connect(self.on_print_test_label)
 
@@ -101,7 +100,6 @@ class SettingsDialog(QDialog):
 
             # test procedure settings
             self.settings.setValue("norm_run_slewing_duration", self._ui.sb_norm_run_slewing_duration.value())
-            self.settings.setValue("min_tld_block_duration", self._ui.sb_min_block_duration.value())
 
     def on_print_test_label(self) -> None:
         """

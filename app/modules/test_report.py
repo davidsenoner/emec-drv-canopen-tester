@@ -30,6 +30,8 @@ class Label:
     """
 
     def __init__(self, serial_number: int):
+        self._ccw_block_current = None
+        self._cw_block_current = None
         self._node_id = None
         self._cycles = None
         self._type = "UNKNOWN"
@@ -89,6 +91,22 @@ class Label:
     @mean_current.setter
     def mean_current(self, current: float) -> None:
         self._mean_current = current
+
+    @property
+    def cw_block_current(self) -> float:
+        return self._cw_block_current
+
+    @cw_block_current.setter
+    def cw_block_current(self, current: float) -> None:
+        self._cw_block_current = current
+
+    @property
+    def ccw_block_current(self) -> float:
+        return self._ccw_block_current
+
+    @ccw_block_current.setter
+    def ccw_block_current(self, current: float) -> None:
+        self._ccw_block_current = current
 
 
 def print_pdf(path: str, printer: str) -> None:
@@ -243,12 +261,22 @@ class TestReportManager(SimpleDocTemplate):
             height = 2492 * image_ratio
 
             imean_out = label.mean_current / 1000  # print in Amps
+            cw_block_current = label.cw_block_current / 1000  # print in Amps
+            ccw_block_current = label.ccw_block_current / 1000  # print in Amps
 
-            data = [[Image(logo, width=width, height=height), "QC APPROVED"],
-                    ["DATE:", f'{label.datetime}'],
-                    ["SN:", f"{label.serial_number}"],
-                    ["TYPE(ID):", f"{label.type} ({label.node_id})"],
-                    ["Imean", "{:.2f}A".format(imean_out)]]  # 2 digits
+            if label.node_id == 12:
+                data = [[Image(logo, width=width, height=height), "QC APPROVED"],
+                        ["DATE:", f'{label.datetime}'],
+                        ["SN:", f"{label.serial_number}"],
+                        ["TYPE(ID):", f"{label.type} ({label.node_id})"],
+                        ["Imean", "{:.2f}A".format(imean_out)]]
+            else:
+                data = [[Image(logo, width=width, height=height), "QC APPROVED"],
+                        ["DATE:", f'{label.datetime}'],
+                        ["SN:", f"{label.serial_number}"],
+                        ["TYPE(ID):", f"{label.type} ({label.node_id})"],
+                        ["Imean", "{:.2f}A".format(imean_out)],
+                        ["Icw/Iccw", "{:.2f}A / {:.2f}A".format(cw_block_current, ccw_block_current)]]
 
             table = Table(data)
 

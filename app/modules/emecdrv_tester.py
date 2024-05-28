@@ -25,6 +25,11 @@ class EMECDrvTester(QTimer):
         self.label_print_timeout = None
         self.cw_block_detected = False
         self.ccw_block_detected = False
+        self.normal_run_test_active = True  # flag for first run of normal running test
+        self.mean_current = 0  # mean current value during normal running test
+        self.cw_block_current = 0  # current measured at CW block test event
+        self.ccw_block_current = 0  # current measured at CCW block test event
+        self.block_test_time = 0 # timer for block test duration needed for detection of block event
         self.not_moving_counter = 0  # counter for detection of no movement error
         self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = 0
@@ -52,18 +57,18 @@ class EMECDrvTester(QTimer):
 
             self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
             self.normal_run_test_duration = int(self.settings.value("norm_run_slewing_duration", 120))
-            self.min_tld_block_duration = int(self.settings.value("min_tld_block_duration", 4))
-            self.block_current_threshold = int(self.settings.value("block_current_threshold", 1500))
+
+        self.block_current_threshold = int(self.settings.value("block_current_threshold", 1500))
 
         logger.debug(f"Node {node.id} min_target: {self.min_target}, max_target: {self.max_target}")
-        self.target_temp = (self.max_target - self.min_target) / 2 + self.min_target  # get mid-position
+        self.target_temp = self.mid_target = int((self.max_target - abs(self.min_target)) / 2 + abs(self.min_target))
 
         self.statistic_timer = QTimer()
         self.statistic_timer.setInterval(1000)
-        self.statistic_timer.timeout.connect(self.timer_statistics)
+        self.statistic_timer.timeout.connect(self.on_timeout_statistics)
 
         self.current_stat = CurrentStatistics(max_length=20)
-        self.block_current_stat = CurrentStatistics(max_length=10)
+        self.block_stat_current = CurrentStatistics(max_length=20)
 
         # register emergency error callback that will stop with error message from canopen
         self.node.emcy.add_callback(self.emergency_callback)
@@ -74,25 +79,34 @@ class EMECDrvTester(QTimer):
 
         # Init Node state
         timeout = time.time() + 15
-        node.state = 'READY TO SWITCH ON'
-        while node.state != 'READY TO SWITCH ON':
-            if time.time() > timeout:
-                raise Exception('Timeout when trying to change state to READY TO SWITCH ON')
-            time.sleep(0.001)
+        try:
+            node.state = 'READY TO SWITCH ON'
+            while node.state != 'READY TO SWITCH ON':
+                if time.time() > timeout:
+                    raise Exception('Timeout when trying to change state to READY TO SWITCH ON')
+                time.sleep(0.001)
+        except Exception as e:
+            logger.error(f"Cannot change state to READY TO SWITCH ON: {e}") # log error
 
         timeout = time.time() + 15
-        node.state = 'SWITCHED ON'
-        while node.state != 'SWITCHED ON':
-            if time.time() > timeout:
-                raise Exception('Timeout when trying to change state to SWITCHED ON')
-            time.sleep(0.001)
+        try:
+            node.state = 'SWITCHED ON'
+            while node.state != 'SWITCHED ON':
+                if time.time() > timeout:
+                    raise Exception('Timeout when trying to change state to SWITCHED ON')
+                time.sleep(0.001)
+        except Exception as e:
+            logger.error(f"Cannot change state to SWITCHED ON: {e}")
 
         timeout = time.time() + 15
-        node.state = 'OPERATION ENABLED'
-        while node.state != 'OPERATION ENABLED':
-            if time.time() > timeout:
-                raise Exception('Timeout when trying to change state to OPERATION ENABLED')
-            time.sleep(0.001)
+        try:
+            node.state = 'OPERATION ENABLED'
+            while node.state != 'OPERATION ENABLED':
+                if time.time() > timeout:
+                    raise Exception('Timeout when trying to change state to OPERATION ENABLED')
+                time.sleep(0.001)
+        except Exception as e:
+            logger.error(f"Cannot change state to OPERATION ENABLED: {e}")
 
         self.timeout.connect(self.test_routine)  # connect test routine to timeout signal
 
@@ -159,6 +173,15 @@ class EMECDrvTester(QTimer):
     def get_manufacturer_software_version(self):
         """ Return's manufacturer software version red from canopen registers """
         return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
+
+    def get_cw_block_current(self):
+        return self.cw_block_current
+
+    def get_ccw_block_current(self):
+        return self.ccw_block_current
+
+    def get_mean_current(self):
+        return self.mean_current
 
     def get_software_version_ok(self) -> bool:
         # compare software version
@@ -243,31 +266,37 @@ class EMECDrvTester(QTimer):
         return self.actual_test_mode_description
 
     def goto_target_position(self, position: int):
+        self.target_temp = position
         try:
             actual_position = self.get_actual_position()
             if actual_position > abs(position):  # abs() because slewing have negative value when turning CCW
                 self.moving_direction = CCW
+                if position > 0:
+                    position = -position  # CCW movement needs negative value
             elif actual_position < abs(position):
                 self.moving_direction = CW
+                if position < 0:
+                    position = -position
             else:
                 self.moving_direction = STOPPED
                 self.stop_test(message="Internal error: New target position same  as actual")
 
             self.stop_movement()
 
-            self.node.sdo[OD_TARGET_POSITION].raw = self.target_temp = position  # set new target position
+            self.node.sdo[OD_TARGET_POSITION].raw = position  # set new target position
             QTimer.singleShot(1500, self.start_movement)  # wait 1,5s until restart movement in opposite direction
             self.moving_time = 0  # Reset timer when reaching target position
         except Exception as e:
             logger.error(f'Cannot go to target position: {e}')
 
-    def timer_statistics(self):
+    def on_timeout_statistics(self):
         try:
             actual_current = self.get_actual_current()
             self.current_stat.add(actual_current)  # add current value to statistics
-            self.block_current_stat.add(actual_current)  # add current value to statistics
+            self.block_stat_current.add(actual_current)
         except Exception as e:
             logger.error(f'Cannot read actual current from SDO: {e}')
+            self.statistic_timer.stop()
 
     def is_max_limit_reached(self):
         """ Return True if max limit is reached """
@@ -284,6 +313,24 @@ class EMECDrvTester(QTimer):
         try:
             actual_position = self.get_actual_position()
             return actual_position <= (abs(self.min_target) + self.tolerance)
+        except Exception as e:
+            logger.error(f'Cannot read actual position from SDO: {e}')
+            return False
+
+    def is_mid_position_reached(self):
+        """ Return True if target position is reached """
+        try:
+            actual_position = self.get_actual_position()
+            return abs(actual_position - self.mid_target) < self.tolerance
+        except Exception as e:
+            logger.error(f'Cannot read actual position from SDO: {e}')
+            return False
+
+    def is_between_limits(self):
+        """ Return True if target position is between min and max """
+        try:
+            actual_position = self.get_actual_position()
+            return abs(self.min_target) < actual_position < abs(self.max_target)
         except Exception as e:
             logger.error(f'Cannot read actual position from SDO: {e}')
             return False
@@ -306,18 +353,14 @@ class EMECDrvTester(QTimer):
         else:
             self.moving_time += 1  # increment timer during movement
 
-        # call test routine depending on node id
-        if self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
-            self.test_routine_slewing()
-        elif self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
-            self.test_routine_lift()
-        else:
-            logger.error("Unknown node id during execution of test_routine()")
-
-        # generate signal for printing/generating a label
-        if not self.label_printed and self.elapsed_time > self.label_print_timeout:
-            self.generate_label_signal.emit()
-            self.label_printed = True
+        if self.is_between_limits():
+            # call test routine depending on node id
+            if self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+                self.test_routine_slewing()
+            elif self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+                self.test_routine_lift()
+            else:
+                logger.error("Unknown node id during execution of test_routine()")
 
     def test_routine_slewing(self):
         # detect max movement time exceeded
@@ -357,71 +400,99 @@ class EMECDrvTester(QTimer):
             return
 
         # check max current limit
-        mean = self.current_stat.mean()
-        if mean > self.max_error_current:
-            self.stop_test(message=f"Current limit exceeded (Imean= {mean} mA)")
+        self.mean_current = self.current_stat.mean()
+        if self.mean_current > self.max_error_current:
+            self.stop_test(message=f"Current limit exceeded (Imean= {self.mean_current} mA)")
 
-        # check if drive is moving
-        if abs(self.actual_position_temp - actual_position) < MIN_POS_PER_SECOND:  # is not moving??
-            self.not_moving_counter += 1
-            if self.not_moving_counter >= 4:
-                self.stop_test(message=f"Slewing is not moving since {self.not_moving_counter}s")
+        if self.elapsed_time < self.normal_run_test_duration:  # test until normal run duration is reached
+            # check if drive is moving
+            if abs(self.actual_position_temp - actual_position) < MIN_POS_PER_SECOND:  # is not moving??
+                self.not_moving_counter += 1
+                if self.not_moving_counter >= 4:
+                    self.stop_test(message=f"Slewing is not moving since {self.not_moving_counter}s")
 
-        else:
-            self.not_moving_counter = 0  # reset counter for detection "not moving" error
-            if self.actual_position_temp > actual_position:  # is drive moving CCW?
-                if self.moving_direction != CCW:  # if moving CCW but should CW
-                    self.wrong_movement_counter += 1
-                else:
-                    self.wrong_movement_counter = 0  # moving in correct direction
             else:
-                if self.moving_direction != CW:  # if moving CW but should CCW
-                    self.wrong_movement_counter += 1
-                else:
-                    self.wrong_movement_counter = 0  # moving in correct direction
+                self.not_moving_counter = 0  # reset counter for detection "not moving" error
 
-            # moving in wrong direction timer control
-            if self.wrong_movement_counter >= 4:
-                self.stop_test(message="Slewing is moving in wrong direction since {self.wrong_movement_counter}")
+                if self.normal_run_test_active:
+                    if self.actual_position_temp > actual_position:  # is drive moving CCW?
+                        if self.moving_direction != CCW:  # if moving CCW but should CW
+                            self.wrong_movement_counter += 1
+                        else:
+                            self.wrong_movement_counter = 0  # moving in correct direction
+                    else:
+                        if self.moving_direction != CW:  # if moving CW but should CCW
+                            self.wrong_movement_counter += 1
+                        else:
+                            self.wrong_movement_counter = 0  # moving in correct direction
 
-            self.actual_position_temp = actual_position  # update temp for actual position
+                    # moving in wrong direction timer control
+                    if self.wrong_movement_counter >= 4:
+                        self.stop_test(message=f"Slewing is moving in wrong direction since {self.wrong_movement_counter}")
 
-        # after 2 minutes switch to CW blocked test mode
-        if self.elapsed_time > self.normal_run_test_duration:
-            self.actual_test_mode_description = "Motor running to min position for CW blocked test"
-            if self.is_min_limit_reached():
-                self.actual_test_mode_description = "CW blocked Test. Waiting for TLD block!!"
-                self.block_current_stat.reset()  # start test with empty fifo
+                    self.actual_position_temp = actual_position  # update temp for actual position
+        else:
+            if self.normal_run_test_active:
+                self.normal_run_test_active = False
+                self.actual_test_mode_description = f"Normal running test OK!! Go to position {self.mid_target} for CW blocked test"
+                self.goto_target_position(self.mid_target)
+
+            if self.is_mid_position_reached():
+                self.goto_target_position(self.max_target)
+                self.actual_test_mode_description = "CW blocked Test. Waiting for TLD to be blocked!!"
+                self.block_stat_current.reset()  # start test with empty fifo
                 self.actual_test_mode = CW_BLOCKED_TEST_MODE  # switch to CW blocked test mode
+                self.block_test_time = 0
 
     def cw_block_test_routine(self):
-        if self.block_current_stat.values_above_threshold() >= self.min_tld_block_duration:
-            self.cw_block_detected = True
-            self.actual_test_mode_description = "CW blocked Test OK!!"
-            logger.info("Block recognized in CW direction")
+        self.block_test_time += 1
 
         if self.is_max_limit_reached():
             # a block event should be detected before reaching the max limit
             if not self.cw_block_detected:
                 self.stop_test(message="Block not recognized in CW direction")  # stop test if block not recognized
 
-            # init CCW blocked test mode
-            self.actual_test_mode_description = "CCW blocked Test. Waiting for TLD block!!"
-            self.block_current_stat.reset()  # start test with empty fifo
-            self.actual_test_mode = CCW_BLOCKED_TEST_MODE  # switch to CCW blocked test mode
+        if self.block_test_time >= 4:
+            max_current = self.block_stat_current.max()
+            if max_current >= self.block_current_threshold:
+                logger.info(f"CW Block with I: {max_current} mA")
+
+                self.cw_block_detected = True
+                self.cw_block_current = max_current  # save current value at block event
+                self.actual_test_mode_description = "CW blocked Test OK!! Now CCW block Test. Waiting for TLD to be blocked!!"
+                self.block_stat_current.reset()  # start test with empty fifo
+                self.actual_test_mode = CCW_BLOCKED_TEST_MODE  # switch to CCW blocked test mode
+                self.block_test_time = 0
+                self.goto_target_position(self.min_target)
+
+        else:
+            self.block_stat_current.reset()  # throw away during first 4 seconds
 
     def ccw_block_test_routine(self):
-        if self.block_current_stat.values_above_threshold() >= self.min_tld_block_duration:
-            self.ccw_block_detected = True
-            self.actual_test_mode_description = "CW and CCW blocked Test OK!!"
-            logger.info("Block recognized in CCW direction")
+        self.block_test_time += 1
 
         if self.is_min_limit_reached():
             # a block event should be detected before reaching the min limit
             if not self.ccw_block_detected:
                 self.stop_test(message="Block not recognized in CCW direction")  # stop test if block not recognized
 
-            self.stop_test(message="Test finished successfully!!")
+        if self.block_test_time >= 4:
+            max_current = self.block_stat_current.max()
+            if max_current >= self.block_current_threshold:
+                logger.info(f"CCW Block with I: {max_current} mA")
+
+                self.ccw_block_detected = True
+                self.ccw_block_current = max_current  # save current value at block event
+                self.block_test_time = 0
+                self.actual_test_mode_description = "CW and CCW blocked Test OK!!"
+                self.stop_test(message="Test finished successfully!!")
+
+                # generate signal for printing/generating a label
+                if not self.label_printed:
+                    self.generate_label_signal.emit()
+                    self.label_printed = True
+        else:
+            self.block_stat_current.reset()
 
     def test_routine_lift(self):
         try:
@@ -436,9 +507,9 @@ class EMECDrvTester(QTimer):
             self.stop_test(message=f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE_LIFT}s exceeded!!")
 
         # check max current limit
-        mean = self.current_stat.mean()
-        if mean > self.max_error_current:
-            self.stop_test(message=f"Current limit exceeded (Imean= {mean} mA)")
+        self.mean_current = self.current_stat.mean()
+        if self.mean_current > self.max_error_current:
+            self.stop_test(message=f"Current limit exceeded (Imean= {self.mean_current} mA)")
 
         # check if drive is moving
         if abs(self.actual_position_temp - actual_position) < MIN_POS_PER_SECOND:  # is not moving??
@@ -466,6 +537,11 @@ class EMECDrvTester(QTimer):
 
             self.actual_position_temp = actual_position  # update temp for actual position
 
+        # generate signal for printing/generating a label
+        if not self.label_printed and self.elapsed_time > self.label_print_timeout:
+            self.generate_label_signal.emit()
+            self.label_printed = True
+
     def start_test(self):
         if self.isActive():
             logger.debug(f'Test already running on Node {self.node.id}')
@@ -477,6 +553,7 @@ class EMECDrvTester(QTimer):
         self.test_error_message = None
         self.cw_block_detected = False
         self.ccw_block_detected = False
+        self.normal_run_test_active = True  # flag for first run of normal running test
 
         # driver specific settings
         if self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
@@ -484,17 +561,12 @@ class EMECDrvTester(QTimer):
         elif self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
             self.normal_run_test_duration = int(self.settings.value("norm_run_slewing_duration", 120))
-            self.min_tld_block_duration = int(self.settings.value("min_tld_block_duration", 5))
             self.block_current_threshold = int(self.settings.value("block_current_threshold", 1500))
-            self.block_current_stat.set_threshold(self.block_current_threshold)
 
         # at every start take setting of label printer timer
         self.label_print_timeout = int(self.settings.value("label_print_timer", 60))
 
-        # Init target first time min or max depending on actual position
-        mid = (self.max_target - self.min_target) / 2 + self.min_target  # get mid-position
-
-        if self.node.sdo[OD_TARGET_POSITION].raw > mid:
+        if self.node.sdo[OD_TARGET_POSITION].raw > self.mid_target:
             # move in CW direction
             self.node.sdo[OD_TARGET_POSITION].raw = self.max_target
             self.moving_direction = CW
@@ -505,6 +577,7 @@ class EMECDrvTester(QTimer):
 
         self.actual_test_mode = NORMAL_RUN_TEST_MODE  # restart from normal
         self.actual_test_mode_description = "Normal running"
+        self.block_stat_current.reset()
 
         self.start_movement()
         self.start(1000)
@@ -522,7 +595,6 @@ class EMECDrvTester(QTimer):
 
         self.moving_time = self.elapsed_time = self.not_moving_counter = 0
         self.current_stat.reset()  # reset current statistics
-        self.block_current_stat.reset()  # reset current statistics
 
     def start_movement(self):
         try:
@@ -532,7 +604,7 @@ class EMECDrvTester(QTimer):
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw & ~CONTROL_START_MOVEMENT_ORDER
             self.node.sdo[OD_CONTROL_WORD].raw = self.node.sdo[OD_CONTROL_WORD].raw | CONTROL_START_MOVEMENT_ORDER
 
-            self.timeout.connect(self.timer_statistics)  # connect statistics timer to timeout signal
+            self.statistic_timer.start()  # start statistics timer
         except Exception as e:
             logger.error(f'Cannot start movement: {e}')
 
@@ -542,7 +614,7 @@ class EMECDrvTester(QTimer):
         except Exception as e:
             logger.error(f'Cannot stop movement: {e}')
 
-        self.timeout.disconnect(self.timer_statistics)  # disconnect statistics timer from timeout signal
+        self.statistic_timer.stop()  # stop statistics timer
 
     def ack_error(self):
         try:

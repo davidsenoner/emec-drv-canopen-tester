@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'settings_diagGidecL.ui'
+## Form generated from reading UI file 'settings_diagLHrEsN.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -229,28 +229,6 @@ class Ui_SettingsDialog(object):
 
         self.verticalLayout_3.addLayout(self.gridLayout_5)
 
-        self.label_18 = QLabel(SettingsDialog)
-        self.label_18.setObjectName(u"label_18")
-
-        self.verticalLayout_3.addWidget(self.label_18)
-
-        self.gridLayout_6 = QGridLayout()
-        self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.sb_min_block_duration = QSpinBox(SettingsDialog)
-        self.sb_min_block_duration.setObjectName(u"sb_min_block_duration")
-        self.sb_min_block_duration.setMinimum(1)
-        self.sb_min_block_duration.setMaximum(1200)
-
-        self.gridLayout_6.addWidget(self.sb_min_block_duration, 0, 1, 1, 1)
-
-        self.label_17 = QLabel(SettingsDialog)
-        self.label_17.setObjectName(u"label_17")
-
-        self.gridLayout_6.addWidget(self.label_17, 0, 0, 1, 1)
-
-
-        self.verticalLayout_3.addLayout(self.gridLayout_6)
-
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout_3.addItem(self.verticalSpacer)
@@ -306,8 +284,5 @@ class Ui_SettingsDialog(object):
         self.label_14.setText(QCoreApplication.translate("SettingsDialog", u"<html><head/><body><p><span style=\" font-size:12pt; font-weight:600;\">Normal running</span></p></body></html>", None))
         self.sb_norm_run_slewing_duration.setSuffix(QCoreApplication.translate("SettingsDialog", u" s", None))
         self.label_15.setText(QCoreApplication.translate("SettingsDialog", u"<html><head/><body><p>Duration Slewing <span style=\" font-style:italic;\">(default=200s)</span></p></body></html>", None))
-        self.label_18.setText(QCoreApplication.translate("SettingsDialog", u"<html><head/><body><p><span style=\" font-size:12pt; font-weight:600;\">Torque (TLD) test settings </span>(only Slewing)</p></body></html>", None))
-        self.sb_min_block_duration.setSuffix(QCoreApplication.translate("SettingsDialog", u" s", None))
-        self.label_17.setText(QCoreApplication.translate("SettingsDialog", u"Min. block duration", None))
     # retranslateUi
 
