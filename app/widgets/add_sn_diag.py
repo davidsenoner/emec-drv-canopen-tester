@@ -34,7 +34,11 @@ class AddSNDialog(QDialog):
             self._ui.lbl_drive_id.setText(f"<b>Slewing</b> with Node ID: {node_id} on Channel: {channel}")
 
         if self.exec_() == QDialog.Accepted:
-            self.serial_number = int(self._ui.led_serial_number.text())
+            check_sn = self._ui.led_serial_number.text()
+            if check_sn.isdigit():
+                self.serial_number = int(check_sn)
+            else:
+                self.serial_number = 0
 
     @property
     def serial_number(self) -> int:

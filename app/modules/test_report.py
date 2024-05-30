@@ -30,6 +30,8 @@ class Label:
     """
 
     def __init__(self, serial_number: int):
+        self._ccw_block_current = None
+        self._cw_block_current = None
         self._node_id = None
         self._cycles = None
         self._type = "UNKNOWN"
@@ -90,6 +92,22 @@ class Label:
     def mean_current(self, current: float) -> None:
         self._mean_current = current
 
+    @property
+    def cw_block_current(self) -> float:
+        return self._cw_block_current
+
+    @cw_block_current.setter
+    def cw_block_current(self, current: float) -> None:
+        self._cw_block_current = current
+
+    @property
+    def ccw_block_current(self) -> float:
+        return self._ccw_block_current
+
+    @ccw_block_current.setter
+    def ccw_block_current(self, current: float) -> None:
+        self._ccw_block_current = current
+
 
 def print_pdf(path: str, printer: str) -> None:
     """
@@ -99,15 +117,15 @@ def print_pdf(path: str, printer: str) -> None:
     :return: None
     """
     path = Path(path)
-    logger.debug(f"Print PDF: {path}")
+    logger.info(f"Print PDF: {path}")
     if path.exists():
         try:
             cups_conn = cups.Connection()
             cups_conn.printFile(printer, str(path), f"{path.name}", {})
         except Exception as e:
-            logger.debug(f"Error printing PDF: {e}")
+            logger.error(f"Error printing PDF: {e}")
     else:
-        logger.debug(f"{path} does not exist")
+        logger.error(f"{path} does not exist")
 
 
 def keep_latest_files(folder_path: str, keep_count: int) -> None:
@@ -129,7 +147,7 @@ def keep_latest_files(folder_path: str, keep_count: int) -> None:
     # Delete the older files
     for i in range(to_delete_count):
         files[i].unlink()
-        logger.debug(f"Deleted: {files[i]}")
+        logger.info(f"Deleted: {files[i]}")
 
 
 class TestReportManager(SimpleDocTemplate):
@@ -157,7 +175,7 @@ class TestReportManager(SimpleDocTemplate):
             try:
                 self._temp_folder.mkdir(parents=False, exist_ok=True)
             except Exception as e:
-                logger.debug(e)
+                logger.error(e)
 
         self._labels = []
         self.filename = None
@@ -209,7 +227,7 @@ class TestReportManager(SimpleDocTemplate):
     def add_label(self, label: Label):
         self._labels.append(label)
 
-        logger.debug(f"Add label with SN {label.serial_number} to TestReportManager ({len(self._labels)} labels)")
+        logger.info(f"Add label with SN {label.serial_number} to TestReportManager ({len(self._labels)} labels)")
 
         # when we have x labels ready -> print
         if len(self._labels) == self._columns:
@@ -235,7 +253,7 @@ class TestReportManager(SimpleDocTemplate):
         tables = []
 
         for frame_id, label in enumerate(self._labels):
-            logger.debug(f"Build Label ID {frame_id}")
+            logger.info(f"Build Label ID {frame_id}")
 
             logo = 'app/resources/images/emec_logo_sw.png'
             image_ratio = 0.005
@@ -243,12 +261,22 @@ class TestReportManager(SimpleDocTemplate):
             height = 2492 * image_ratio
 
             imean_out = label.mean_current / 1000  # print in Amps
+            cw_block_current = label.cw_block_current / 1000  # print in Amps
+            ccw_block_current = label.ccw_block_current / 1000  # print in Amps
 
-            data = [[Image(logo, width=width, height=height), "QC APPROVED"],
-                    ["DATE:", f'{label.datetime}'],
-                    ["SN:", f"{label.serial_number}"],
-                    ["TYPE(ID):", f"{label.type} ({label.node_id})"],
-                    ["Imean", "{:.2f}A".format(imean_out)]]  # 2 digits
+            if label.node_id == 12:
+                data = [[Image(logo, width=width, height=height), "QC APPROVED"],
+                        ["DATE:", f'{label.datetime}'],
+                        ["SN:", f"{label.serial_number}"],
+                        ["TYPE(ID):", f"{label.type} ({label.node_id})"],
+                        ["Imean", "{:.2f}A".format(imean_out)]]
+            else:
+                data = [[Image(logo, width=width, height=height), "QC APPROVED"],
+                        ["DATE:", f'{label.datetime}'],
+                        ["SN:", f"{label.serial_number}"],
+                        ["TYPE(ID):", f"{label.type} ({label.node_id})"],
+                        ["Imean", "{:.2f}A".format(imean_out)],
+                        ["Icw/Iccw", "{:.2f}A / {:.2f}A".format(cw_block_current, ccw_block_current)]]
 
             table = Table(data)
 
@@ -271,6 +299,6 @@ class TestReportManager(SimpleDocTemplate):
 
         try:
             self.build(tables)
-            logger.debug(f"Label saved to file {self.filename}")
+            logger.info(f"Label saved to file {self.filename}")
         except Exception as e:
-            logger.debug(f"Exception during file build: {e}")
+            logger.error(f"Exception during file build: {e}")
