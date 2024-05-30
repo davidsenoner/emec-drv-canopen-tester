@@ -394,7 +394,7 @@ class NodeTable(QObject):
             # COLUMN SOFTWARE VERSION
             _column = 9
             try:
-                item = QTableWidgetItem(node_table_row.manufacturer_software_version)
+                item = QTableWidgetItem(node_table_row.get_manufacturer_software_version())
 
                 brush = QBrush(QColor(255, 0, 0, 255))
                 brush.setStyle(Qt.SolidPattern)
