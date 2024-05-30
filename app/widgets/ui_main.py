@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'maingPolSY.ui'
+## Form generated from reading UI file 'mainxMiHmh.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -879,10 +879,10 @@ class Ui_MainWindow(object):
         self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-weight:600;\">Print label with SN:</span></p></body></html>", None))
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"<h4>Min. software version</h4>", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"<b>Slewing:</b>", None))
-        self.label_10.setText(QCoreApplication.translate("MainWindow", u"<h4>Max. current</h4>", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><h4 style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:medium; font-weight:600;\">Max. current </span><span style=\" font-size:8pt; font-weight:600; font-style:italic;\">(normal run)</span></h4></body></html>", None))
         self.spb_max_slewing_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.spb_max_lift_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<h4>Blocked Current THR</h4>", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><h4 style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:medium; font-weight:600;\">Blocked Current </span><span style=\" font-size:medium; font-weight:600; font-style:italic;\">(block test)</span></h4></body></html>", None))
         self.spb_blocked_current_thr_slewing.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
     # retranslateUi
