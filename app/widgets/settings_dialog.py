@@ -151,8 +151,10 @@ class SettingsDialog(QDialog):
         i = 0
         while i < report_manager.columns_count:
             label = Label(20231120 + i)
-            label.node_id = 12
+            label.node_id = 13
             label.mean_current = 400
+            label.cw_block_current = 850
+            label.ccw_block_current = 852
             label.type = "SLEWING"
             report_manager.add_label(label)
             i += 1
