@@ -245,7 +245,12 @@ class NodeTable(QObject):
 
         for key in key_to_remove:
             row = self.table_rows[key]
-            self.report_manager.print_label_from_serial_number(row.serial_number)
+
+            # by disconnecting device print only if a label was generated in this session
+            if row.label_generated:
+                self.report_manager.print_label_from_serial_number(row.serial_number)
+
+            row.stop()
             self.pop_node(row)
             self.table_rows.pop(key)
             logging.info(f'Node ID {key} removed')

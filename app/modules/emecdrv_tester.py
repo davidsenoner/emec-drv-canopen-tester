@@ -33,7 +33,7 @@ class EMECDrvTester(QTimer):
         self.not_moving_counter = 0  # counter for detection of no movement error
         self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = 0
-        self.label_printed = False  # status bit True=Label already printed
+        self.label_generated = False  # status bit True=Label already printed
         self.actual_test_mode = NORMAL_RUN_TEST_MODE
         self.actual_test_mode_description = "Normal running"
 
@@ -298,55 +298,28 @@ class EMECDrvTester(QTimer):
             logger.error(f'Cannot read actual current from SDO: {e}')
             self.statistic_timer.stop()
 
-    def is_max_limit_reached(self):
-        """ Return True if max limit is reached """
+    def test_routine(self):
+        self.elapsed_time += 1
+        self.on_test_timer_timeout.emit()
+
         try:
             actual_position = self.get_actual_position()
-            return (abs(self.max_target) - self.tolerance) <= actual_position
         except Exception as e:
             self.stop()
             logger.error(f'Cannot read actual position from SDO: {e}')
             return False
 
-    def is_min_limit_reached(self):
-        """ Return True if min limit is reached """
-        try:
-            actual_position = self.get_actual_position()
-            return actual_position <= (abs(self.min_target) + self.tolerance)
-        except Exception as e:
-            logger.error(f'Cannot read actual position from SDO: {e}')
-            return False
-
-    def is_mid_position_reached(self):
-        """ Return True if target position is reached """
-        try:
-            actual_position = self.get_actual_position()
-            return abs(actual_position - self.mid_target) < self.tolerance
-        except Exception as e:
-            logger.error(f'Cannot read actual position from SDO: {e}')
-            return False
-
-    def is_between_limits(self):
-        """ Return True if target position is between min and max """
-        try:
-            actual_position = self.get_actual_position()
-            return abs(self.min_target) < actual_position < abs(self.max_target)
-        except Exception as e:
-            logger.error(f'Cannot read actual position from SDO: {e}')
-            return False
-
-    def test_routine(self):
-        self.elapsed_time += 1
-        self.on_test_timer_timeout.emit()
+        min_limit = abs(self.min_target) + self.tolerance
+        max_limit = abs(self.max_target) - self.tolerance
 
         # max position reached condition
-        if self.is_max_limit_reached():
+        if max_limit <= actual_position:
             if self.target_temp != self.min_target:
                 self.block_test_time_mask = 0  # when drive is restarting do not check block event
                 self.goto_target_position(self.min_target)  # go to the new position/other limit
 
         # min position reached condition
-        elif self.is_min_limit_reached():
+        elif actual_position <= min_limit:
             if self.target_temp != self.max_target:
                 self.block_test_time_mask = 0  # when drive is restarting do not check block event
                 self.goto_target_position(self.max_target)  # go to the new position/other limit
@@ -355,7 +328,7 @@ class EMECDrvTester(QTimer):
         else:
             self.moving_time += 1  # increment timer during movement
 
-        if self.is_between_limits():
+        if min_limit < actual_position < max_limit:  # between limits
             # call test routine depending on node id
             if self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
                 self.test_routine_slewing()
@@ -376,9 +349,9 @@ class EMECDrvTester(QTimer):
             self.block_test_routine()
         elif self.actual_test_mode == BLOCK_TEST_OK:
             # generate signal for printing/generating a label
-            if not self.label_printed:
+            if not self.label_generated:
                 self.generate_label_signal.emit()
-                self.label_printed = True
+                self.label_generated = True
 
             self.stop_test(message="Test finished")
         else:
@@ -446,7 +419,7 @@ class EMECDrvTester(QTimer):
     def block_test_routine(self):
         self.block_test_time_mask += 1
 
-        if self.block_test_time_mask >= 4:
+        if self.block_test_time_mask >= 10:
             max_current = self.block_stat_current.max()
             if max_current >= self.block_current_threshold:
 
@@ -522,9 +495,9 @@ class EMECDrvTester(QTimer):
             self.actual_position_temp = actual_position  # update temp for actual position
 
         # generate signal for printing/generating a label
-        if not self.label_printed and self.elapsed_time > self.label_print_timeout:
+        if not self.label_generated and self.elapsed_time > self.label_print_timeout:
             self.generate_label_signal.emit()
-            self.label_printed = True
+            self.label_generated = True
 
     def start_test(self):
         if self.isActive():
