@@ -237,6 +237,7 @@ class TestReportManager(SimpleDocTemplate):
 
         # check if serial number is valid
         if serial_number < 1000:
+            logger.error(f"Invalid serial number for printing: {serial_number}")
             return 0
 
         for file in self._temp_folder.glob(f"**/*{serial_number}*.pdf"):
