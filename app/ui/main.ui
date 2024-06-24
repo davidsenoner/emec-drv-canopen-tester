@@ -884,12 +884,12 @@ QPushButton:disabled {
            <item row="3" column="0">
             <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h4 style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:medium; font-weight:600;&quot;&gt;Blocked Current &lt;/span&gt;&lt;span style=&quot; font-size:medium; font-weight:600; font-style:italic;&quot;&gt;(block test)&lt;/span&gt;&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h4 style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:medium; font-weight:600;&quot;&gt;Delta Block Current &lt;/span&gt;&lt;span style=&quot; font-size:medium; font-weight:600; font-style:italic;&quot;&gt;(block test)&lt;/span&gt;&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
            <item row="3" column="2">
-            <widget class="QSpinBox" name="spb_blocked_current_thr_slewing">
+            <widget class="QSpinBox" name="spb_delta_block_curr_slewing">
              <property name="suffix">
               <string> mA</string>
              </property>

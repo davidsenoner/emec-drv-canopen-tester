@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainxMiHmh.ui'
+## Form generated from reading UI file 'mainKmmEEp.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -822,11 +822,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.label_2, 3, 0, 1, 1)
 
-        self.spb_blocked_current_thr_slewing = QSpinBox(self.gridFrame)
-        self.spb_blocked_current_thr_slewing.setObjectName(u"spb_blocked_current_thr_slewing")
-        self.spb_blocked_current_thr_slewing.setMaximum(5000)
+        self.spb_delta_block_curr_slewing = QSpinBox(self.gridFrame)
+        self.spb_delta_block_curr_slewing.setObjectName(u"spb_delta_block_curr_slewing")
+        self.spb_delta_block_curr_slewing.setMaximum(5000)
 
-        self.gridLayout_3.addWidget(self.spb_blocked_current_thr_slewing, 3, 2, 1, 1)
+        self.gridLayout_3.addWidget(self.spb_delta_block_curr_slewing, 3, 2, 1, 1)
 
 
         self.verticalLayout_2.addLayout(self.gridLayout_3)
@@ -882,8 +882,8 @@ class Ui_MainWindow(object):
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><h4 style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:medium; font-weight:600;\">Max. current </span><span style=\" font-size:8pt; font-weight:600; font-style:italic;\">(normal run)</span></h4></body></html>", None))
         self.spb_max_slewing_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.spb_max_lift_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><h4 style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:medium; font-weight:600;\">Blocked Current </span><span style=\" font-size:medium; font-weight:600; font-style:italic;\">(block test)</span></h4></body></html>", None))
-        self.spb_blocked_current_thr_slewing.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><h4 style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:medium; font-weight:600;\">Delta Block Current </span><span style=\" font-size:medium; font-weight:600; font-style:italic;\">(block test)</span></h4></body></html>", None))
+        self.spb_delta_block_curr_slewing.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
     # retranslateUi
 
