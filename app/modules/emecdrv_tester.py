@@ -29,7 +29,7 @@ class EMECDrvTester(QTimer):
         self.mean_current = 0  # mean current value during normal running test
         self.cw_block_current = 0  # current measured at CW block test event
         self.ccw_block_current = 0  # current measured at CCW block test event
-        self.block_test_time_mask = 0 # timer for block test duration needed for detection of block event
+        self.block_test_time_mask = 0  # timer for block test duration needed for detection of block event
         self.not_moving_counter = 0  # counter for detection of no movement error
         self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = 0
@@ -58,7 +58,7 @@ class EMECDrvTester(QTimer):
             self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
             self.normal_run_test_duration = int(self.settings.value("norm_run_slewing_duration", 120))
 
-        self.block_current_threshold = int(self.settings.value("block_current_threshold", 1500))
+        self.delta_block_current = int(self.settings.value("delta_block_current", 200))
 
         logger.debug(f"Node {node.id} min_target: {self.min_target}, max_target: {self.max_target}")
         self.target_temp = self.mid_target = int((self.max_target - abs(self.min_target)) / 2 + abs(self.min_target))
@@ -411,45 +411,52 @@ class EMECDrvTester(QTimer):
 
                 self.actual_position_temp = actual_position  # update temp for actual position
         else:
-            self.actual_test_mode_description = "TLD test, waiting for block event!!"
-            self.block_stat_current.reset()  # start test with empty fifo
             self.actual_test_mode = BLOCKED_TEST_MODE  # switch to CW blocked test mode
             self.block_test_time_mask = 0
+            self.block_stat_current.reset()
+            self.current_stat.reset(length=2)
 
     def block_test_routine(self):
         self.block_test_time_mask += 1
 
-        if self.block_test_time_mask >= 10:
-            max_current = self.block_stat_current.max()
-            if max_current >= self.block_current_threshold:
+        if self.block_test_time_mask == 20:
+            self.actual_test_mode_description = "Waiting for block event!!"
+        elif self.block_test_time_mask > 20:
 
+            long_mean = self.block_stat_current.mean()  # 20s mean current
+            short_max = self.current_stat.max()  # 5s mean current
+
+            # calculate delta between short and long mean current
+            # if current changes in short time, block event is detected
+            delta_mean = short_max - long_mean
+            #logger.debug(f"long: {long_mean} mA")
+            #logger.debug(f"short: {short_max} mA")
+
+            if delta_mean >= self.delta_block_current:
                 if self.moving_direction == CW:
-                    logger.info(f"CW Block with I: {max_current} mA")
+                    logger.info(f"CW Block with I: {short_max} mA")
 
                     self.cw_block_detected = True
-                    self.cw_block_current = max_current  # save current value at block event
-                    self.actual_test_mode_description = "CW blocked Test OK!! Block shaft for CCW test"
+                    self.cw_block_current = short_max  # save current value at block event
+                    self.actual_test_mode_description = "CW blocked Test OK!!"
                     self.block_stat_current.reset()  # start test with empty fifo
                     self.block_test_time_mask = 0
                     if not self.ccw_block_detected:
                         self.goto_target_position(self.min_target)
                 elif self.moving_direction == CCW:
-                    logger.info(f"CCW Block with I: {max_current} mA")
+                    logger.info(f"CCW Block with I: {short_max} mA")
 
                     self.ccw_block_detected = True
-                    self.ccw_block_current = max_current
-                    self.actual_test_mode_description = "CCW blocked Test OK!! Block shaft for CW test"
+                    self.ccw_block_current = short_max
+                    self.actual_test_mode_description = "CCW blocked Test OK!!"
                     self.block_stat_current.reset()  # start test with empty fifo
                     self.block_test_time_mask = 0
                     if not self.cw_block_detected:
                         self.goto_target_position(self.max_target)
-        else:
-            self.block_stat_current.reset()  # throw away during first 4 seconds
 
         if self.cw_block_detected and self.ccw_block_detected:
             self.actual_test_mode_description = "Block event in both directions detected!! Test OK!!"
             self.actual_test_mode = BLOCK_TEST_OK  # block event in both directions detected, test finished
-            self.block_stat_current.reset()
 
     def test_routine_lift(self):
         try:
@@ -518,10 +525,10 @@ class EMECDrvTester(QTimer):
         elif self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
             self.normal_run_test_duration = int(self.settings.value("norm_run_slewing_duration", 120))
-            self.block_current_threshold = int(self.settings.value("block_current_threshold", 1500))
+            self.delta_block_current = int(self.settings.value("delta_block_current", 200))
 
             logger.debug(f"Normal run duration: {self.normal_run_test_duration} s")
-            logger.debug(f"Block current threshold: {self.block_current_threshold} mA")
+            logger.debug(f"Block current threshold: {self.delta_block_current} mA")
 
         # at every start take setting of label printer timer
         self.label_print_timeout = int(self.settings.value("label_print_timer", 60))
@@ -537,7 +544,7 @@ class EMECDrvTester(QTimer):
 
         self.actual_test_mode = NORMAL_RUN_TEST_MODE  # restart from normal
         self.actual_test_mode_description = "Normal running"
-        self.block_stat_current.reset()
+        self.current_stat.reset(length=20)  # reset current statistics and change to 5s fifo
 
         self.start_movement()
         self.start(1000)
