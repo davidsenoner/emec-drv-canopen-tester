@@ -25,7 +25,7 @@ class CurrentStatistics:
         assert max_length > 1, "max_length must be greater than 1"
 
         self.current_values = deque([0] * max_length, maxlen=max_length)
-        self.max_length = max_length
+        self._max_length = max_length
         self.threshold = threshold
 
     def __repr__(self):
@@ -33,6 +33,14 @@ class CurrentStatistics:
 
     def __iter__(self):
         return iter(self.current_values)
+
+    @property
+    def max_length(self):
+        return self._max_length
+
+    @max_length.setter
+    def max_length(self, length: int):
+        self._max_length = length
 
     def set_threshold(self, threshold):
         self.threshold = threshold
@@ -82,5 +90,7 @@ class CurrentStatistics:
     def get_values(self):
         return self.current_values
 
-    def reset(self):
+    def reset(self, length=None):
+        if length is not None:
+            self.max_length = length
         self.current_values = deque([0] * self.max_length, maxlen=self.max_length)
