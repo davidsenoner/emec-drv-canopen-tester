@@ -58,7 +58,7 @@ class EMECDrvTester(QTimer):
             self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
             self.normal_run_test_duration = int(self.settings.value("norm_run_slewing_duration", 120))
 
-        self.delta_block_current = int(self.settings.value("delta_block_current", 200))
+        self.block_duration = int(self.settings.value("block_duration", 4))
 
         logger.debug(f"Node {node.id} min_target: {self.min_target}, max_target: {self.max_target}")
         self.target_temp = self.mid_target = int((self.max_target - abs(self.min_target)) / 2 + abs(self.min_target))
@@ -68,7 +68,6 @@ class EMECDrvTester(QTimer):
         self.statistic_timer.timeout.connect(self.on_timeout_statistics)
 
         self.current_stat = CurrentStatistics(max_length=20)
-        self.block_stat_current = CurrentStatistics(max_length=20)
 
         # register emergency error callback that will stop with error message from canopen
         self.node.emcy.add_callback(self.emergency_callback)
@@ -293,7 +292,6 @@ class EMECDrvTester(QTimer):
         try:
             actual_current = self.get_actual_current()
             self.current_stat.add(actual_current)  # add current value to statistics
-            self.block_stat_current.add(actual_current)
         except Exception as e:
             logger.error(f'Cannot read actual current from SDO: {e}')
             self.statistic_timer.stop()
@@ -413,46 +411,51 @@ class EMECDrvTester(QTimer):
         else:
             self.actual_test_mode = BLOCKED_TEST_MODE  # switch to CW blocked test mode
             self.block_test_time_mask = 0
-            self.block_stat_current.reset()
-            self.current_stat.reset(length=2)
+            self.current_stat.reset(length=self.block_duration)
 
     def block_test_routine(self):
         self.block_test_time_mask += 1
 
-        if self.block_test_time_mask == 20:
+        if self.block_test_time_mask == 10:
             self.actual_test_mode_description = "Waiting for block event!!"
-        elif self.block_test_time_mask > 20:
+        elif self.block_test_time_mask > 10:
 
-            long_mean = self.block_stat_current.mean()  # 20s mean current
-            short_max = self.current_stat.max()  # 5s mean current
+            try:
+                actual_position = self.get_actual_position()
+            except Exception as e:
+                self.stop()
+                logger.error(f'Cannot read actual position from SDO: {e}')
+                return
 
-            # calculate delta between short and long mean current
-            # if current changes in short time, block event is detected
-            delta_mean = short_max - long_mean
-            #logger.debug(f"long: {long_mean} mA")
-            #logger.debug(f"short: {short_max} mA")
+            # check if drive is moving
+            if abs(self.actual_position_temp - actual_position) < 7:  # is not moving??
+                self.not_moving_counter += 1
+                if self.not_moving_counter >= self.block_duration:
+                    self.not_moving_counter = 0  # reset in any case if a block detected
+                    max_current = self.current_stat.max()  # 5s mean current
 
-            if delta_mean >= self.delta_block_current:
-                if self.moving_direction == CW:
-                    logger.info(f"CW Block with I: {short_max} mA")
+                    if self.moving_direction == CW:
+                        logger.info(f"CW Block with I: {max_current} mA")
 
-                    self.cw_block_detected = True
-                    self.cw_block_current = short_max  # save current value at block event
-                    self.actual_test_mode_description = "CW blocked Test OK!!"
-                    self.block_stat_current.reset()  # start test with empty fifo
-                    self.block_test_time_mask = 0
-                    if not self.ccw_block_detected:
-                        self.goto_target_position(self.min_target)
-                elif self.moving_direction == CCW:
-                    logger.info(f"CCW Block with I: {short_max} mA")
+                        self.cw_block_detected = True
+                        self.cw_block_current = max_current  # save current value at block event
+                        self.actual_test_mode_description = "CW blocked Test OK!!"
+                        self.block_test_time_mask = 0
+                        if not self.ccw_block_detected:
+                            self.goto_target_position(self.min_target)
+                    elif self.moving_direction == CCW:
+                        logger.info(f"CCW Block with I: {max_current} mA")
 
-                    self.ccw_block_detected = True
-                    self.ccw_block_current = short_max
-                    self.actual_test_mode_description = "CCW blocked Test OK!!"
-                    self.block_stat_current.reset()  # start test with empty fifo
-                    self.block_test_time_mask = 0
-                    if not self.cw_block_detected:
-                        self.goto_target_position(self.max_target)
+                        self.ccw_block_detected = True
+                        self.ccw_block_current = max_current
+                        self.actual_test_mode_description = "CCW blocked Test OK!!"
+                        self.block_test_time_mask = 0
+                        if not self.cw_block_detected:
+                            self.goto_target_position(self.max_target)
+            else:
+                self.not_moving_counter = 0
+
+            self.actual_position_temp = actual_position  # update temp for actual position
 
         if self.cw_block_detected and self.ccw_block_detected:
             self.actual_test_mode_description = "Block event in both directions detected!! Test OK!!"
@@ -525,10 +528,10 @@ class EMECDrvTester(QTimer):
         elif self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
             self.normal_run_test_duration = int(self.settings.value("norm_run_slewing_duration", 120))
-            self.delta_block_current = int(self.settings.value("delta_block_current", 200))
+            self.block_duration = int(self.settings.value("block_duration", 4))
 
             logger.debug(f"Normal run duration: {self.normal_run_test_duration} s")
-            logger.debug(f"Block current threshold: {self.delta_block_current} mA")
+            logger.debug(f"Block duration in s: {self.block_duration} s")
 
         # at every start take setting of label printer timer
         self.label_print_timeout = int(self.settings.value("label_print_timer", 60))
