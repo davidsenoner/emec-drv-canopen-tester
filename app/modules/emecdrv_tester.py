@@ -432,22 +432,22 @@ class EMECDrvTester(QTimer):
                 self.not_moving_counter += 1
                 if self.not_moving_counter >= self.block_duration:
                     self.not_moving_counter = 0  # reset in any case if a block detected
-                    max_current = self.current_stat.max()  # 5s mean current
+                    mean_current = self.current_stat.mean()  # 5s mean current
 
                     if self.moving_direction == CW:
-                        logger.info(f"CW Block with I: {max_current} mA")
+                        logger.info(f"CW Block with I: {mean_current} mA")
 
                         self.cw_block_detected = True
-                        self.cw_block_current = max_current  # save current value at block event
+                        self.cw_block_current = mean_current  # save current value at block event
                         self.actual_test_mode_description = "CW blocked Test OK!!"
                         self.block_test_time_mask = 0
                         if not self.ccw_block_detected:
                             self.goto_target_position(self.min_target)
                     elif self.moving_direction == CCW:
-                        logger.info(f"CCW Block with I: {max_current} mA")
+                        logger.info(f"CCW Block with I: {mean_current} mA")
 
                         self.ccw_block_detected = True
-                        self.ccw_block_current = max_current
+                        self.ccw_block_current = mean_current
                         self.actual_test_mode_description = "CCW blocked Test OK!!"
                         self.block_test_time_mask = 0
                         if not self.cw_block_detected:
