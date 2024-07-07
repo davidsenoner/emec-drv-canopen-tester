@@ -30,8 +30,8 @@ class Label:
     """
 
     def __init__(self, serial_number: int):
-        self._ccw_block_current = None
-        self._cw_block_current = None
+        self._ccw_block_torque = None
+        self._cw_block_torque = None
         self._node_id = None
         self._cycles = None
         self._type = "UNKNOWN"
@@ -93,20 +93,20 @@ class Label:
         self._mean_current = current
 
     @property
-    def cw_block_current(self) -> float:
-        return self._cw_block_current
+    def cw_block_torque(self) -> float:
+        return self._cw_block_torque
 
-    @cw_block_current.setter
-    def cw_block_current(self, current: float) -> None:
-        self._cw_block_current = current
+    @cw_block_torque.setter
+    def cw_block_torque(self, current: float) -> None:
+        self._cw_block_torque = current
 
     @property
-    def ccw_block_current(self) -> float:
-        return self._ccw_block_current
+    def ccw_block_torque(self) -> float:
+        return self._ccw_block_torque
 
-    @ccw_block_current.setter
-    def ccw_block_current(self, current: float) -> None:
-        self._ccw_block_current = current
+    @ccw_block_torque.setter
+    def ccw_block_torque(self, current: float) -> None:
+        self._ccw_block_torque = current
 
 
 def print_pdf(path: str, printer: str) -> None:
@@ -262,8 +262,8 @@ class TestReportManager(SimpleDocTemplate):
             height = 2492 * image_ratio
 
             imean_out = label.mean_current / 1000  # print in Amps
-            cw_block_current = label.cw_block_current / 1000  # print in Amps
-            ccw_block_current = label.ccw_block_current / 1000  # print in Amps
+            cw_block_torque = int(label.cw_block_torque)  # print in Amps
+            ccw_block_torque = int(label.ccw_block_torque)  # print in Amps
 
             if label.node_id == 12:
                 data = [[Image(logo, width=width, height=height), "QC APPROVED"],
@@ -277,7 +277,7 @@ class TestReportManager(SimpleDocTemplate):
                         ["SN:", f"{label.serial_number}"],
                         ["TYPE(ID):", f"{label.type} ({label.node_id})"],
                         ["Imean", "{:.2f}A".format(imean_out)],
-                        ["Icw/Iccw", "{:.2f}A / {:.2f}A".format(cw_block_current, ccw_block_current)]]
+                        ["T21/T22", f"{cw_block_torque}Nm / {ccw_block_torque}Nm"]]
 
             table = Table(data)
 

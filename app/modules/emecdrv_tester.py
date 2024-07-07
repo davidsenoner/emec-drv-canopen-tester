@@ -27,8 +27,8 @@ class EMECDrvTester(QTimer):
         self.ccw_block_detected = False
         self.normal_run_test_active = True  # flag for first run of normal running test
         self.mean_current = 0  # mean current value during normal running test
-        self.cw_block_current = 0  # current measured at CW block test event
-        self.ccw_block_current = 0  # current measured at CCW block test event
+        self.cw_block_torque = 0
+        self.ccw_block_torque = 0
         self.block_test_time_mask = 0  # timer for block test duration needed for detection of block event
         self.not_moving_counter = 0  # counter for detection of no movement error
         self.wrong_movement_counter = 0  # counter for detection of wrong movement error
@@ -49,6 +49,7 @@ class EMECDrvTester(QTimer):
             self.min_target = MIN_TARGET_POSITION_LIFT  # default for Lift
             self.max_target = MAX_TARGET_POSITION_LIFT  # default for Lift
             self.max_error_current = int(self.settings.value("max_error_current_lift", 600))
+            self.normal_run_test_duration = 20  # default for Lift, check this value!!!
 
         elif node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self.tolerance = 10
@@ -57,6 +58,9 @@ class EMECDrvTester(QTimer):
 
             self.max_error_current = int(self.settings.value("max_error_current_slewing", 600))
             self.normal_run_test_duration = int(self.settings.value("norm_run_slewing_duration", 120))
+            self.repeat_test_active = int(self.settings.value("repeat_test_active", True, type=bool))
+            self.min_torque = int(self.settings.value("min_torque", 38, type=int))
+            self.max_torque = int(self.settings.value("max_torque", 52, type=int))
 
         self.block_duration = int(self.settings.value("block_duration", 4))
 
@@ -68,6 +72,7 @@ class EMECDrvTester(QTimer):
         self.statistic_timer.timeout.connect(self.on_timeout_statistics)
 
         self.current_stat = CurrentStatistics(max_length=20)
+        self.current_label = CurrentStatistics(max_length=self.normal_run_test_duration-2)
 
         # register emergency error callback that will stop with error message from canopen
         self.node.emcy.add_callback(self.emergency_callback)
@@ -173,11 +178,11 @@ class EMECDrvTester(QTimer):
         """ Return's manufacturer software version red from canopen registers """
         return self.node.sdo[OD_MANUFACTURER_SOFTWARE_VERSION].raw
 
-    def get_cw_block_current(self):
-        return self.cw_block_current
+    def get_cw_block_torque(self):
+        return self.cw_block_torque
 
-    def get_ccw_block_current(self):
-        return self.ccw_block_current
+    def get_ccw_block_torque(self):
+        return self.ccw_block_torque
 
     def get_mean_current(self):
         return self.mean_current
@@ -292,6 +297,7 @@ class EMECDrvTester(QTimer):
         try:
             actual_current = self.get_actual_current()
             self.current_stat.add(actual_current)  # add current value to statistics
+            self.current_label.add(actual_current) # add current value for long term mean current value
         except Exception as e:
             logger.error(f'Cannot read actual current from SDO: {e}')
             self.statistic_timer.stop()
@@ -346,12 +352,12 @@ class EMECDrvTester(QTimer):
         elif self.actual_test_mode == BLOCKED_TEST_MODE:
             self.block_test_routine()
         elif self.actual_test_mode == BLOCK_TEST_OK:
+            self.stop_test(message="Test finished")
             # generate signal for printing/generating a label
             if not self.label_generated:
                 self.generate_label_signal.emit()
                 self.label_generated = True
 
-            self.stop_test(message="Test finished")
         else:
             self.actual_test_mode_description = "Test mode unknown"
             self.stop_test(message="Stop test due to test mode unknown")
@@ -378,13 +384,15 @@ class EMECDrvTester(QTimer):
             return
 
         # check max current limit
-        self.mean_current = self.current_stat.mean()
-        if self.mean_current > self.max_error_current:
-            self.stop_test(message=f"Current limit exceeded (Imean= {self.mean_current} mA)")
+        short_current_mean = self.current_stat.mean()
+        self.mean_current = self.current_label.mean()
+        if short_current_mean > self.max_error_current:
+            self.stop_test(message=f"Current limit exceeded (Imean= {short_current_mean} mA)")
+            return
 
         if self.elapsed_time < self.normal_run_test_duration:  # test until normal run duration is reached
             # check if drive is moving
-            if abs(self.actual_position_temp - actual_position) < MIN_POS_PER_SECOND:  # is not moving??
+            if abs(self.actual_position_temp - actual_position) < MIN_POS_PER_SECOND_SLEWING:  # is not moving??
                 self.not_moving_counter += 1
                 if self.not_moving_counter >= 4:
                     self.stop_test(message=f"Slewing is not moving since {self.not_moving_counter}s")
@@ -416,10 +424,18 @@ class EMECDrvTester(QTimer):
     def block_test_routine(self):
         self.block_test_time_mask += 1
 
-        if self.block_test_time_mask == 10:
-            self.actual_test_mode_description = "Waiting for block event!!"
-        elif self.block_test_time_mask > 10:
+        if self.cw_block_detected and self.ccw_block_detected:
+            self.actual_test_mode_description = "Block event in both directions detected!! Test OK!!"
+            self.actual_test_mode = BLOCK_TEST_OK  # block event in both directions detected, test finished
+            return
 
+        if self.block_test_time_mask < 10:
+            self.actual_test_mode_description = "Initialising block test!!"
+            return
+        elif self.block_test_time_mask == 10:
+            self.actual_test_mode_description = "Waiting for block event!!"
+            return
+        elif self.block_test_time_mask > 10:
             try:
                 actual_position = self.get_actual_position()
             except Exception as e:
@@ -427,39 +443,53 @@ class EMECDrvTester(QTimer):
                 logger.error(f'Cannot read actual position from SDO: {e}')
                 return
 
-            # check if drive is moving
-            if abs(self.actual_position_temp - actual_position) < 7:  # is not moving??
+            pos_increment = abs(self.actual_position_temp - actual_position)
+            self.actual_position_temp = actual_position  # update temp for actual position
+
+            if pos_increment > MIN_POS_PER_SECOND_SLEWING:
+                self.not_moving_counter = 0
+                return
+            else:
                 self.not_moving_counter += 1
                 if self.not_moving_counter >= self.block_duration:
                     self.not_moving_counter = 0  # reset in any case if a block detected
-                    mean_current = self.current_stat.mean()  # 5s mean current
+                    mean_current = self.current_stat.mean() / 1000  # 5s mean current
 
                     if self.moving_direction == CW:
-                        logger.info(f"CW Block with I: {mean_current} mA")
+                        self.cw_block_torque = -80.736 * (mean_current**2) + 143.96 * mean_current - 17.148 # conversion to Nm
+                        logger.info(f"CW Block with Im: {mean_current}A, T21={self.cw_block_torque}Nm")
 
-                        self.cw_block_detected = True
-                        self.cw_block_current = mean_current  # save current value at block event
-                        self.actual_test_mode_description = "CW blocked Test OK!!"
+                        if self.repeat_test_active:
+                            if self.min_torque < self.cw_block_torque < self.max_torque:
+                                self.cw_block_detected = True
+                                self.actual_test_mode_description = "CW blocked Test OK!!"
+                            else:
+                                self.actual_test_mode_description = f"Repeat test, torque out of range (T21={int(self.cw_block_torque)}Nm)"
+                        else:
+                            self.cw_block_detected = True
+                            self.actual_test_mode_description = "CW blocked Test OK!!"
+
                         self.block_test_time_mask = 0
                         if not self.ccw_block_detected:
                             self.goto_target_position(self.min_target)
-                    elif self.moving_direction == CCW:
-                        logger.info(f"CCW Block with I: {mean_current} mA")
 
-                        self.ccw_block_detected = True
-                        self.ccw_block_current = mean_current
-                        self.actual_test_mode_description = "CCW blocked Test OK!!"
+                    elif self.moving_direction == CCW:
+                        self.ccw_block_torque = -18.208 * (mean_current**2) + 52.867 * mean_current + 14.542 # conversion to Nm
+                        logger.info(f"CCW Block with Im: {mean_current}A, T22={self.ccw_block_torque}Nm")
+
+                        if self.repeat_test_active:
+                            if self.min_torque < self.ccw_block_torque < self.max_torque:
+                                self.ccw_block_detected = True
+                                self.actual_test_mode_description = "CCW blocked Test OK!!"
+                            else:
+                                self.actual_test_mode_description = f"Repeat test, torque out of range (T22={int(self.ccw_block_torque)}Nm)"
+                        else:
+                            self.ccw_block_detected = True
+                            self.actual_test_mode_description = "CCW blocked Test OK!!"
+
                         self.block_test_time_mask = 0
                         if not self.cw_block_detected:
                             self.goto_target_position(self.max_target)
-            else:
-                self.not_moving_counter = 0
-
-            self.actual_position_temp = actual_position  # update temp for actual position
-
-        if self.cw_block_detected and self.ccw_block_detected:
-            self.actual_test_mode_description = "Block event in both directions detected!! Test OK!!"
-            self.actual_test_mode = BLOCK_TEST_OK  # block event in both directions detected, test finished
 
     def test_routine_lift(self):
         try:
@@ -472,18 +502,22 @@ class EMECDrvTester(QTimer):
         # detect max movement time exceeded
         if self.moving_time >= MAX_MOVEMENT_TIME_ABSOLUTE_LIFT:
             self.stop_test(message=f"Max movement time of {MAX_MOVEMENT_TIME_ABSOLUTE_LIFT}s exceeded!!")
+            return
 
         # check max current limit
-        self.mean_current = self.current_stat.mean()
-        if self.mean_current > self.max_error_current:
-            self.stop_test(message=f"Current limit exceeded (Imean= {self.mean_current} mA)")
+        short_current_mean = self.current_stat.mean()
+        self.mean_current = self.current_label.mean()
+        if short_current_mean > self.max_error_current:
+            self.stop_test(message=f"Current limit exceeded (Imean= {short_current_mean} mA)")
+            return
 
         # check if drive is moving
-        if abs(self.actual_position_temp - actual_position) < MIN_POS_PER_SECOND:  # is not moving??
+        if abs(self.actual_position_temp - actual_position) < MIN_POS_PER_SECOND_LIFT:  # is not moving??
             self.not_moving_counter += 1
             # logger.debug(f"Actual position not changing since {self.not_moving_counter}s")
             if self.not_moving_counter >= 4:
                 self.stop_test(message=f"Lift is not moving since {self.not_moving_counter}s")
+                return
 
         else:
             self.not_moving_counter = 0  # reset counter for detection "not moving" error
@@ -548,6 +582,7 @@ class EMECDrvTester(QTimer):
         self.actual_test_mode = NORMAL_RUN_TEST_MODE  # restart from normal
         self.actual_test_mode_description = "Normal running"
         self.current_stat.reset(length=20)  # reset current statistics and change to 5s fifo
+        self.current_label.reset()
 
         self.start_movement()
         self.start(1000)
@@ -566,6 +601,7 @@ class EMECDrvTester(QTimer):
 
         self.moving_time = self.elapsed_time = self.not_moving_counter = 0
         self.current_stat.reset()  # reset current statistics
+        self.current_label.reset()
 
     def start_movement(self):
         try:
