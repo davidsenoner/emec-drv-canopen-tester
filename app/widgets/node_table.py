@@ -110,8 +110,8 @@ class NodeTableRow(EMECDrvTester):
         label = Label(self.serial_number)
         label.node_id = self.node_id
         label.mean_current = self.get_mean_current()
-        label.cw_block_current = self.get_cw_block_current()
-        label.ccw_block_current = self.get_ccw_block_current()
+        label.cw_block_torque = self.get_cw_block_torque()
+        label.ccw_block_torque = self.get_ccw_block_torque()
         label.type = str(self)
 
         self.label_present_signal.emit(label)

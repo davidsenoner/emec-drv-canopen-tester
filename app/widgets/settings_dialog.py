@@ -70,6 +70,9 @@ class SettingsDialog(QDialog):
 
         # test procedure settings
         self._ui.sb_norm_run_slewing_duration.setValue(self.settings.value("norm_run_slewing_duration", 200, type=int))
+        self._ui.cb_repeat_test.setChecked(self.settings.value("repeat_test_active", True, type=bool))
+        self._ui.sb_min_torque.setValue(self.settings.value("min_torque", 38, type=int))
+        self._ui.sb_max_torque.setValue(self.settings.value("max_torque", 52, type=int))
 
         self._ui.btn_print_test_label.clicked.connect(self.on_print_test_label)
 
@@ -100,6 +103,9 @@ class SettingsDialog(QDialog):
 
             # test procedure settings
             self.settings.setValue("norm_run_slewing_duration", self._ui.sb_norm_run_slewing_duration.value())
+            self.settings.setValue("repeat_test_active", self._ui.cb_repeat_test.isChecked())
+            self.settings.setValue("min_torque", self._ui.sb_min_torque.value())
+            self.settings.setValue("max_torque", self._ui.sb_max_torque.value())
 
     def on_print_test_label(self) -> None:
         """
@@ -153,8 +159,8 @@ class SettingsDialog(QDialog):
             label = Label(20231120 + i)
             label.node_id = 13
             label.mean_current = 400
-            label.cw_block_current = 850
-            label.ccw_block_current = 852
+            label.cw_block_torque = 850
+            label.ccw_block_torque = 852
             label.type = "SLEWING"
             report_manager.add_label(label)
             i += 1
