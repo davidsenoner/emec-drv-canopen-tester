@@ -265,6 +265,13 @@ class TestReportManager(SimpleDocTemplate):
             cw_block_torque = int(label.cw_block_torque)  # print in Amps
             ccw_block_torque = int(label.ccw_block_torque)  # print in Amps
 
+            # convert to string
+            imean_out_str = f"{imean_out:.2f}".replace(".", "")
+            cw_block_torque_str = f"{cw_block_torque}".replace(".", "")
+            ccw_block_torque_str = f"{ccw_block_torque}".replace(".", "")
+
+            result_code = imean_out_str + "T21" + cw_block_torque_str + "T22" + ccw_block_torque_str
+
             if label.node_id == 12:
                 data = [[Image(logo, width=width, height=height), "QC APPROVED"],
                         ["DATE:", f'{label.datetime}'],
@@ -276,8 +283,9 @@ class TestReportManager(SimpleDocTemplate):
                         ["DATE:", f'{label.datetime}'],
                         ["SN:", f"{label.serial_number}"],
                         ["TYPE(ID):", f"{label.type} ({label.node_id})"],
-                        ["Imean", "{:.2f}A".format(imean_out)],
-                        ["T21/T22", f"{cw_block_torque}Nm / {ccw_block_torque}Nm"]]
+                        ["RC:", result_code]]
+                        # ["Imean", "{:.2f}A".format(imean_out)],
+                        # ["T21/T22", f"{cw_block_torque}Nm / {ccw_block_torque}Nm"]]
 
             table = Table(data)
 

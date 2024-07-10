@@ -159,8 +159,8 @@ class SettingsDialog(QDialog):
             label = Label(20231120 + i)
             label.node_id = 13
             label.mean_current = 400
-            label.cw_block_torque = 850
-            label.ccw_block_torque = 852
+            label.cw_block_torque = 42
+            label.ccw_block_torque = 40
             label.type = "SLEWING"
             report_manager.add_label(label)
             i += 1
