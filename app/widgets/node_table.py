@@ -113,6 +113,7 @@ class NodeTableRow(EMECDrvTester):
         label.cw_block_torque = self.get_cw_block_torque()
         label.ccw_block_torque = self.get_ccw_block_torque()
         label.type = str(self)
+        label.device_temperature = self.get_device_temperature_at_start()
 
         self.label_present_signal.emit(label)
 
@@ -203,7 +204,7 @@ class NodeTable(QObject):
     def add_node(network: Network, node_id: int):
         # Create node from ID
         try:
-            eds = 'app/resources/eds/emecdrv5.eds'
+            eds = 'app/resources/eds/emecdrv5_07.eds'
             # Add new node to network
             network.add_node(BaseNode402(node_id, eds))
             time.sleep(0.05)

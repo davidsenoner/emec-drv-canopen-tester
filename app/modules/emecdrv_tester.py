@@ -21,6 +21,7 @@ class EMECDrvTester(QTimer):
     def __init__(self, node: BaseNode402):
         super().__init__()
 
+        self.device_temperature_at_start = None
         self.node = node
         self.label_print_timeout = None
         self.cw_block_detected = False
@@ -186,6 +187,9 @@ class EMECDrvTester(QTimer):
 
     def get_mean_current(self):
         return self.mean_current
+
+    def get_device_temperature_at_start(self):
+        return self.device_temperature_at_start
 
     def get_software_version_ok(self) -> bool:
         # compare software version
@@ -555,6 +559,12 @@ class EMECDrvTester(QTimer):
         self.cw_block_detected = False
         self.ccw_block_detected = False
         self.normal_run_test_active = True  # flag for first run of normal running test
+        try:
+            self.device_temperature_at_start = self.get_device_temp()
+            logger.debug(f'Device temperature at start: {self.device_temperature_at_start}°C')
+        except Exception as e:
+            logger.error(f'Cannot read device temperature from SDO: {e}')
+            self.device_temperature_at_start = 0
 
         # driver specific settings
         if self.node.id == TITAN40_EMECDRV5_LIFT_NODE_ID:
