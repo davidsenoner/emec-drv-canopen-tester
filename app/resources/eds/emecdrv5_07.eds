@@ -9,15 +9,15 @@
 [FileInfo]
 FileName=emecdrv5.eds
 FileVersion=1
-FileRevision=6
+FileRevision=7
 EDSVersion=4.0
 Description=CANopen device using port's CANopen library
 CreationTime=10:31AM
 CreationDate=02-16-2023
 CreatedBy=MR
-ModificationTime=10:32AM
-ModificationDate=02-16-2023
-ModifiedBy=MR
+ModificationTime=10:41
+ModificationDate=17/07/2024
+ModifiedBy=Senoner
 
 [DeviceInfo]
 VendorName=Demaclenko
@@ -686,7 +686,7 @@ SubNumber=4
 [2000sub0]
 ParameterName=Accumulative operating time
 ObjectType=7
-DataType=0x0005
+DataType=0x0007
 AccessType=ro
 DefaultValue=0x3
 PDOMapping=0
