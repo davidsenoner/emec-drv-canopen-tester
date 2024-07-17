@@ -30,6 +30,7 @@ class Label:
     """
 
     def __init__(self, serial_number: int):
+        self._device_temperature = '-'  # device temperature
         self._ccw_block_torque = None
         self._cw_block_torque = None
         self._node_id = None
@@ -87,6 +88,14 @@ class Label:
     @property
     def mean_current(self) -> float:
         return self._mean_current
+
+    @property
+    def device_temperature(self) -> float:
+        return self._device_temperature
+
+    @device_temperature.setter
+    def device_temperature(self, temperature: float) -> None:
+        self._device_temperature = temperature
 
     @mean_current.setter
     def mean_current(self, current: float) -> None:
@@ -272,20 +281,24 @@ class TestReportManager(SimpleDocTemplate):
 
             result_code = imean_out_str + "T21" + cw_block_torque_str + "T22" + ccw_block_torque_str
 
+            # Lift
             if label.node_id == 12:
                 data = [[Image(logo, width=width, height=height), "QC APPROVED"],
                         ["DATE:", f'{label.datetime}'],
                         ["SN:", f"{label.serial_number}"],
                         ["TYPE(ID):", f"{label.type} ({label.node_id})"],
-                        ["Imean", "{:.2f}A".format(imean_out)]]
-            else:
+                        ["Imean", "{:.2f}A".format(imean_out)],
+                        ["Tested at", f"{label.device_temperature}°C"]]
+
+            # Slewing
+            elif label.node_id == 13:
                 data = [[Image(logo, width=width, height=height), "QC APPROVED"],
                         ["DATE:", f'{label.datetime}'],
                         ["SN:", f"{label.serial_number}"],
                         ["TYPE(ID):", f"{label.type} ({label.node_id})"],
                         ["RC:", result_code]]
-                        # ["Imean", "{:.2f}A".format(imean_out)],
-                        # ["T21/T22", f"{cw_block_torque}Nm / {ccw_block_torque}Nm"]]
+                # ["Imean", "{:.2f}A".format(imean_out)],
+                # ["T21/T22", f"{cw_block_torque}Nm / {ccw_block_torque}Nm"]]
 
             table = Table(data)
 
