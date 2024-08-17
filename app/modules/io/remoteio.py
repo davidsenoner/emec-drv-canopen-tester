@@ -212,8 +212,7 @@ class MoxaE1242:
         self._DO_pulse_channels_qty = 0
 
         logger.info(f"Initializing Moxa E1242 with IP: {ip}")
-        logger.info(f"Modbus port: {port}")
-        logger.info(f"Modbus comm: {comm}")
+        logger.info(f"Modbus port: {port} on {comm} protocol")
         logger.info(f"Hardware configuration: AI channels: {self._AI_channels_qty}, DI channels: {self._DI_channels_qty}, "
                     f"DO channels: {self._DO_channels_qty}, DI counter channels: {self._DI_counter_channels_qty}")
 
@@ -225,7 +224,7 @@ class MoxaE1242:
 
     @property
     def status(self):
-        return self.modbus_manager.status
+        return self.mb_cfg.get("status", False)
 
     @property
     def AI_channels_qty(self):
