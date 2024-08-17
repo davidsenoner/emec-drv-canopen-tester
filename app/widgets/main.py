@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import time
 
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtCore import QTimer
@@ -6,7 +8,8 @@ from PyQt5.QtCore import QTimer
 from app.widgets.ui_main import Ui_MainWindow
 
 from app.widgets.node_table import NodeTable
-from app.modules.network_manager import NetworkManager
+from app.modules.io import CANOpenManger
+from app.modules.io import MoxaE1242
 from app.widgets.settings_dialog import SettingsDialog
 
 from PyQt5.QtCore import QSettings
@@ -27,22 +30,61 @@ class MainWindow(QMainWindow):
     def __init__(self, version: str):
         QMainWindow.__init__(self)
 
+        logger.info(f"Starting EMEC Drive End-Of-Line Tester {version}")
+
         # Init UI
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
         self.showMaximized()
         self.setWindowTitle(f"EMEC Drive End-Of-Line Tester {version}")  # Window title bar
         self.node_table = None
-
-        self.network_manager = NetworkManager()
-
-        self._ui.lbl_detected_cahnnels.setText(f"{len(self.network_manager.network_list)} channels")
-
-        if len(self.network_manager.network_list) > 0:  # at least ne channel detected
-            self.node_table = NodeTable(self._ui.tbl_node_list, self.network_manager.network_list)  # Init Tables
+        self.moxa_remote_io = None
+        self.canopen_manager = None
 
         # Settings management
         self.settings = QSettings("EMEC", "Tester")
+
+        # CANOpen initialization
+        self.canopen_manager = CANOpenManger()
+
+        if len(self.canopen_manager) > 0:  # at least ne channel detected
+            self.node_table = NodeTable(self._ui.tbl_node_list, self.canopen_manager.items())  # Init Tables
+
+        self._ui.lbl_detected_can_converter.setText(f"{len(self.canopen_manager)}")
+        bauds = {cfg["baud"] for cfg in self.canopen_manager.canopen_channels_cfg if cfg.get("init", False)}
+        self._ui.lbl_can_baudrate.setText(", ".join(map(str, bauds)))
+
+        # Moxa remote IO initialization
+        remote_io_enabled = self.settings.value("remote_io_enabled", True, type=bool)
+        if remote_io_enabled:
+            remote_io_ip = self.settings.value("remote_io_ip", "192.168.23.254", type=str)
+            remote_io_port = self.settings.value("remote_io_port", 502, type=int)
+            remote_io_connection_timeout = self.settings.value("remote_io_connection_timeout", 5, type=int)
+
+            self.moxa_remote_io = MoxaE1242(ip=remote_io_ip, port=remote_io_port)  # TODO: move IP Address to settings
+            for _ in range(remote_io_connection_timeout):
+                if self.moxa_remote_io.status:
+                    break
+                time.sleep(1)
+
+            if not self.moxa_remote_io.status:
+                logger.error("Moxa E1242 Remote IO not detected")
+                self._ui.lbl_remoteio_connection_status.setText("Not connected")
+                return
+
+            logger.info("Moxa E1242 Remote IO initialized")
+            logger.info(f"CANOpen Manager initialized with {len(self.canopen_manager)} channels")
+            logger.info(f"Moxa IP: {self.moxa_remote_io.lan_ip} - {self.moxa_remote_io.lan_mac}")
+
+            self._ui.lbl_remoteio_ip.setText(".".join(map(str, self.moxa_remote_io.lan_ip)))
+            self._ui.lbl_remoteio_firmware.setText(self.moxa_remote_io.firmware_version)
+            self._ui.lbl_remoteio_model_name.setText(self.moxa_remote_io.model_name)
+            self._ui.lbl_remoteio_connection_status.setText("Connected")
+        else:
+            self._ui.lbl_remoteio_ip.setText("-")
+            self._ui.lbl_remoteio_firmware.setText("-")
+            self._ui.lbl_remoteio_model_name.setText("-")
+            self._ui.lbl_remoteio_connection_status.setText("disabled")
 
         min_sw_version_slewing = self.settings.value("min_sw_version_slewing", "v1.25")
         min_sw_version_lift = self.settings.value("min_sw_version_lift", "v3.16")
