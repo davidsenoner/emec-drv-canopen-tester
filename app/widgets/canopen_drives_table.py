@@ -1,6 +1,5 @@
 import logging
 import time
-import platform
 from canopen import Network, BaseNode402
 
 from PyQt5.QtWidgets import QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox
@@ -9,22 +8,13 @@ from PyQt5.QtGui import QCursor, QColor, QBrush
 
 from app.modules.drives.emec_canopen import EMECDrvTester
 from app.modules.drives.emec_canopen import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
-from app.widgets.add_info_diag import AddInfoDialog
-from app.widgets.add_sn_diag import AddSNDialog
-from app.modules.test_report import Label, TestReportManager, keep_latest_files
+from app.widgets.dialogs.add_info import AddInfoDialog
+from app.widgets.dialogs.add_serial_number import AddSNDialog
+from app.modules.test_report import Label, TestReportManager, keep_latest_files, get_label_temp_folder
 
 logger = logging.getLogger(__name__)
 
-
-def get_label_temp_folder():
-    os = platform.system()
-    if os == "Windows":
-        return "C:/tmp/labels/"
-    else:
-        return "/var/tmp/labels/"
-
-
-class NodeTableRow(EMECDrvTester):
+class CANOpenDrivesTableRow(EMECDrvTester):
     label_present_signal = pyqtSignal(Label)
 
     def __init__(self, network: Network, channel: int, node: BaseNode402):
@@ -118,7 +108,7 @@ class NodeTableRow(EMECDrvTester):
         self.label_present_signal.emit(label)
 
 
-class NodeTable(QObject):
+class CANOpenDrivesTable(QObject):
     def __init__(self, widget: QTableWidget, networks: list):
         super().__init__()
 
@@ -168,7 +158,7 @@ class NodeTable(QObject):
         }
 
     @staticmethod
-    def start_node(node_table_row: NodeTableRow):
+    def start_node(node_table_row: CANOpenDrivesTableRow):
         try:
             node_table_row.start_test()
         except Exception as e:
@@ -176,14 +166,14 @@ class NodeTable(QObject):
             return
 
     @staticmethod
-    def stop_node(node_table_row: NodeTableRow):
+    def stop_node(node_table_row: CANOpenDrivesTableRow):
         try:
             node_table_row.stop_test("Stopped by user")
         except Exception as e:
             logger.debug(f'Error during stop test command: {e}')
 
     @staticmethod
-    def reset_node(node_table_row: NodeTableRow):
+    def reset_node(node_table_row: CANOpenDrivesTableRow):
         try:
             node_table_row.ack_error()
         except Exception as e:
@@ -225,7 +215,7 @@ class NodeTable(QObject):
             key = f'{channel}_{node_id}'
 
             if key not in self.table_rows:
-                node_table_row = NodeTableRow(network=network, channel=channel, node=network.nodes[node_id])
+                node_table_row = CANOpenDrivesTableRow(network=network, channel=channel, node=network.nodes[node_id])
 
                 node_table_row.on_test_timer_timeout.connect(self.draw_cyclic_info)
                 self.table_rows.update({key: node_table_row})

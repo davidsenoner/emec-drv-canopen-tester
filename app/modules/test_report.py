@@ -24,6 +24,55 @@ Access Printer server website:
 """
 
 
+def print_pdf(path: str, printer: str) -> None:
+    """
+    Print PDF with selected printer
+    :param path: PDF path
+    :param printer: printer where PDF should be printed
+    :return: None
+    """
+    path = Path(path)
+    logger.info(f"Print PDF: {path}")
+    if path.exists():
+        try:
+            cups_conn = cups.Connection()
+            cups_conn.printFile(printer, str(path), f"{path.name}", {})
+        except Exception as e:
+            logger.error(f"Error printing PDF: {e}")
+    else:
+        logger.error(f"{path} does not exist")
+
+
+def get_label_temp_folder():
+    import platform
+    os = platform.system()
+    if os == "Windows":
+        return "C:/tmp/labels/"
+    else:
+        return "/var/tmp/labels/"
+
+def keep_latest_files(folder_path: str, keep_count: int) -> None:
+    """
+    This method will delete older files when keep_count has ben reached
+    :param folder_path: path of folder to delete files
+    :param keep_count: files to keep in folder until delete older files
+    :return: None
+    """
+    folder = Path(folder_path)
+
+    # List all files in the folder and sort them by modification time
+    files = list(folder.glob('*'))
+    files.sort(key=lambda x: x.stat().st_mtime)
+
+    # Calculate the number of files to delete
+    to_delete_count = max(0, len(files) - keep_count)
+
+    # Delete the older files
+    for i in range(to_delete_count):
+        files[i].unlink()
+        logger.info(f"Deleted: {files[i]}")
+
+
 class Label:
     """
     Label property class
@@ -116,47 +165,6 @@ class Label:
     @ccw_block_torque.setter
     def ccw_block_torque(self, current: float) -> None:
         self._ccw_block_torque = current
-
-
-def print_pdf(path: str, printer: str) -> None:
-    """
-    Print PDF with selected printer
-    :param path: PDF path
-    :param printer: printer where PDF should be printed
-    :return: None
-    """
-    path = Path(path)
-    logger.info(f"Print PDF: {path}")
-    if path.exists():
-        try:
-            cups_conn = cups.Connection()
-            cups_conn.printFile(printer, str(path), f"{path.name}", {})
-        except Exception as e:
-            logger.error(f"Error printing PDF: {e}")
-    else:
-        logger.error(f"{path} does not exist")
-
-
-def keep_latest_files(folder_path: str, keep_count: int) -> None:
-    """
-    This method will delete older files when keep_count has ben reached
-    :param folder_path: path of folder to delete files
-    :param keep_count: files to keep in folder until delete older files
-    :return: None
-    """
-    folder = Path(folder_path)
-
-    # List all files in the folder and sort them by modification time
-    files = list(folder.glob('*'))
-    files.sort(key=lambda x: x.stat().st_mtime)
-
-    # Calculate the number of files to delete
-    to_delete_count = max(0, len(files) - keep_count)
-
-    # Delete the older files
-    for i in range(to_delete_count):
-        files[i].unlink()
-        logger.info(f"Deleted: {files[i]}")
 
 
 class TestReportManager(SimpleDocTemplate):
