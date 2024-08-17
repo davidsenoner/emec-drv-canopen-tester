@@ -683,7 +683,7 @@ QPushButton:disabled {
      <number>0</number>
     </property>
     <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="QFrame" name="gridFrame">
         <property name="sizePolicy">
@@ -709,7 +709,7 @@ QPushButton:disabled {
                <height>16777215</height>
               </size>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_3">
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
               <property name="leftMargin">
                <number>0</number>
               </property>
@@ -748,17 +748,129 @@ QPushButton:disabled {
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="label_9">
-                <property name="text">
-                 <string>&lt;h4&gt;Detected channels&lt;/h4&gt;</string>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
                 </property>
-               </widget>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
               <item>
-               <widget class="QLabel" name="lbl_detected_cahnnels">
-                <property name="text">
-                 <string>TextLabel</string>
+               <widget class="QFrame" name="verticalFrame">
+                <property name="minimumSize">
+                 <size>
+                  <width>500</width>
+                  <height>0</height>
+                 </size>
                 </property>
+                <property name="frameShape">
+                 <enum>QFrame::Box</enum>
+                </property>
+                <layout class="QGridLayout" name="gridLayout">
+                 <item row="6" column="3">
+                  <widget class="QLabel" name="lbl_remoteio_firmware">
+                   <property name="text">
+                    <string>V1.0.0</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="2">
+                  <widget class="QLabel" name="label_5">
+                   <property name="text">
+                    <string>Firmware</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="3">
+                  <widget class="QLabel" name="lbl_remoteio_ip">
+                   <property name="text">
+                    <string>127.0.0.1</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="2">
+                  <widget class="QLabel" name="label_4">
+                   <property name="text">
+                    <string>IP Address</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_9">
+                   <property name="text">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h4 style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:medium; font-weight:600;&quot;&gt;CANOpen&lt;/span&gt;&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="2">
+                  <widget class="QLabel" name="label_11">
+                   <property name="text">
+                    <string>Model Name</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QLabel" name="lbl_detected_can_converter">
+                   <property name="text">
+                    <string>0</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="7" column="3">
+                  <widget class="QLabel" name="lbl_remoteio_connection_status">
+                   <property name="text">
+                    <string>OK</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="label_16">
+                   <property name="text">
+                    <string>Converter detected</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="3">
+                  <widget class="QLabel" name="lbl_remoteio_model_name">
+                   <property name="text">
+                    <string>Moxa E1242</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="7" column="2">
+                  <widget class="QLabel" name="label_12">
+                   <property name="text">
+                    <string>Connection status</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="2">
+                  <widget class="QLabel" name="label_3">
+                   <property name="text">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Remote IO&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0">
+                  <widget class="QLabel" name="label_18">
+                   <property name="text">
+                    <string>Baudrate</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="1">
+                  <widget class="QLabel" name="lbl_can_baudrate">
+                   <property name="text">
+                    <string>TextLabel</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
               </item>
              </layout>
@@ -767,156 +879,181 @@ QPushButton:disabled {
           </layout>
          </item>
          <item>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="0" column="4">
-            <widget class="QLabel" name="label_8">
-             <property name="text">
-              <string>&lt;b&gt;Lift:&lt;/b&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="4">
-            <widget class="QLabel" name="lbl_print_lbl_detection_status">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QLineEdit" name="led_min_sw_ver_slewing">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::StrongFocus</enum>
-             </property>
-             <property name="maxLength">
-              <number>20</number>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Print label with SN:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="4">
-            <widget class="QLineEdit" name="led_min_sw_ver_lift">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::StrongFocus</enum>
-             </property>
-             <property name="maxLength">
-              <number>20</number>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="2">
-            <widget class="QLineEdit" name="led_print_label_with_serial">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="maxLength">
-              <number>20</number>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>&lt;h4&gt;Min. software version&lt;/h4&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>&lt;b&gt;Slewing:&lt;/b&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h4 style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:medium; font-weight:600;&quot;&gt;Max. current &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600; font-style:italic;&quot;&gt;(normal run)&lt;/span&gt;&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QSpinBox" name="spb_max_slewing_current">
-             <property name="suffix">
-              <string> mA</string>
-             </property>
-             <property name="maximum">
-              <number>3000</number>
-             </property>
-             <property name="value">
-              <number>0</number>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="4">
-            <widget class="QSpinBox" name="spb_max_lift_current">
-             <property name="suffix">
-              <string> mA</string>
-             </property>
-             <property name="maximum">
-              <number>3000</number>
-             </property>
-             <property name="value">
-              <number>0</number>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h4 style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:medium; font-weight:600;&quot;&gt;Block duration &lt;/span&gt;&lt;span style=&quot; font-size:medium; font-weight:600; font-style:italic;&quot;&gt;(block test)&lt;/span&gt;&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QSpinBox" name="spb_block_duration">
-             <property name="suffix">
-              <string> s</string>
-             </property>
-             <property name="maximum">
-              <number>20</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
            <item>
-            <widget class="QTableWidget" name="tbl_node_list">
-             <property name="editTriggers">
-              <set>QAbstractItemView::EditKeyPressed</set>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::NoSelection</enum>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-             <attribute name="verticalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayoutCANOpen">
+             <item>
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;CANOpen Drives&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QGridLayout" name="gridLayout_3">
+               <item row="0" column="4">
+                <widget class="QLabel" name="label_8">
+                 <property name="text">
+                  <string>&lt;b&gt;Lift:&lt;/b&gt;</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="4">
+                <widget class="QLabel" name="lbl_print_lbl_detection_status">
+                 <property name="text">
+                  <string>TextLabel</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QLineEdit" name="led_min_sw_ver_slewing">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::StrongFocus</enum>
+                 </property>
+                 <property name="maxLength">
+                  <number>20</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Print label with SN:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="4">
+                <widget class="QLineEdit" name="led_min_sw_ver_lift">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::StrongFocus</enum>
+                 </property>
+                 <property name="maxLength">
+                  <number>20</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="2">
+                <widget class="QLineEdit" name="led_print_label_with_serial">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="maxLength">
+                  <number>20</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_6">
+                 <property name="text">
+                  <string>&lt;h4&gt;Min. software version&lt;/h4&gt;</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QLabel" name="label_7">
+                 <property name="text">
+                  <string>&lt;b&gt;Slewing:&lt;/b&gt;</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_10">
+                 <property name="text">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h4 style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:medium; font-weight:600;&quot;&gt;Max. current &lt;/span&gt;&lt;span style=&quot; font-size:8pt; font-weight:600; font-style:italic;&quot;&gt;(normal run)&lt;/span&gt;&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="QSpinBox" name="spb_max_slewing_current">
+                 <property name="suffix">
+                  <string> mA</string>
+                 </property>
+                 <property name="maximum">
+                  <number>3000</number>
+                 </property>
+                 <property name="value">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="4">
+                <widget class="QSpinBox" name="spb_max_lift_current">
+                 <property name="suffix">
+                  <string> mA</string>
+                 </property>
+                 <property name="maximum">
+                  <number>3000</number>
+                 </property>
+                 <property name="value">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_2">
+                 <property name="text">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h4 style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:medium; font-weight:600;&quot;&gt;Block duration &lt;/span&gt;&lt;span style=&quot; font-size:medium; font-weight:600; font-style:italic;&quot;&gt;(block test)&lt;/span&gt;&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QSpinBox" name="spb_block_duration">
+                 <property name="suffix">
+                  <string> s</string>
+                 </property>
+                 <property name="maximum">
+                  <number>20</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QTableWidget" name="tbl_node_list">
+               <property name="editTriggers">
+                <set>QAbstractItemView::EditKeyPressed</set>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::NoSelection</enum>
+               </property>
+               <property name="selectionBehavior">
+                <enum>QAbstractItemView::SelectRows</enum>
+               </property>
+               <attribute name="verticalHeaderVisible">
+                <bool>false</bool>
+               </attribute>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayoutDIO">
+             <item>
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;Digital IO Controlled Drives&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableWidget" name="tbl_DIO_drives"/>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
