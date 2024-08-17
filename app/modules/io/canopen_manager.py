@@ -10,6 +10,14 @@ class CANOpenWrapper:
     def __init__(self):
         self._network_list = []
 
+    def __del__(self):
+        for network in self._network_list:
+            network.disconnect()
+            logger.debug(f"Network {network.channel} disconnected")
+
+    def __len__(self):
+        return len(self._network_list)
+
     @property
     def network_list(self):
         return self._network_list
@@ -57,6 +65,10 @@ class CANOpenManger:
     def __init__(self):
         self.canopen_channels_cfg = [
             {
+                "channel": 0,
+                "baud": 125000
+            },
+            {
                 "channel": 1,
                 "baud": 125000
             },
@@ -67,10 +79,6 @@ class CANOpenManger:
             {
                 "channel": 3,
                 "baud": 125000
-            },
-            {
-                "channel": 4,
-                "baud": 125000
             }
         ]
 
@@ -79,3 +87,16 @@ class CANOpenManger:
         logger.info("Init CANOpen io")
         for bus in self.canopen_channels_cfg:
             bus['init'] = self.wrapper.init(**bus)  # Init CAN channels
+
+    def __len__(self):
+        return len(self.wrapper)
+
+    def __del__(self):
+        del self.wrapper
+        logger.debug("CANOpen Manager deleted")
+
+    def __str__(self):
+        return f"CANOpen Manager with {len(self)} channels"
+
+    def items(self):
+        return self.wrapper.network_list
