@@ -7,8 +7,8 @@ from PyQt5.QtWidgets import QTableWidgetItem, QPushButton, QHeaderView, QTableWi
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QObject, QTimer, QSettings
 from PyQt5.QtGui import QCursor, QColor, QBrush
 
-from app.modules.emecdrv_tester import EMECDrvTester
-from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
+from app.modules.drives.emec_canopen import EMECDrvTester
+from app.modules.drives.emec_canopen import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 from app.widgets.add_info_diag import AddInfoDialog
 from app.widgets.add_sn_diag import AddSNDialog
 from app.modules.test_report import Label, TestReportManager, keep_latest_files
@@ -193,7 +193,7 @@ class NodeTable(QObject):
     @staticmethod
     def pop_node(node_table_row):
         try:
-            # Pop node from network
+            # Pop node from io
             if node_table_row.node_id in node_table_row.network:
                 node_table_row.network.pop(node_table_row.node_id)
             time.sleep(0.05)
@@ -205,7 +205,7 @@ class NodeTable(QObject):
         # Create node from ID
         try:
             eds = 'app/resources/eds/emecdrv5_07.eds'
-            # Add new node to network
+            # Add new node to io
             network.add_node(BaseNode402(node_id, eds))
             time.sleep(0.05)
             logging.debug(f'Node ID {node_id} added to network using EDS: {eds}')
@@ -582,7 +582,7 @@ class NodeTable(QObject):
             except Exception as e:
                 pass
                 # logger.error(f"Error during node refresh: {e}")
-                # logger.error(network.scanner.nodes)
+                # logger.error(io.scanner.nodes)
 
         self._redraw_table = True
 

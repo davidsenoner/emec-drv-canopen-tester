@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QDialog
 
 from app.widgets.ui_settings_diag import Ui_SettingsDialog
 from app.modules.test_report import Label, TestReportManager, print_pdf
-from app.modules.emecdrv_tester import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
+from app.modules.drives.emec_canopen import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 
 logger = logging.getLogger(__name__)
 
