@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainIvwTzd.ui'
+## Form generated from reading UI file 'mainjQtxVP.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -688,6 +688,10 @@ class Ui_MainWindow(object):
         self.actionGeneral.setObjectName(u"actionGeneral")
         self.actionSettings = QAction(MainWindow)
         self.actionSettings.setObjectName(u"actionSettings")
+        self.actionLabel_Printer = QAction(MainWindow)
+        self.actionLabel_Printer.setObjectName(u"actionLabel_Printer")
+        self.actionExit = QAction(MainWindow)
+        self.actionExit.setObjectName(u"actionExit")
         self.bgApp = QWidget(MainWindow)
         self.bgApp.setObjectName(u"bgApp")
         self.bgApp.setStyleSheet(u"")
@@ -959,6 +963,9 @@ class Ui_MainWindow(object):
 
         self.menuBar.addAction(self.menuEdit.menuAction())
         self.menuEdit.addAction(self.actionSettings)
+        self.menuEdit.addAction(self.actionLabel_Printer)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionExit)
 
         self.retranslateUi(MainWindow)
 
@@ -969,6 +976,8 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EMEC Drive EOL Tester", None))
         self.actionGeneral.setText(QCoreApplication.translate("MainWindow", u"General", None))
         self.actionSettings.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
+        self.actionLabel_Printer.setText(QCoreApplication.translate("MainWindow", u"Label Printer", None))
+        self.actionExit.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
         self.lbl_logo.setText("")
         self.lbl_remoteio_firmware.setText(QCoreApplication.translate("MainWindow", u"V1.0.0", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Firmware", None))

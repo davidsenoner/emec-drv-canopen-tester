@@ -1,16 +1,19 @@
 import asyncio
 import logging
+import sys
 import time
 
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QMessageBox
 from PyQt5.QtCore import QTimer
 
 from app.widgets.ui_main import Ui_MainWindow
 
-from app.widgets.node_table import NodeTable
+from app.widgets.canopen_drives_table import CANOpenDrivesTable
+from app.widgets.io_drives_table import IODrivesTable
 from app.modules.io import CANOpenManger
 from app.modules.io import MoxaE1242
-from app.widgets.settings_dialog import SettingsDialog
+from app.widgets.dialogs.settings import SettingsDialog
+from app.widgets.dialogs.label_printer import LabelPrinterDialog
 
 from PyQt5.QtCore import QSettings
 
@@ -47,8 +50,9 @@ class MainWindow(QMainWindow):
         # CANOpen initialization
         self.canopen_manager = CANOpenManger()
 
+        # create drives tables
         if len(self.canopen_manager) > 0:  # at least ne channel detected
-            self.node_table = NodeTable(self._ui.tbl_node_list, self.canopen_manager.items())  # Init Tables
+            self.node_table = CANOpenDrivesTable(self._ui.tbl_node_list, self.canopen_manager.items())  # Init Tables
 
         self._ui.lbl_detected_can_converter.setText(f"{len(self.canopen_manager)}")
         bauds = {cfg["baud"] for cfg in self.canopen_manager.canopen_channels_cfg if cfg.get("init", False)}
@@ -70,7 +74,7 @@ class MainWindow(QMainWindow):
             if not self.moxa_remote_io.status:
                 logger.error("Moxa E1242 Remote IO not detected")
                 self._ui.lbl_remoteio_connection_status.setText("Not connected")
-                return
+                # return
 
             logger.info("Moxa E1242 Remote IO initialized")
             logger.info(f"CANOpen Manager initialized with {len(self.canopen_manager)} channels")
@@ -80,6 +84,9 @@ class MainWindow(QMainWindow):
             self._ui.lbl_remoteio_firmware.setText(self.moxa_remote_io.firmware_version)
             self._ui.lbl_remoteio_model_name.setText(self.moxa_remote_io.model_name)
             self._ui.lbl_remoteio_connection_status.setText("Connected")
+
+            if self.moxa_remote_io.status:
+                self.remote_io_table = IODrivesTable(self._ui.tbl_DIO_drives, self.moxa_remote_io)
         else:
             self._ui.lbl_remoteio_ip.setText("-")
             self._ui.lbl_remoteio_firmware.setText("-")
@@ -115,9 +122,32 @@ class MainWindow(QMainWindow):
         def action_settings():
             settings_diag = SettingsDialog()
 
+        def action_Label_Printer():
+            label_printer_dialog = LabelPrinterDialog()
+
         self._ui.actionSettings.triggered.connect(action_settings)
+        self._ui.actionLabel_Printer.triggered.connect(action_Label_Printer)
+        self._ui.actionExit.triggered.connect(self.close)
 
         self.show()
+
+    def closeEvent(self, event):
+
+        # Create the QMessageBox instance manually
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle('Confirmation')
+        msg_box.setText('Do you really want to close the application?')
+        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg_box.setDefaultButton(QMessageBox.No)
+
+        # Show the message box and capture the user's response
+        reply = msg_box.exec_()
+
+        if reply == QMessageBox.Yes:
+            self.moxa_remote_io.stop()
+            event.accept()
+        else:
+            event.ignore()
 
     def on_print_label(self) -> None:
         """
