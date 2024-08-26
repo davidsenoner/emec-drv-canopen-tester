@@ -2,13 +2,13 @@ import sys
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QLineEdit, QPushButton, QVBoxLayout
 
 from app.widgets.ui_add_sn_diag import Ui_AddSNDialog
-from app.modules.drives.emec_canopen import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
+from app.modules.drives.emec_canopen import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID, IO_DRIVE_SLEWING_ID
 
 
 class AddSNDialog(QDialog):
     def __init__(self,
                  node_id: int,
-                 channel: int,
+                 channel: int = 0,
                  serial_number: int = 0
                  ):
         super().__init__()
@@ -32,6 +32,9 @@ class AddSNDialog(QDialog):
         # Set slewing node info to dialog
         elif node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
             self._ui.lbl_drive_id.setText(f"<b>Slewing</b> with Node ID: {node_id} on Channel: {channel}")
+
+        elif node_id == IO_DRIVE_SLEWING_ID:
+            self._ui.lbl_drive_id.setText(f"<b>Slewing</b> with IO controlled signals")
 
         if self.exec_() == QDialog.Accepted:
             check_sn = self._ui.led_serial_number.text()
