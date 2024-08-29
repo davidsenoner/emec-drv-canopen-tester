@@ -1,7 +1,9 @@
+import sys
 import logging
 import asyncio
 import threading
 from app.modules.io import ModbusManager
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -135,13 +137,13 @@ def get_bit(word, bit_position):
 
 class MoxaE1242:
     def __init__(self, ip: str = "192.168.127.254", port: int = 502, comm: str = "tcp", **kwargs):
+        self._lanIp = None
         self._lanMac = None
+        self._modelName = None
         self._deviceName = None
         self._deviceUpTime = None
         self._firmwareVersion = None
         self._firmwareBuildDate = None
-        self._lanIp = None
-        self._modelName = None
         self._watchdogAlarmFlag = None
 
         self._AI_burnoutValue = None
@@ -199,8 +201,8 @@ class MoxaE1242:
         self._DO_pulseStatus = None
         self._DO_pulseStatus_wr = None
 
-        self._DO_status = None
-        self._DO_status_wr = None
+        #self._DO_status_wr_deque = deque()
+        #self._DO_status_to_write = None
 
         self._DO_all_statusFromDO_00 = None
         self._DO_all_statusFromDO_00_wr = None
@@ -211,16 +213,37 @@ class MoxaE1242:
         self._DI_counter_channels_qty = 0
         self._DO_pulse_channels_qty = 0
 
+        self._DO_status = None
+        self._DO_status_wr = [False] * self._DO_channels_qty  # TODO: read first time from device
+
         logger.info(f"Initializing Moxa E1242 with IP: {ip}")
         logger.info(f"Modbus port: {port} on {comm} protocol")
-        logger.info(f"Hardware configuration: AI channels: {self._AI_channels_qty}, DI channels: {self._DI_channels_qty}, "
-                    f"DO channels: {self._DO_channels_qty}, DI counter channels: {self._DI_counter_channels_qty}")
+        logger.info(
+            f"Hardware configuration: AI channels: {self._AI_channels_qty}, DI channels: {self._DI_channels_qty}, "
+            f"DO channels: {self._DO_channels_qty}, DI counter channels: {self._DI_counter_channels_qty}")
 
-        register_map = kwargs.get("register_map", "app/resources/register_map/e1242_mb_register_map.json")
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            path = Path(sys._MEIPASS) / "app/resources/register_map/e1242_mb_register_map.json"
+        else:
+            path = "app/resources/register_map/e1242_mb_register_map.json"
+
+        register_map = kwargs.get("register_map", path)
+        self.rw_period = kwargs.get("rw_period", 0.2)
         self.mb_cfg = {"comm": comm, "host": ip, "port": port, "register_map": register_map}
         self.modbus_manager = ModbusManager()  # Init Modbus manager
 
-        threading.Thread(target=self.start).start()
+        self._thread = threading.Thread(target=self.start)
+        self._thread.start()
+        self._stop_thread = False
+
+    def start(self):
+        asyncio.run(self.modbus_task())
+
+    def stop(self):
+        self._stop_thread = True
+        logger.info("Stopping Moxa E1242 thread")
+        self._thread.join()
+        logger.info("Moxa E1242 thread stopped")
 
     @property
     def status(self):
@@ -266,12 +289,9 @@ class MoxaE1242:
     def DO_pulse_channels_qty(self, value):
         self._DO_pulse_channels_qty = value
 
-    def start(self):
-        asyncio.run(self.modbus_task())
-
     async def modbus_task(self):
         await self.modbus_manager.init_modbus_client(self.mb_cfg)
-        await self.read_write_registers(0.5)
+        await self.read_write_registers(self.rw_period)
 
     async def read_write_registers(self, period=1.0):
 
@@ -285,7 +305,7 @@ class MoxaE1242:
         self._watchdogAlarmFlag = await self.modbus_manager.read_register("watchdogAlarmFlag")
 
         # cyclic
-        while True:
+        while not self._stop_thread:
             # read system registers
             self._deviceUpTime = await self.modbus_manager.read_register("deviceUpTime")
 
@@ -376,9 +396,22 @@ class MoxaE1242:
                 await self.modbus_manager.write_register("DO_pulseStatus", self._DO_pulseStatus_wr)
                 self._DO_pulseStatus_wr = None
 
-            if self._DO_status_wr is not None:
-                await self.modbus_manager.write_register("DO_status", self._DO_status_wr)
-                self._DO_status_wr = None
+            await self.modbus_manager.write_register("DO_status", self._DO_status_wr)
+
+            '''if len(self._DO_status_wr_deque) > 0:
+                if self._DO_status_to_write is None:
+                    self._DO_status_to_write = self._DO_status_wr_deque[0]
+                    channel, status = self._DO_status_wr_deque[0]
+
+                    temp = self._DO_status.copy()[0:self._DO_channels_qty]
+                    temp[channel] = status
+                    await self.modbus_manager.write_register("DO_status", temp)
+
+                    self._DO_status_wr_deque.popleft()
+                else:
+                    channel, status = self._DO_status_to_write
+                    if self._DO_status.copy()[channel] == status:
+                        self._DO_status_to_write = None'''
 
             if self._DO_all_statusFromDO_00_wr is not None:
                 await self.modbus_manager.write_register("DO_all_statusFromDO_00", self._DO_all_statusFromDO_00_wr)
@@ -786,10 +819,8 @@ class MoxaE1242:
         :param channel: Channel number (1-4).
         :param status: Status of the channel. 0: OFF, 1: ON
         """
-        temp = self._DO_status.copy()[0:self._DO_channels_qty]
-        temp[channel] = status
-
-        self._DO_status_wr = temp
+        # self._DO_status_wr_deque.append((channel, status))
+        self._DO_status_wr[channel] = status
 
     def get_DO_all_status_from_DO_00(self):
         """

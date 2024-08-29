@@ -118,7 +118,7 @@ async def write_coil(client, start_address, value, slave_id=1):
     return rr.bits
 
 
-async def write_register(client, start_address: int, value: int, slave_id: int =1):
+async def write_register(client, start_address: int, value: int, slave_id: int = 1):
     """
     Write a single register to the modbus client (code 6)
     :param client:
@@ -158,6 +158,7 @@ async def write_coils(client, start_address: int, values: list[bool], slave_id: 
         raise ModbusException("Error writing coils")
 
     return rr.bits
+
 
 
 async def write_registers(client, start_address: int, values: list[int], slave_id: int = 1):
@@ -252,7 +253,7 @@ def find_register_by_name(registers_data, name):
 
 
 class ModbusManager:
-    def __init__(self) :
+    def __init__(self):
         self.register_map = None
 
         logger.info("Init Modbus clients")
@@ -304,7 +305,7 @@ class ModbusManager:
             print(f"Modbus Error: {e}")
             return None
 
-    async def write_register(self, register_name: str, value: int | list[int]):
+    async def write_register(self, register_name: str, value):
 
         registers_data = (self.register_map.get("io_registers", []) +
                           self.register_map.get("system_registers", []))  # Get registers data
