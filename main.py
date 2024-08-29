@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication
 from app import MainWindow
 
-VERSION = "2.7.0"  # Version number
+VERSION = "2.8.0"  # Version number
 
 if __name__ == "__main__":
     if not QApplication.instance():
