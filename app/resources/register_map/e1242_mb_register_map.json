@@ -1,0 +1,358 @@
+{
+    "model": "ioLogik E1242",
+    "description": "ioLogik E1242 Modbus Address and Register Map",
+    "io_registers": [
+        {
+            "name": "AI_burnoutValue",
+            "description": "high/low word",
+            "start_address": 560,
+            "function_code": "03",
+            "start_register": 40561,
+            "length": 8,
+            "access": "R/W",
+            "type": "2 words"
+        },
+        {
+            "name": "AI_mode",
+            "description": "0: 0-10 V 1: 4-20mA 2: 0-20mA 4: 4-20mA burnout",
+            "start_address": 544,
+            "function_code": "03",
+            "start_register": 40545,
+            "length": 4,
+            "access": "R/W",
+            "type": "word"
+        },
+        {
+            "name": "AI_rawValue",
+            "description": "",
+            "start_address": 512,
+            "function_code": "04",
+            "start_register": 30513,
+            "length": 4,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "AI_rawValueMax",
+            "description": "",
+            "start_address": 532,
+            "function_code": "04",
+            "start_register": 30533,
+            "length": 4,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "AI_rawValueMin",
+            "description": "",
+            "start_address": 528,
+            "function_code": "04",
+            "start_register": 30529,
+            "length": 4,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "AI_resetMaxValue",
+            "description": "1: reset max. value",
+            "start_address": 4153,
+            "function_code": "01",
+            "start_register": 4154,
+            "length": 4,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "AI_resetMinValue",
+            "description": "1: reset min. value",
+            "start_address": 4145,
+            "function_code": "01",
+            "start_register": 4146,
+            "length": 4,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "AI_scaledValue",
+            "description": "high/low word",
+            "start_address": 520,
+            "function_code": "04",
+            "start_register": 30521,
+            "length": 8,
+            "access": "R",
+            "type": "2 words"
+        },
+        {
+            "name": "AI_scaledValueMax",
+            "description": "high/low word",
+            "start_address": 546,
+            "function_code": "04",
+            "start_register": 30547,
+            "length": 8,
+            "access": "R",
+            "type": "2 words"
+        },
+        {
+            "name": "AI_scaledValueMin",
+            "description": "high/low word",
+            "start_address": 536,
+            "function_code": "04",
+            "start_register": 30537,
+            "length": 8,
+            "access": "R",
+            "type": "2 words"
+        },
+        {
+            "name": "AI_status",
+            "description": "0: normal, 1: burnout, 2: over range, 3: under range",
+            "start_address": 576,
+            "function_code": "04",
+            "start_register": 30577,
+            "length": 4,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "DI_counterOverflowFlag",
+            "description": "0: Normal, 1: Overflow",
+            "start_address": 1000,
+            "function_code": "02",
+            "start_register": 11001,
+            "length": 8,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "DI_counterOverflowFlagClear",
+            "description": "1: clear overflow flag",
+            "start_address": 288,
+            "function_code": "01",
+            "start_register": 289,
+            "length": 8,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "DI_counterReset",
+            "description": "1: reset to initial value",
+            "start_address": 272,
+            "function_code": "01",
+            "start_register": 273,
+            "length": 8,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "DI_counterStatus",
+            "description": "0: STOP, 1: START",
+            "start_address": 256,
+            "function_code": "01",
+            "start_register": 257,
+            "length": 8,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "DI_counterValue",
+            "description": "high/low word",
+            "start_address": 16,
+            "function_code": "04",
+            "start_register": 30017,
+            "length": 16,
+            "access": "R",
+            "type": "2 words"
+        },
+        {
+            "name": "DI_status",
+            "description": "0: OFF, 1: ON",
+            "start_address": 0,
+            "function_code": "02",
+            "start_register": 10001,
+            "length": 8,
+            "access": "R",
+            "type": "bit"
+        },
+        {
+            "name": "DI_all_statusFromDI_00",
+            "description": "0: OFF, 1: ON",
+            "start_address": 48,
+            "function_code": "04",
+            "start_register": 30049,
+            "length": 1,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "DO_p2pSafeModeFlagClear",
+            "description": "1: clear safe mode flag",
+            "start_address": 4128,
+            "function_code": "01",
+            "start_register": 4129,
+            "length": 4,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "DO_p2pSafeModeFlag",
+            "description": "0: OFF, 1: ON",
+            "start_address": 4112,
+            "function_code": "02",
+            "start_register": 14113,
+            "length": 4,
+            "access": "R",
+            "type": "bit"
+        },
+        {
+            "name": "DO_p2pStatus",
+            "description": "0: OFF, 1: ON",
+            "start_address": 4096,
+            "function_code": "02",
+            "start_register": 14097,
+            "length": 4,
+            "access": "R",
+            "type": "bit"
+        },
+        {
+            "name": "DO_pulseCount",
+            "description": "",
+            "start_address": 36,
+            "function_code": "03",
+            "start_register": 40037,
+            "length": 4,
+            "access": "R/W",
+            "type": "word"
+        },
+        {
+            "name": "DO_pulseOffWidth",
+            "description": "unit: 1 ms",
+            "start_address": 68,
+            "function_code": "03",
+            "start_register": 40069,
+            "length": 4,
+            "access": "R/W",
+            "type": "word"
+        },
+        {
+            "name": "DO_pulseOnWidth",
+            "description": "unit: 1 ms",
+            "start_address": 52,
+            "function_code": "03",
+            "start_register": 40053,
+            "length": 4,
+            "access": "R/W",
+            "type": "word"
+        },
+        {
+            "name": "DO_pulseStatus",
+            "description": "0: STOP, 1: START",
+            "start_address": 16,
+            "function_code": "01",
+            "start_register": 17,
+            "length": 4,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "DO_status",
+            "description": "0: OFF, 1: ON",
+            "start_address": 0,
+            "function_code": "01",
+            "start_register": 1,
+            "length": 4,
+            "access": "R/W",
+            "type": "bit"
+        },
+        {
+            "name": "DO_all_statusFromDO_00",
+            "description": "0: OFF, 1: ON",
+            "start_address": 32,
+            "function_code": "03",
+            "start_register": 40033,
+            "length": 1,
+            "access": "R/W",
+            "type": "word"
+        }
+    ],
+    "system_registers": [
+        {
+            "name": "deviceName",
+            "description": "Each byte represents ASCII code of each character",
+            "start_address": 5040,
+            "function_code": "04",
+            "start_register": 35041,
+            "length": 30,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "deviceUpTime",
+            "description": "unit: sec(s)",
+            "start_address": 5020,
+            "function_code": "04",
+            "start_register": 35021,
+            "length": 2,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "firmwareVersion",
+            "description": "e.g. V1.2.3 -> 1st byte: 1, 2nd byte: 2, 3rd byte: 3",
+            "start_address": 5029,
+            "function_code": "04",
+            "start_register": 35030,
+            "length": 2,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "firmwareBuildDate",
+            "description": "e.g. Build16051718 --> 16051718",
+            "start_address": 5031,
+            "function_code": "04",
+            "start_register": 35032,
+            "length": 2,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "lanIp",
+            "description": "e.g. 192.168.127.254 -> 1st byte: 192, 2nd byte: 168, 3rd byte: 127, 4th byte: 254",
+            "start_address": 5027,
+            "function_code": "04",
+            "start_register": 35028,
+            "length": 2,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "lanMac",
+            "description": "e.g. 00:90:E8:3E:18:CC -> 1st byte: 0, 2nd byte: 144, 3rd byte: 232, 4th byte: 62, 5th byte: 24, 6th byte: 204",
+            "start_address": 5024,
+            "function_code": "04",
+            "start_register": 35025,
+            "length": 3,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "modelName",
+            "description": "Each byte represents ASCII code of each character",
+            "start_address": 5000,
+            "function_code": "04",
+            "start_register": 35001,
+            "length": 10,
+            "access": "R",
+            "type": "word"
+        },
+        {
+            "name": "watchdogAlarmFlag",
+            "description": "1: clear watchdog alarm",
+            "start_address": 4144,
+            "function_code": "01",
+            "start_register": 4145,
+            "length": 1,
+            "access": "R/W",
+            "type": "bit"
+        }
+    ]
+}

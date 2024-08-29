@@ -1,5 +1,7 @@
-import logging
 import cups
+import sys
+import logging
+import platform
 
 from PyQt5.QtCore import QSettings
 
@@ -9,6 +11,7 @@ from reportlab.lib import colors
 from datetime import datetime
 from reportlab.lib.units import mm
 from pathlib import Path
+from app.modules.drives.defines import TITAN40_EMECDRV5_LIFT_NODE_ID, TITAN40_EMECDRV5_SLEWING_NODE_ID, IO_DRIVE_SLEWING_ID
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +25,48 @@ Print by commandline
 Access Printer server website:
     - http://localhost:631
 """
+
+
+def print_pdf(path: str, printer: str) -> None:
+    """
+    Print PDF with selected printer
+    :param path: PDF path
+    :param printer: printer where PDF should be printed
+    :return: None
+    """
+    path = Path(path)
+    logger.info(f"Print PDF: {path}")
+    if not path.exists():
+        logger.error(f"Print file {path} does not exist!")
+        return
+
+    try:
+        cups_conn = cups.Connection()
+        cups_conn.printFile(printer, str(path), f"{path.name}", {})
+    except Exception as e:
+        logger.error(f"Error printing PDF: {e}")
+
+
+def keep_latest_files(folder_path: str, keep_count: int) -> None:
+    """
+    This method will delete older files when keep_count has ben reached
+    :param folder_path: path of folder to delete files
+    :param keep_count: files to keep in folder until delete older files
+    :return: None
+    """
+    folder = Path(folder_path)
+
+    # List all files in the folder and sort them by modification time
+    files = list(folder.glob('*'))
+    files.sort(key=lambda x: x.stat().st_mtime)
+
+    # Calculate the number of files to delete
+    to_delete_count = max(0, len(files) - keep_count)
+
+    # Delete the older files
+    for i in range(to_delete_count):
+        files[i].unlink()
+        logger.info(f"Deleted: {files[i]}")
 
 
 class Label:
@@ -90,7 +135,7 @@ class Label:
         return self._mean_current
 
     @property
-    def device_temperature(self) -> float:
+    def device_temperature(self):
         return self._device_temperature
 
     @device_temperature.setter
@@ -118,47 +163,6 @@ class Label:
         self._ccw_block_torque = current
 
 
-def print_pdf(path: str, printer: str) -> None:
-    """
-    Print PDF with selected printer
-    :param path: PDF path
-    :param printer: printer where PDF should be printed
-    :return: None
-    """
-    path = Path(path)
-    logger.info(f"Print PDF: {path}")
-    if path.exists():
-        try:
-            cups_conn = cups.Connection()
-            cups_conn.printFile(printer, str(path), f"{path.name}", {})
-        except Exception as e:
-            logger.error(f"Error printing PDF: {e}")
-    else:
-        logger.error(f"{path} does not exist")
-
-
-def keep_latest_files(folder_path: str, keep_count: int) -> None:
-    """
-    This method will delete older files when keep_count has ben reached
-    :param folder_path: path of folder to delete files
-    :param keep_count: files to keep in folder until delete older files
-    :return: None
-    """
-    folder = Path(folder_path)
-
-    # List all files in the folder and sort them by modification time
-    files = list(folder.glob('*'))
-    files.sort(key=lambda x: x.stat().st_mtime)
-
-    # Calculate the number of files to delete
-    to_delete_count = max(0, len(files) - keep_count)
-
-    # Delete the older files
-    for i in range(to_delete_count):
-        files[i].unlink()
-        logger.info(f"Deleted: {files[i]}")
-
-
 class TestReportManager(SimpleDocTemplate):
     """
     Generates a QC Approved label for printing
@@ -166,18 +170,29 @@ class TestReportManager(SimpleDocTemplate):
     filename: PDF-file path and name
     """
 
-    def __init__(self,
-                 temp_folder: str,
-                 columns: int = 1,
-                 column_width: float = 60,
-                 column_height: float = 40,
-                 top_padding: float = 0,
-                 bottom_padding: float = 0,
-                 left_padding: float = 0,
-                 right_padding: float = 0
-                 ):
+    def __init__(self):
         super().__init__(self)
 
+        os = platform.system()
+        if os == "Windows":
+            default_temp_folder = "C:/tmp/labels/"
+        else:
+            default_temp_folder = "/var/tmp/labels/"
+
+        self.settings = QSettings("EMEC", "Tester")
+        max_labels = self.settings.value("label_files_cache", 50, type=int)
+        temp_folder = self.settings.value("label_files_folder", default_temp_folder, type=str)   # TODO: add to GUI
+
+        # load label layout settings
+        columns = self.settings.value("label_paper_columns", 2, type=int)
+        column_width = self.settings.value("label_column_width", 60, type=int)
+        column_height = self.settings.value("label_column_height", 30, type=int)
+        top_padding = self.settings.value("label_column_top", 8, type=int)
+        bottom_padding = self.settings.value("label_column_bottom", 8, type=int)
+        left_padding = self.settings.value("label_column_left", 10, type=int)
+        right_padding = self.settings.value("label_column_right", 10, type=int)
+
+        keep_latest_files(temp_folder, max_labels)
         self._temp_folder = Path(temp_folder)
 
         if not self._temp_folder.exists():
@@ -250,9 +265,15 @@ class TestReportManager(SimpleDocTemplate):
             return 0
 
         for file in self._temp_folder.glob(f"**/*{serial_number}*.pdf"):
-            settings = QSettings("EMEC", "Tester")  # init QSettings
-            printer = settings.value("printer", "None")
-            print_pdf(path=str(file), printer=printer)
+            self.settings = QSettings("EMEC", "Tester")  # init QSettings
+            printer = self.settings.value("printer", "None")
+
+            if not file.exists():
+                logger.error(f"File {file} does not exist")
+                return 0
+
+            if printer is not None:
+                print_pdf(path=str(file), printer=printer)
 
             return file.name  # print only fist file found than exit
 
@@ -265,25 +286,20 @@ class TestReportManager(SimpleDocTemplate):
         for frame_id, label in enumerate(self._labels):
             logger.info(f"Build Label ID {frame_id}")
 
-            logo = 'app/resources/images/emec_logo_sw.png'
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                path = Path(sys._MEIPASS) / "app/resources/images/emec_logo_sw.png"
+            else:
+                path = "app/resources/images/emec_logo_sw.png"
+
             image_ratio = 0.005
             width = 8086 * image_ratio
             height = 2492 * image_ratio
 
-            imean_out = label.mean_current / 1000  # print in Amps
-            cw_block_torque = int(label.cw_block_torque)  # print in Amps
-            ccw_block_torque = int(label.ccw_block_torque)  # print in Amps
-
-            # convert to string
-            imean_out_str = f"{imean_out:.2f}".replace(".", "")
-            cw_block_torque_str = f"{cw_block_torque}".replace(".", "")
-            ccw_block_torque_str = f"{ccw_block_torque}".replace(".", "")
-
-            result_code = imean_out_str + "T21" + cw_block_torque_str + "T22" + ccw_block_torque_str
-
             # Lift
-            if label.node_id == 12:
-                data = [[Image(logo, width=width, height=height), "QC APPROVED"],
+            if label.node_id == TITAN40_EMECDRV5_LIFT_NODE_ID:
+                imean_out = label.mean_current / 1000  # print in Amps
+
+                data = [[Image(path, width=width, height=height), "QC APPROVED"],
                         ["DATE:", f'{label.datetime}'],
                         ["SN:", f"{label.serial_number}"],
                         ["TYPE(ID):", f"{label.type} ({label.node_id})"],
@@ -291,14 +307,32 @@ class TestReportManager(SimpleDocTemplate):
                         ["Tested at", f"{label.device_temperature}°C"]]
 
             # Slewing
-            elif label.node_id == 13:
-                data = [[Image(logo, width=width, height=height), "QC APPROVED"],
+            elif label.node_id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
+
+                imean_out = label.mean_current / 1000  # print in Amps
+                cw_block_torque = int(label.cw_block_torque)  # print in Amps
+                ccw_block_torque = int(label.ccw_block_torque)  # print in Amps
+
+                # convert to string
+                imean_out_str = f"{imean_out:.2f}".replace(".", "")
+                cw_block_torque_str = f"{cw_block_torque}".replace(".", "")
+                ccw_block_torque_str = f"{ccw_block_torque}".replace(".", "")
+                result_code = imean_out_str + "T21" + cw_block_torque_str + "T22" + ccw_block_torque_str
+
+                data = [[Image(path, width=width, height=height), "QC APPROVED"],
                         ["DATE:", f'{label.datetime}'],
                         ["SN:", f"{label.serial_number}"],
                         ["TYPE(ID):", f"{label.type} ({label.node_id})"],
                         ["RC:", result_code]]
                 # ["Imean", "{:.2f}A".format(imean_out)],
                 # ["T21/T22", f"{cw_block_torque}Nm / {ccw_block_torque}Nm"]]
+
+            # IO controlled slewing motors
+            elif label.node_id == IO_DRIVE_SLEWING_ID:
+                data = [[Image(path, width=width, height=height), "QC APPROVED"],
+                        ["DATE:", f'{label.datetime}'],
+                        ["SN:", f"{label.serial_number}"],
+                        ["TYPE:", label.type]]
 
             table = Table(data)
 

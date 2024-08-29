@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainpXjFpW.ui'
+## Form generated from reading UI file 'mainFQOPnK.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -688,6 +688,10 @@ class Ui_MainWindow(object):
         self.actionGeneral.setObjectName(u"actionGeneral")
         self.actionSettings = QAction(MainWindow)
         self.actionSettings.setObjectName(u"actionSettings")
+        self.actionLabel_Printer = QAction(MainWindow)
+        self.actionLabel_Printer.setObjectName(u"actionLabel_Printer")
+        self.actionExit = QAction(MainWindow)
+        self.actionExit.setObjectName(u"actionExit")
         self.bgApp = QWidget(MainWindow)
         self.bgApp.setObjectName(u"bgApp")
         self.bgApp.setStyleSheet(u"")
@@ -695,8 +699,8 @@ class Ui_MainWindow(object):
         self.gridLayout_2.setSpacing(0)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout = QVBoxLayout()
-        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.gridFrame = QFrame(self.bgApp)
         self.gridFrame.setObjectName(u"gridFrame")
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -716,9 +720,9 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.verticalFrame.sizePolicy().hasHeightForWidth())
         self.verticalFrame.setSizePolicy(sizePolicy1)
         self.verticalFrame.setMaximumSize(QSize(16777215, 16777215))
-        self.verticalLayout_3 = QVBoxLayout(self.verticalFrame)
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_4 = QHBoxLayout(self.verticalFrame)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.lbl_logo = QLabel(self.verticalFrame)
         self.lbl_logo.setObjectName(u"lbl_logo")
         sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
@@ -730,23 +734,105 @@ class Ui_MainWindow(object):
         self.lbl_logo.setPixmap(QPixmap(u":/images/logo_emec.png"))
         self.lbl_logo.setScaledContents(True)
 
-        self.verticalLayout_3.addWidget(self.lbl_logo)
+        self.horizontalLayout_4.addWidget(self.lbl_logo)
 
-        self.label_9 = QLabel(self.verticalFrame)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_4.addItem(self.horizontalSpacer)
+
+        self.verticalFrame1 = QFrame(self.verticalFrame)
+        self.verticalFrame1.setObjectName(u"verticalFrame1")
+        self.verticalFrame1.setMinimumSize(QSize(500, 0))
+        self.verticalFrame1.setFrameShape(QFrame.Box)
+        self.gridLayout = QGridLayout(self.verticalFrame1)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.lbl_remoteio_firmware = QLabel(self.verticalFrame1)
+        self.lbl_remoteio_firmware.setObjectName(u"lbl_remoteio_firmware")
+
+        self.gridLayout.addWidget(self.lbl_remoteio_firmware, 6, 3, 1, 1)
+
+        self.label_5 = QLabel(self.verticalFrame1)
+        self.label_5.setObjectName(u"label_5")
+
+        self.gridLayout.addWidget(self.label_5, 6, 2, 1, 1)
+
+        self.lbl_remoteio_ip = QLabel(self.verticalFrame1)
+        self.lbl_remoteio_ip.setObjectName(u"lbl_remoteio_ip")
+
+        self.gridLayout.addWidget(self.lbl_remoteio_ip, 4, 3, 1, 1)
+
+        self.label_4 = QLabel(self.verticalFrame1)
+        self.label_4.setObjectName(u"label_4")
+
+        self.gridLayout.addWidget(self.label_4, 4, 2, 1, 1)
+
+        self.label_9 = QLabel(self.verticalFrame1)
         self.label_9.setObjectName(u"label_9")
 
-        self.verticalLayout_3.addWidget(self.label_9)
+        self.gridLayout.addWidget(self.label_9, 3, 0, 1, 1)
 
-        self.lbl_detected_cahnnels = QLabel(self.verticalFrame)
-        self.lbl_detected_cahnnels.setObjectName(u"lbl_detected_cahnnels")
+        self.label_11 = QLabel(self.verticalFrame1)
+        self.label_11.setObjectName(u"label_11")
 
-        self.verticalLayout_3.addWidget(self.lbl_detected_cahnnels)
+        self.gridLayout.addWidget(self.label_11, 5, 2, 1, 1)
+
+        self.lbl_detected_can_converter = QLabel(self.verticalFrame1)
+        self.lbl_detected_can_converter.setObjectName(u"lbl_detected_can_converter")
+
+        self.gridLayout.addWidget(self.lbl_detected_can_converter, 4, 1, 1, 1)
+
+        self.lbl_remoteio_connection_status = QLabel(self.verticalFrame1)
+        self.lbl_remoteio_connection_status.setObjectName(u"lbl_remoteio_connection_status")
+
+        self.gridLayout.addWidget(self.lbl_remoteio_connection_status, 7, 3, 1, 1)
+
+        self.label_16 = QLabel(self.verticalFrame1)
+        self.label_16.setObjectName(u"label_16")
+
+        self.gridLayout.addWidget(self.label_16, 4, 0, 1, 1)
+
+        self.lbl_remoteio_model_name = QLabel(self.verticalFrame1)
+        self.lbl_remoteio_model_name.setObjectName(u"lbl_remoteio_model_name")
+
+        self.gridLayout.addWidget(self.lbl_remoteio_model_name, 5, 3, 1, 1)
+
+        self.label_12 = QLabel(self.verticalFrame1)
+        self.label_12.setObjectName(u"label_12")
+
+        self.gridLayout.addWidget(self.label_12, 7, 2, 1, 1)
+
+        self.label_3 = QLabel(self.verticalFrame1)
+        self.label_3.setObjectName(u"label_3")
+
+        self.gridLayout.addWidget(self.label_3, 3, 2, 1, 1)
+
+        self.label_18 = QLabel(self.verticalFrame1)
+        self.label_18.setObjectName(u"label_18")
+
+        self.gridLayout.addWidget(self.label_18, 5, 0, 1, 1)
+
+        self.lbl_can_baudrate = QLabel(self.verticalFrame1)
+        self.lbl_can_baudrate.setObjectName(u"lbl_can_baudrate")
+
+        self.gridLayout.addWidget(self.lbl_can_baudrate, 5, 1, 1, 1)
+
+
+        self.horizontalLayout_4.addWidget(self.verticalFrame1)
 
 
         self.horizontalLayout.addWidget(self.verticalFrame, 0, Qt.AlignTop)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
+
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.verticalLayoutCANOpen = QVBoxLayout()
+        self.verticalLayoutCANOpen.setObjectName(u"verticalLayoutCANOpen")
+        self.label_13 = QLabel(self.gridFrame)
+        self.label_13.setObjectName(u"label_13")
+
+        self.verticalLayoutCANOpen.addWidget(self.label_13)
 
         self.gridLayout_3 = QGridLayout()
         self.gridLayout_3.setObjectName(u"gridLayout_3")
@@ -829,10 +915,8 @@ class Ui_MainWindow(object):
         self.gridLayout_3.addWidget(self.spb_block_duration, 3, 2, 1, 1)
 
 
-        self.verticalLayout_2.addLayout(self.gridLayout_3)
+        self.verticalLayoutCANOpen.addLayout(self.gridLayout_3)
 
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.tbl_node_list = QTableWidget(self.gridFrame)
         self.tbl_node_list.setObjectName(u"tbl_node_list")
         self.tbl_node_list.setEditTriggers(QAbstractItemView.EditKeyPressed)
@@ -840,16 +924,37 @@ class Ui_MainWindow(object):
         self.tbl_node_list.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tbl_node_list.verticalHeader().setVisible(False)
 
-        self.horizontalLayout_2.addWidget(self.tbl_node_list)
+        self.verticalLayoutCANOpen.addWidget(self.tbl_node_list)
 
 
-        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout_5.addLayout(self.verticalLayoutCANOpen)
+
+        self.verticalLayoutDIO = QVBoxLayout()
+        self.verticalLayoutDIO.setObjectName(u"verticalLayoutDIO")
+        self.label_14 = QLabel(self.gridFrame)
+        self.label_14.setObjectName(u"label_14")
+
+        self.verticalLayoutDIO.addWidget(self.label_14)
+
+        self.tbl_DIO_drives = QTableWidget(self.gridFrame)
+        self.tbl_DIO_drives.setObjectName(u"tbl_DIO_drives")
+        self.tbl_DIO_drives.setSelectionMode(QAbstractItemView.NoSelection)
+        self.tbl_DIO_drives.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tbl_DIO_drives.verticalHeader().setVisible(False)
+
+        self.verticalLayoutDIO.addWidget(self.tbl_DIO_drives)
 
 
-        self.verticalLayout.addWidget(self.gridFrame)
+        self.horizontalLayout_5.addLayout(self.verticalLayoutDIO)
 
 
-        self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_5)
+
+
+        self.horizontalLayout_3.addWidget(self.gridFrame)
+
+
+        self.gridLayout_2.addLayout(self.horizontalLayout_3, 0, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.bgApp)
         self.menuBar = QMenuBar(MainWindow)
@@ -861,6 +966,9 @@ class Ui_MainWindow(object):
 
         self.menuBar.addAction(self.menuEdit.menuAction())
         self.menuEdit.addAction(self.actionSettings)
+        self.menuEdit.addAction(self.actionLabel_Printer)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionExit)
 
         self.retranslateUi(MainWindow)
 
@@ -871,9 +979,24 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EMEC Drive EOL Tester", None))
         self.actionGeneral.setText(QCoreApplication.translate("MainWindow", u"General", None))
         self.actionSettings.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
+        self.actionLabel_Printer.setText(QCoreApplication.translate("MainWindow", u"Label Printer", None))
+        self.actionExit.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
         self.lbl_logo.setText("")
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"<h4>Detected channels</h4>", None))
-        self.lbl_detected_cahnnels.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.lbl_remoteio_firmware.setText(QCoreApplication.translate("MainWindow", u"V1.0.0", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindow", u"Firmware", None))
+        self.lbl_remoteio_ip.setText(QCoreApplication.translate("MainWindow", u"127.0.0.1", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"IP Address", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><h4 style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:medium; font-weight:600;\">CANOpen</span></h4></body></html>", None))
+        self.label_11.setText(QCoreApplication.translate("MainWindow", u"Model Name", None))
+        self.lbl_detected_can_converter.setText(QCoreApplication.translate("MainWindow", u"0", None))
+        self.lbl_remoteio_connection_status.setText(QCoreApplication.translate("MainWindow", u"OK", None))
+        self.label_16.setText(QCoreApplication.translate("MainWindow", u"Converter detected", None))
+        self.lbl_remoteio_model_name.setText(QCoreApplication.translate("MainWindow", u"Moxa E1242", None))
+        self.label_12.setText(QCoreApplication.translate("MainWindow", u"Connection status", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-weight:600;\">Remote IO</span></p></body></html>", None))
+        self.label_18.setText(QCoreApplication.translate("MainWindow", u"Baudrate", None))
+        self.lbl_can_baudrate.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
+        self.label_13.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:600;\">CANOpen Drives</span></p></body></html>", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"<b>Lift:</b>", None))
         self.lbl_print_lbl_detection_status.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-weight:600;\">Print label with SN:</span></p></body></html>", None))
@@ -884,6 +1007,7 @@ class Ui_MainWindow(object):
         self.spb_max_lift_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><h4 style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:medium; font-weight:600;\">Block duration </span><span style=\" font-size:medium; font-weight:600; font-style:italic;\">(block test)</span></h4></body></html>", None))
         self.spb_block_duration.setSuffix(QCoreApplication.translate("MainWindow", u" s", None))
+        self.label_14.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:600;\">Digital IO Controlled Drives</span></p><p><br/></p></body></html>", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
     # retranslateUi
 
