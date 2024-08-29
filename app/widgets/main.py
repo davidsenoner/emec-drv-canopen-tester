@@ -14,6 +14,7 @@ from app.modules.io import CANOpenManger
 from app.modules.io import MoxaE1242
 from app.widgets.dialogs.settings import SettingsDialog
 from app.widgets.dialogs.label_printer import LabelPrinterDialog
+from app.modules.test_report import Label, TestReportManager
 
 from PyQt5.QtCore import QSettings
 
@@ -47,15 +48,40 @@ class MainWindow(QMainWindow):
         # Settings management
         self.settings = QSettings("EMEC", "Tester")
 
+        self._report_manager = TestReportManager()
+
         # CANOpen initialization
-        self.canopen_manager = CANOpenManger()
+        channels = {
+            0: {
+                "enabled": self.settings.value("can0_enabled", True, type=bool),
+                "baud": self.settings.value("can0_baudrate", 125000, type=str)
+            },
+            1: {
+                "enabled": self.settings.value("can1_enabled", True, type=bool),
+                "baud": self.settings.value("can1_baudrate", 125000, type=str)
+            },
+            2: {
+                "enabled": self.settings.value("can2_enabled", False, type=bool),
+                "baud": self.settings.value("can2_baudrate", 125000, type=str)
+            },
+            3: {
+                "enabled": self.settings.value("can3_enabled", False, type=bool),
+                "baud": self.settings.value("can3_baudrate", 125000, type=str)
+            },
+            4: {
+                "enabled": self.settings.value("can4_enabled", False, type=bool),
+                "baud": self.settings.value("can4_baudrate", 125000, type=str)
+            }
+        }
+        self.canopen_manager = CANOpenManger(channels)
 
         # create drives tables
         if len(self.canopen_manager) > 0:  # at least ne channel detected
             self.node_table = CANOpenDrivesTable(self._ui.tbl_node_list, self.canopen_manager.items())  # Init Tables
+            self.node_table.set_report_manager(self._report_manager)
 
         self._ui.lbl_detected_can_converter.setText(f"{len(self.canopen_manager)}")
-        bauds = {cfg["baud"] for cfg in self.canopen_manager.canopen_channels_cfg if cfg.get("init", False)}
+        bauds = {cfg["baud"] for id, cfg in channels.items() if cfg.get("init", False)}
         self._ui.lbl_can_baudrate.setText(", ".join(map(str, bauds)))
 
         # Moxa remote IO initialization
@@ -64,29 +90,32 @@ class MainWindow(QMainWindow):
             remote_io_ip = self.settings.value("remote_io_ip", "192.168.23.254", type=str)
             remote_io_port = self.settings.value("remote_io_port", 502, type=int)
             remote_io_connection_timeout = self.settings.value("remote_io_connection_timeout", 5, type=int)
+            remote_io_rw_period = self.settings.value("remote_io_rw_period", 0.5, type=float)
 
-            self.moxa_remote_io = MoxaE1242(ip=remote_io_ip, port=remote_io_port)  # TODO: move IP Address to settings
+            self.moxa_remote_io = MoxaE1242(ip=remote_io_ip, port=remote_io_port, rw_period=remote_io_rw_period)
             for _ in range(remote_io_connection_timeout):
                 if self.moxa_remote_io.status:
                     break
                 time.sleep(1)
 
-            if not self.moxa_remote_io.status:
+            if self.moxa_remote_io.status:
+                logger.info("Moxa E1242 Remote IO initialized")
+                logger.info(f"CANOpen Manager initialized with {len(self.canopen_manager)} channels")
+                logger.info(f"Moxa IP: {self.moxa_remote_io.lan_ip} - {self.moxa_remote_io.lan_mac}")
+
+                self._ui.lbl_remoteio_ip.setText(".".join(map(str, self.moxa_remote_io.lan_ip)))
+                self._ui.lbl_remoteio_firmware.setText(self.moxa_remote_io.firmware_version)
+                self._ui.lbl_remoteio_model_name.setText(self.moxa_remote_io.model_name)
+                self._ui.lbl_remoteio_connection_status.setText("Connected")
+
+                self.remote_io_table = IODrivesTable(self._ui.tbl_DIO_drives, self.moxa_remote_io)
+                self.remote_io_table.set_report_manager(self._report_manager)
+            else:
                 logger.error("Moxa E1242 Remote IO not detected")
                 self._ui.lbl_remoteio_connection_status.setText("Not connected")
-                # return
+                self.moxa_remote_io.stop()
+                self.moxa_remote_io = None
 
-            logger.info("Moxa E1242 Remote IO initialized")
-            logger.info(f"CANOpen Manager initialized with {len(self.canopen_manager)} channels")
-            logger.info(f"Moxa IP: {self.moxa_remote_io.lan_ip} - {self.moxa_remote_io.lan_mac}")
-
-            self._ui.lbl_remoteio_ip.setText(".".join(map(str, self.moxa_remote_io.lan_ip)))
-            self._ui.lbl_remoteio_firmware.setText(self.moxa_remote_io.firmware_version)
-            self._ui.lbl_remoteio_model_name.setText(self.moxa_remote_io.model_name)
-            self._ui.lbl_remoteio_connection_status.setText("Connected")
-
-            if self.moxa_remote_io.status:
-                self.remote_io_table = IODrivesTable(self._ui.tbl_DIO_drives, self.moxa_remote_io)
         else:
             self._ui.lbl_remoteio_ip.setText("-")
             self._ui.lbl_remoteio_firmware.setText("-")
@@ -145,6 +174,7 @@ class MainWindow(QMainWindow):
 
         if reply == QMessageBox.Yes:
             self.moxa_remote_io.stop()
+            del self.moxa_remote_io
             event.accept()
         else:
             event.ignore()

@@ -4,7 +4,7 @@ from canopen import BaseNode402
 from canopen.emcy import EmcyError
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, QSettings, QTimer
 
-from app.modules.defines import *
+from app.modules.drives.defines import *
 from app.modules.utils import CurrentStatistics, compare_versions
 
 logger = logging.getLogger(__name__)
@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 NORMAL_RUN_TEST_MODE = 0
 BLOCKED_TEST_MODE = 1
 BLOCK_TEST_OK = 2
-
+STOPPED = 0
+CW = 1
+CCW = 2
 
 class EMECDrvTester(QTimer):
     on_test_timer_timeout = pyqtSignal()
@@ -429,7 +431,7 @@ class EMECDrvTester(QTimer):
         self.block_test_time_mask += 1
 
         if self.cw_block_detected and self.ccw_block_detected:
-            self.actual_test_mode_description = "Block event in both directions detected!! Test OK!!"
+            self.actual_test_mode_description = "Block detected in both directions, Test OK!!"
             self.actual_test_mode = BLOCK_TEST_OK  # block event in both directions detected, test finished
             return
 

@@ -1,5 +1,7 @@
-import logging
 import time
+import sys
+import logging
+from pathlib import Path
 from canopen import Network, BaseNode402
 
 from PyQt5.QtWidgets import QTableWidgetItem, QPushButton, QHeaderView, QTableWidget, QMenu, QMessageBox
@@ -10,9 +12,10 @@ from app.modules.drives.emec_canopen import EMECDrvTester
 from app.modules.drives.emec_canopen import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 from app.widgets.dialogs.add_info import AddInfoDialog
 from app.widgets.dialogs.add_serial_number import AddSNDialog
-from app.modules.test_report import Label, TestReportManager, keep_latest_files, get_label_temp_folder
+from app.modules.test_report import Label, TestReportManager
 
 logger = logging.getLogger(__name__)
+
 
 class CANOpenDrivesTableRow(EMECDrvTester):
     label_present_signal = pyqtSignal(Label)
@@ -28,7 +31,7 @@ class CANOpenDrivesTableRow(EMECDrvTester):
         self._comment = ""
         self._report = None
 
-        self.generate_label_signal.connect(self.on_label_present)
+        self.generate_label_signal.connect(self.on_generate_label)
 
     def __str__(self):
         if self.node.id == TITAN40_EMECDRV5_SLEWING_NODE_ID:
@@ -90,7 +93,7 @@ class CANOpenDrivesTableRow(EMECDrvTester):
     def comment(self, comment: str) -> None:
         self._comment = comment
 
-    def on_label_present(self):
+    def on_generate_label(self):
         """
         Create a label and send a signal passing the label
         This method should be connected to a singnal (es. timeout signal)
@@ -119,8 +122,8 @@ class CANOpenDrivesTable(QObject):
         self._redraw_table = True
 
         self.settings = QSettings("EMEC", "Tester")
-        self._headers = ["Ch_Id", "Type", "Start", "Stop", "CW", "CCW", "Pos", "Duration", "Current", "SW-Version",
-                         "Serial number", "State", "Test mode/result"]
+        self._headers = ["Ch_Id", "Type", "Start", "Stop", "CW", "CCW", "Position", "Duration", "Current", "SW-Version",
+                         "Serial Number", "State", "Test mode/result"]
 
         self.table_widget.setColumnCount(len(self._headers))
         self.table_widget.setHorizontalHeaderLabels(self._headers)
@@ -137,14 +140,10 @@ class CANOpenDrivesTable(QObject):
         self.refresh_table_timer1.start(800)
         self.refresh_table_timer1.timeout.connect(self.draw_table)
 
-        layout = self.get_layout_settings()
-        label_temp_folder = get_label_temp_folder()
+        self._report_manager = None
 
-        settings = QSettings("EMEC", "Tester")
-        max_labels = settings.value("label_files_cache", 50, type=int)
-        keep_latest_files(label_temp_folder, max_labels)
-
-        self._report_manager = TestReportManager(label_temp_folder, **layout)
+    def set_report_manager(self, report_manager: TestReportManager):
+        self._report_manager = report_manager
 
     def get_layout_settings(self):
         return {
@@ -158,17 +157,17 @@ class CANOpenDrivesTable(QObject):
         }
 
     @staticmethod
-    def start_node(node_table_row: CANOpenDrivesTableRow):
+    def start_node(row: CANOpenDrivesTableRow):
         try:
-            node_table_row.start_test()
+            row.start_test()
         except Exception as e:
             logger.debug(f'Error during start test command: {e}')
             return
 
     @staticmethod
-    def stop_node(node_table_row: CANOpenDrivesTableRow):
+    def stop_node(row: CANOpenDrivesTableRow):
         try:
-            node_table_row.stop_test("Stopped by user")
+            row.stop_test("Stopped by user")
         except Exception as e:
             logger.debug(f'Error during stop test command: {e}')
 
@@ -192,13 +191,19 @@ class CANOpenDrivesTable(QObject):
 
     @staticmethod
     def add_node(network: Network, node_id: int):
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            path = Path(sys._MEIPASS) / "app/resources/eds/emecdrv5_07.eds"
+        else:
+            path = "app/resources/eds/emecdrv5_07.eds"
+
+        logger.debug(f'Adding node ID {node_id} to network using EDS: {path}')
+
         # Create node from ID
         try:
-            eds = 'app/resources/eds/emecdrv5_07.eds'
             # Add new node to io
-            network.add_node(BaseNode402(node_id, eds))
+            network.add_node(BaseNode402(node_id, path))
             time.sleep(0.05)
-            logging.debug(f'Node ID {node_id} added to network using EDS: {eds}')
+            logging.debug(f'Node ID {node_id} added to network using EDS: {path}')
         except Exception as e:
             logger.error(f'Error when adding node to network: {e}')
 
@@ -238,7 +243,7 @@ class CANOpenDrivesTable(QObject):
             row = self.table_rows[key]
 
             # by disconnecting device print only if a label was generated in this session
-            if row.label_generated:
+            if row.label_ready:
                 self.report_manager.print_label_from_serial_number(row.serial_number)
 
             row.stop()

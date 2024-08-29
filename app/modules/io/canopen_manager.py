@@ -24,6 +24,11 @@ class CANOpenWrapper:
 
     def init(self, channel: int = None, baud: int = None, **kwargs) -> bool:
         ret = False
+
+        if not kwargs.get("enabled", False):
+            logger.info(f"Channel {channel} disabled")
+            return False
+
         if channel is None:
             channel = 1
             logger.info(f"No CAN channel specified, default {channel=}")
@@ -62,31 +67,12 @@ class CANOpenManger:
     Network Manager for CANOpen and Modbus clients
     """
 
-    def __init__(self):
-        self.canopen_channels_cfg = [
-            {
-                "channel": 0,
-                "baud": 125000
-            },
-            {
-                "channel": 1,
-                "baud": 125000
-            },
-            {
-                "channel": 2,
-                "baud": 125000
-            },
-            {
-                "channel": 3,
-                "baud": 125000
-            }
-        ]
-
+    def __init__(self, channels):
         self.wrapper = CANOpenWrapper()
 
         logger.info("Init CANOpen io")
-        for bus in self.canopen_channels_cfg:
-            bus['init'] = self.wrapper.init(**bus)  # Init CAN channels
+        for id, config in channels.items():
+            config['init'] = self.wrapper.init(id, **config)  # Init CAN channels
 
     def __len__(self):
         return len(self.wrapper)
