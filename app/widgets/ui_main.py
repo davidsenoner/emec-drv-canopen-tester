@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainjQtxVP.ui'
+## Form generated from reading UI file 'mainFQOPnK.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -938,6 +938,9 @@ class Ui_MainWindow(object):
 
         self.tbl_DIO_drives = QTableWidget(self.gridFrame)
         self.tbl_DIO_drives.setObjectName(u"tbl_DIO_drives")
+        self.tbl_DIO_drives.setSelectionMode(QAbstractItemView.NoSelection)
+        self.tbl_DIO_drives.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tbl_DIO_drives.verticalHeader().setVisible(False)
 
         self.verticalLayoutDIO.addWidget(self.tbl_DIO_drives)
 
