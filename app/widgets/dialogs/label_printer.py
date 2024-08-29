@@ -16,6 +16,7 @@ class LabelPrinterDialog(QDialog):
     """
     Settings Dialog
     """
+
     def __init__(self):
         super().__init__()
 
@@ -35,21 +36,19 @@ class LabelPrinterDialog(QDialog):
 
         self.settings = QSettings("EMEC", "Tester")  # init QSettings
         printer = self.settings.value("printer", "None")  # get printer selection von settings file
+        self._ui.cb_select_printer.addItem("None")
 
         # if CUPS connected display all printers in list
         if printers is not None:
             for printer in printers:
                 self._ui.cb_select_printer.addItem(printer)
-        else:
-            # otherwise add None to list
-            self._ui.cb_select_printer.addItem("None")
 
         # if the saved printer is in list select it
         if printer in [self._ui.cb_select_printer.itemText(i) for i in range(self._ui.cb_select_printer.count())]:
             self._ui.cb_select_printer.setCurrentText(printer)
         else:
             self._ui.cb_select_printer.setCurrentText("None")
-            logger.debug(f"Printer: <{self._printer}> not found in printer list")
+            logger.debug(f"Printer: <{printer}> not found in printer list")
 
         self._ui.sb_print_autom_timer.setValue(int(self.settings.value("label_print_timer", 60)))
         self._ui.cb_sn_active.setChecked(self.settings.value("sn_mnt_active", True, type=bool))
@@ -120,26 +119,8 @@ class LabelPrinterDialog(QDialog):
         Generate a test-label for layout design
         :return: str - path of label file used for printing or opening
         """
-        layout = {
-            "columns": self._ui.sb_label_columns.value(),
-            "column_width": self._ui.sb_column_width.value(),
-            "column_height": self._ui.sb_column_height.value(),
 
-            "top_padding": self._ui.sb_padding_top.value(),
-            "bottom_padding": self._ui.sb_padding_bottom.value(),
-            "left_padding": self._ui.sb_padding_left.value(),
-            "right_padding": self._ui.sb_padding_right.value(),
-        }
-
-        os = platform.system()
-
-        label_temp_folder = "/var/tmp/labels/"
-        if os == "Windows":
-            label_temp_folder = "C:/tmp/labels/"
-        elif os == "Linux":
-            label_temp_folder = "/var/tmp/labels/"
-
-        report_manager = TestReportManager(label_temp_folder, **layout)
+        report_manager = TestReportManager()
 
         i = 0
         while i < report_manager.columns_count:
