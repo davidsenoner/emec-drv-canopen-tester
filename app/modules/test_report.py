@@ -287,7 +287,7 @@ class TestReportManager(SimpleDocTemplate):
             logger.info(f"Build Label ID {frame_id}")
 
             if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-                path = Path(sys._MEIPASS) / "app/resources/images/emec_logo_sw.png"
+                path = f"{sys._MEIPASS}/app/resources/images/emec_logo_sw.png"
             else:
                 path = "app/resources/images/emec_logo_sw.png"
 
