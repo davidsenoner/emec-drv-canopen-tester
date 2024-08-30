@@ -223,7 +223,7 @@ class MoxaE1242:
             f"DO channels: {self._DO_channels_qty}, DI counter channels: {self._DI_counter_channels_qty}")
 
         if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-            path = Path(sys._MEIPASS) / "app/resources/register_map/e1242_mb_register_map.json"
+            path = f"{sys._MEIPASS}/app/resources/register_map/e1242_mb_register_map.json"
         else:
             path = "app/resources/register_map/e1242_mb_register_map.json"
 

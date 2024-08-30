@@ -192,7 +192,7 @@ class CANOpenDrivesTable(QObject):
     @staticmethod
     def add_node(network: Network, node_id: int):
         if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-            path = Path(sys._MEIPASS) / "app/resources/eds/emecdrv5_07.eds"
+            path = f"{sys._MEIPASS}/app/resources/eds/emecdrv5_07.eds"
         else:
             path = "app/resources/eds/emecdrv5_07.eds"
 
