@@ -113,7 +113,6 @@ class MainWindow(QMainWindow):
             else:
                 logger.error("Moxa E1242 Remote IO not detected")
                 self._ui.lbl_remoteio_connection_status.setText("Not connected")
-                self.moxa_remote_io.stop()
                 self.moxa_remote_io = None
 
         else:
@@ -173,8 +172,9 @@ class MainWindow(QMainWindow):
         reply = msg_box.exec_()
 
         if reply == QMessageBox.Yes:
-            self.moxa_remote_io.stop()
-            del self.moxa_remote_io
+            if self.moxa_remote_io is not None:
+                self.moxa_remote_io.stop()
+                del self.moxa_remote_io
             event.accept()
         else:
             event.ignore()

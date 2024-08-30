@@ -36,7 +36,7 @@ class EMECDrvTester(QTimer):
         self.not_moving_counter = 0  # counter for detection of no movement error
         self.wrong_movement_counter = 0  # counter for detection of wrong movement error
         self.actual_position_temp = 0
-        self.label_generated = False  # status bit True=Label already printed
+        self.label_ready = False  # status bit True=Label already printed
         self.actual_test_mode = NORMAL_RUN_TEST_MODE
         self.actual_test_mode_description = "Normal running"
 
@@ -360,9 +360,9 @@ class EMECDrvTester(QTimer):
         elif self.actual_test_mode == BLOCK_TEST_OK:
             self.stop_test(message="Test finished")
             # generate signal for printing/generating a label
-            if not self.label_generated:
+            if not self.label_ready:
                 self.generate_label_signal.emit()
-                self.label_generated = True
+                self.label_ready = True
 
         else:
             self.actual_test_mode_description = "Test mode unknown"
@@ -545,9 +545,9 @@ class EMECDrvTester(QTimer):
             self.actual_position_temp = actual_position  # update temp for actual position
 
         # generate signal for printing/generating a label
-        if not self.label_generated and self.elapsed_time > self.label_print_timeout:
+        if not self.label_ready and self.elapsed_time > self.label_print_timeout:
             self.generate_label_signal.emit()
-            self.label_generated = True
+            self.label_ready = True
 
     def start_test(self):
         if self.isActive():
