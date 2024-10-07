@@ -11,7 +11,7 @@ from PyQt5.QtGui import QCursor, QColor, QBrush
 from app.modules.drives.emec_canopen import EMECDrvTester
 from app.modules.drives.emec_canopen import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 from app.widgets.dialogs.add_info import AddInfoDialog
-from app.widgets.dialogs.add_serial_number import AddSNDialog
+from app.widgets.dialogs.write_registers_dialog import WriteRegistersDialog
 from app.modules.test_report import Label, TestReportManager
 
 logger = logging.getLogger(__name__)
@@ -226,8 +226,8 @@ class CANOpenDrivesTable(QObject):
                 self.table_rows.update({key: node_table_row})
 
                 if self.settings.value("sn_mnt_active", True, type=bool):
-                    dialog = AddSNDialog(channel=channel, node_id=node_id)
-                    node_table_row.serial_number = dialog.serial_number
+                    dialog = WriteRegistersDialog(channel=channel, node_id=node_id)
+                    node_table_row.serial_number = dialog.get_serial_number()
                     node_table_row.label_present_signal.connect(self._report_manager.add_label)
 
     def remove_absent_nodes(self, channel, network):
@@ -469,12 +469,12 @@ class CANOpenDrivesTable(QObject):
 
         # add serial number action to context menu
         if action == add_serial_action:
-            dialog = AddSNDialog(
+            dialog = WriteRegistersDialog(
                 channel=node_table_row.channel,
                 node_id=node_table_row.node_id,
                 serial_number=node_table_row.serial_number
             )
-            node_table_row.serial_number = dialog.serial_number
+            node_table_row.serial_number = dialog.get_serial_number()
 
         # node info command from context menu
         if action == info_action:

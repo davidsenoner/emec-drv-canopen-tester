@@ -5,7 +5,7 @@ from PyQt5.QtCore import pyqtSignal, QSettings, QTimer
 
 from app.modules.io.remoteio import MoxaE1242
 from app.modules.drives.defines import MAX_MOVEMENT_TIME_ABSOLUTE_SLEWING
-from app.widgets.dialogs.add_serial_number import AddSNDialog
+from app.widgets.dialogs.write_registers_dialog import WriteRegistersDialog
 from app.modules.drives.defines import IO_DRIVE_SLEWING_ID
 from app.modules.test_report import Label
 
@@ -215,8 +215,8 @@ class EMECL2L3Drive(QTimer):
                     self.drive_removed = False
                     self.label_ready = False
                     if self.settings.value("sn_mnt_active", True, type=bool):
-                        dialog = AddSNDialog(node_id=IO_DRIVE_SLEWING_ID)
-                        self.serial_number = dialog.serial_number
+                        dialog = WriteRegistersDialog(node_id=IO_DRIVE_SLEWING_ID)
+                        self.serial_number = dialog.get_serial_number()
                     self.start_test()
         else:
             if self.drive_present_since > 0:
