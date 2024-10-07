@@ -440,7 +440,6 @@ class CANOpenDrivesTable(QObject):
         if not index.isValid():
             return
 
-        sn_active = self.settings.value("sn_mnt_active", True, type=bool)
         row = index.row()
 
         key = self.table_widget.item(row, 0).text()  # Column 0 have unique key for channel/node_id
@@ -452,9 +451,7 @@ class CANOpenDrivesTable(QObject):
         reset_action = menu.addAction("Reset device")
         info_action = menu.addAction("Info")
         add_info_action = menu.addAction("Add additional information")
-
-        if sn_active:
-            add_serial_action = menu.addAction("Add serial number")
+        add_serial_action = menu.addAction("Add serial number")
 
         action = menu.exec_(self.table_widget.mapToGlobal(pos))
 
@@ -471,14 +468,13 @@ class CANOpenDrivesTable(QObject):
             node_table_row.comment = dialog.comment
 
         # add serial number action to context menu
-        if sn_active:
-            if action == add_serial_action:
-                dialog = AddSNDialog(
-                    channel=node_table_row.channel,
-                    node_id=node_table_row.node_id,
-                    serial_number=node_table_row.serial_number
-                )
-                node_table_row.serial_number = dialog.serial_number
+        if action == add_serial_action:
+            dialog = AddSNDialog(
+                channel=node_table_row.channel,
+                node_id=node_table_row.node_id,
+                serial_number=node_table_row.serial_number
+            )
+            node_table_row.serial_number = dialog.serial_number
 
         # node info command from context menu
         if action == info_action:
