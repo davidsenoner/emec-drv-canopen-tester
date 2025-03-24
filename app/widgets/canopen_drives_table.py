@@ -123,14 +123,14 @@ class CANOpenDrivesTable(QObject):
 
         self.settings = QSettings("EMEC", "Tester")
         self._headers = ["Ch_Id", "Type", "Start", "Stop", "CW", "CCW", "Position", "Duration", "Current", "SW-Version",
-                         "Serial Number", "State", "Test mode/result"]
+                         "Serial Number", "Temperature" "State", "Test mode/result"]
 
         self.table_widget.setColumnCount(len(self._headers))
         self.table_widget.setHorizontalHeaderLabels(self._headers)
         self.table_widget.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
         self.table_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_widget.customContextMenuRequested.connect(self.on_context_menu)
-        self.table_widget.horizontalHeader().setContentsMargins(10, 0, 10, 0)
+        self.table_widget.horizontalHeader().setContentsMargins(0, 0, 0, 0)
 
         self.refresh_table_timer = QTimer()
         self.refresh_table_timer.start(1000)
@@ -290,16 +290,23 @@ class CANOpenDrivesTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_actual_current()} mA'))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
+                
+            # COLUMN ACTUAL TEMPERATURE
+            _column = 11
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_device_temp()} °C'))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN STATUS
-            _column = 11
+            _column = 12
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN TESTING MODE
-            _column = 12
+            _column = 13
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
 
             i += 1  # IMPORTANT: increment row counter only once!!!
@@ -412,16 +419,23 @@ class CANOpenDrivesTable(QObject):
             # COLUMN SERIAL
             _column = 10
             self.table_widget.setItem(i, _column, QTableWidgetItem(f"{node_table_row.serial_number}"))
+            
+            # COLUMN TEMPERATURE
+            _column = 11
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_device_temp()} °C'))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN STATUS
-            _column = 11
+            _column = 12
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN TESTING MODE
-            _column = 12
+            _column = 13
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
 
             i += 1  # IMPORTANT: increment row counter only once!!!
