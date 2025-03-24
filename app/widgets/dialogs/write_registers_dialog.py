@@ -58,8 +58,8 @@ class WriteRegistersDialog(QDialog):
     def get_serial_number(self) -> int:
         return self._serial_number
 
-    def get_hw_version(self) -> int | str:
+    def get_hw_version(self):
         return self._hw_version
 
-    def get_fw_version(self) -> int | str:
+    def get_fw_version(self):
         return self._fw_version
