@@ -1,8 +1,9 @@
 import sys
 from PyQt5.QtWidgets import QApplication
 from app import MainWindow
+from PyQt5.QtCore import QStandardPaths
 
-VERSION = "2.8.1"  # Version number
+VERSION = "2.9.0"  # Version number
 
 if __name__ == "__main__":
     if not QApplication.instance():

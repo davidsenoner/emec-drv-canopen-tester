@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>527</height>
+    <height>670</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -879,9 +879,15 @@ QPushButton:disabled {
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_5">
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayoutCANOpen">
+          <widget class="QTabWidget" name="tabWidget">
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="QWidget" name="tab">
+            <attribute name="title">
+             <string>CANOpen</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout">
              <item>
               <widget class="QLabel" name="label_13">
                <property name="text">
@@ -1040,9 +1046,12 @@ QPushButton:disabled {
               </widget>
              </item>
             </layout>
-           </item>
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayoutDIO">
+           </widget>
+           <widget class="QWidget" name="tab_2">
+            <attribute name="title">
+             <string>DIO Drives</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
              <item>
               <widget class="QLabel" name="label_14">
                <property name="text">
@@ -1064,8 +1073,8 @@ QPushButton:disabled {
               </widget>
              </item>
             </layout>
-           </item>
-          </layout>
+           </widget>
+          </widget>
          </item>
         </layout>
        </widget>

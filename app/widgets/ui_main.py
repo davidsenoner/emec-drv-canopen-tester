@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainFQOPnK.ui'
+## Form generated from reading UI file 'mainTUnYnF.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(800, 527)
+        MainWindow.resize(800, 670)
         MainWindow.setStyleSheet(u"/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "\n"
 "	DARK MODE STYLE SHEET\n"
@@ -825,28 +825,30 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.verticalLayoutCANOpen = QVBoxLayout()
-        self.verticalLayoutCANOpen.setObjectName(u"verticalLayoutCANOpen")
-        self.label_13 = QLabel(self.gridFrame)
+        self.tabWidget = QTabWidget(self.gridFrame)
+        self.tabWidget.setObjectName(u"tabWidget")
+        self.tab = QWidget()
+        self.tab.setObjectName(u"tab")
+        self.verticalLayout = QVBoxLayout(self.tab)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.label_13 = QLabel(self.tab)
         self.label_13.setObjectName(u"label_13")
 
-        self.verticalLayoutCANOpen.addWidget(self.label_13)
+        self.verticalLayout.addWidget(self.label_13)
 
         self.gridLayout_3 = QGridLayout()
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.label_8 = QLabel(self.gridFrame)
+        self.label_8 = QLabel(self.tab)
         self.label_8.setObjectName(u"label_8")
 
         self.gridLayout_3.addWidget(self.label_8, 0, 4, 1, 1)
 
-        self.lbl_print_lbl_detection_status = QLabel(self.gridFrame)
+        self.lbl_print_lbl_detection_status = QLabel(self.tab)
         self.lbl_print_lbl_detection_status.setObjectName(u"lbl_print_lbl_detection_status")
 
         self.gridLayout_3.addWidget(self.lbl_print_lbl_detection_status, 4, 4, 1, 1)
 
-        self.led_min_sw_ver_slewing = QLineEdit(self.gridFrame)
+        self.led_min_sw_ver_slewing = QLineEdit(self.tab)
         self.led_min_sw_ver_slewing.setObjectName(u"led_min_sw_ver_slewing")
         self.led_min_sw_ver_slewing.setMinimumSize(QSize(0, 30))
         self.led_min_sw_ver_slewing.setFocusPolicy(Qt.StrongFocus)
@@ -854,12 +856,12 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.led_min_sw_ver_slewing, 1, 2, 1, 1)
 
-        self.label = QLabel(self.gridFrame)
+        self.label = QLabel(self.tab)
         self.label.setObjectName(u"label")
 
         self.gridLayout_3.addWidget(self.label, 4, 0, 1, 1)
 
-        self.led_min_sw_ver_lift = QLineEdit(self.gridFrame)
+        self.led_min_sw_ver_lift = QLineEdit(self.tab)
         self.led_min_sw_ver_lift.setObjectName(u"led_min_sw_ver_lift")
         self.led_min_sw_ver_lift.setMinimumSize(QSize(0, 30))
         self.led_min_sw_ver_lift.setFocusPolicy(Qt.StrongFocus)
@@ -867,88 +869,86 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.led_min_sw_ver_lift, 1, 4, 1, 1)
 
-        self.led_print_label_with_serial = QLineEdit(self.gridFrame)
+        self.led_print_label_with_serial = QLineEdit(self.tab)
         self.led_print_label_with_serial.setObjectName(u"led_print_label_with_serial")
         self.led_print_label_with_serial.setMinimumSize(QSize(0, 30))
         self.led_print_label_with_serial.setMaxLength(20)
 
         self.gridLayout_3.addWidget(self.led_print_label_with_serial, 4, 2, 1, 1)
 
-        self.label_6 = QLabel(self.gridFrame)
+        self.label_6 = QLabel(self.tab)
         self.label_6.setObjectName(u"label_6")
 
         self.gridLayout_3.addWidget(self.label_6, 1, 0, 1, 1)
 
-        self.label_7 = QLabel(self.gridFrame)
+        self.label_7 = QLabel(self.tab)
         self.label_7.setObjectName(u"label_7")
 
         self.gridLayout_3.addWidget(self.label_7, 0, 2, 1, 1)
 
-        self.label_10 = QLabel(self.gridFrame)
+        self.label_10 = QLabel(self.tab)
         self.label_10.setObjectName(u"label_10")
 
         self.gridLayout_3.addWidget(self.label_10, 2, 0, 1, 1)
 
-        self.spb_max_slewing_current = QSpinBox(self.gridFrame)
+        self.spb_max_slewing_current = QSpinBox(self.tab)
         self.spb_max_slewing_current.setObjectName(u"spb_max_slewing_current")
         self.spb_max_slewing_current.setMaximum(3000)
         self.spb_max_slewing_current.setValue(0)
 
         self.gridLayout_3.addWidget(self.spb_max_slewing_current, 2, 2, 1, 1)
 
-        self.spb_max_lift_current = QSpinBox(self.gridFrame)
+        self.spb_max_lift_current = QSpinBox(self.tab)
         self.spb_max_lift_current.setObjectName(u"spb_max_lift_current")
         self.spb_max_lift_current.setMaximum(3000)
         self.spb_max_lift_current.setValue(0)
 
         self.gridLayout_3.addWidget(self.spb_max_lift_current, 2, 4, 1, 1)
 
-        self.label_2 = QLabel(self.gridFrame)
+        self.label_2 = QLabel(self.tab)
         self.label_2.setObjectName(u"label_2")
 
         self.gridLayout_3.addWidget(self.label_2, 3, 0, 1, 1)
 
-        self.spb_block_duration = QSpinBox(self.gridFrame)
+        self.spb_block_duration = QSpinBox(self.tab)
         self.spb_block_duration.setObjectName(u"spb_block_duration")
         self.spb_block_duration.setMaximum(20)
 
         self.gridLayout_3.addWidget(self.spb_block_duration, 3, 2, 1, 1)
 
 
-        self.verticalLayoutCANOpen.addLayout(self.gridLayout_3)
+        self.verticalLayout.addLayout(self.gridLayout_3)
 
-        self.tbl_node_list = QTableWidget(self.gridFrame)
+        self.tbl_node_list = QTableWidget(self.tab)
         self.tbl_node_list.setObjectName(u"tbl_node_list")
         self.tbl_node_list.setEditTriggers(QAbstractItemView.EditKeyPressed)
         self.tbl_node_list.setSelectionMode(QAbstractItemView.NoSelection)
         self.tbl_node_list.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tbl_node_list.verticalHeader().setVisible(False)
 
-        self.verticalLayoutCANOpen.addWidget(self.tbl_node_list)
+        self.verticalLayout.addWidget(self.tbl_node_list)
 
-
-        self.horizontalLayout_5.addLayout(self.verticalLayoutCANOpen)
-
-        self.verticalLayoutDIO = QVBoxLayout()
-        self.verticalLayoutDIO.setObjectName(u"verticalLayoutDIO")
-        self.label_14 = QLabel(self.gridFrame)
+        self.tabWidget.addTab(self.tab, "")
+        self.tab_2 = QWidget()
+        self.tab_2.setObjectName(u"tab_2")
+        self.verticalLayout_3 = QVBoxLayout(self.tab_2)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.label_14 = QLabel(self.tab_2)
         self.label_14.setObjectName(u"label_14")
 
-        self.verticalLayoutDIO.addWidget(self.label_14)
+        self.verticalLayout_3.addWidget(self.label_14)
 
-        self.tbl_DIO_drives = QTableWidget(self.gridFrame)
+        self.tbl_DIO_drives = QTableWidget(self.tab_2)
         self.tbl_DIO_drives.setObjectName(u"tbl_DIO_drives")
         self.tbl_DIO_drives.setSelectionMode(QAbstractItemView.NoSelection)
         self.tbl_DIO_drives.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tbl_DIO_drives.verticalHeader().setVisible(False)
 
-        self.verticalLayoutDIO.addWidget(self.tbl_DIO_drives)
+        self.verticalLayout_3.addWidget(self.tbl_DIO_drives)
 
+        self.tabWidget.addTab(self.tab_2, "")
 
-        self.horizontalLayout_5.addLayout(self.verticalLayoutDIO)
-
-
-        self.verticalLayout_2.addLayout(self.horizontalLayout_5)
+        self.verticalLayout_2.addWidget(self.tabWidget)
 
 
         self.horizontalLayout_3.addWidget(self.gridFrame)
@@ -971,6 +971,9 @@ class Ui_MainWindow(object):
         self.menuEdit.addAction(self.actionExit)
 
         self.retranslateUi(MainWindow)
+
+        self.tabWidget.setCurrentIndex(0)
+
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
@@ -1007,7 +1010,9 @@ class Ui_MainWindow(object):
         self.spb_max_lift_current.setSuffix(QCoreApplication.translate("MainWindow", u" mA", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><h4 style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:medium; font-weight:600;\">Block duration </span><span style=\" font-size:medium; font-weight:600; font-style:italic;\">(block test)</span></h4></body></html>", None))
         self.spb_block_duration.setSuffix(QCoreApplication.translate("MainWindow", u" s", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"CANOpen", None))
         self.label_14.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:600;\">Digital IO Controlled Drives</span></p><p><br/></p></body></html>", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"DIO Drives", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
     # retranslateUi
 

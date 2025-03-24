@@ -11,7 +11,7 @@ from PyQt5.QtGui import QCursor, QColor, QBrush
 from app.modules.drives.emec_canopen import EMECDrvTester
 from app.modules.drives.emec_canopen import TITAN40_EMECDRV5_SLEWING_NODE_ID, TITAN40_EMECDRV5_LIFT_NODE_ID
 from app.widgets.dialogs.add_info import AddInfoDialog
-from app.widgets.dialogs.add_serial_number import AddSNDialog
+from app.widgets.dialogs.write_registers_dialog import WriteRegistersDialog
 from app.modules.test_report import Label, TestReportManager
 
 logger = logging.getLogger(__name__)
@@ -123,14 +123,14 @@ class CANOpenDrivesTable(QObject):
 
         self.settings = QSettings("EMEC", "Tester")
         self._headers = ["Ch_Id", "Type", "Start", "Stop", "CW", "CCW", "Position", "Duration", "Current", "SW-Version",
-                         "Serial Number", "State", "Test mode/result"]
+                         "Serial Number", "Temperature" "State", "Test mode/result"]
 
         self.table_widget.setColumnCount(len(self._headers))
         self.table_widget.setHorizontalHeaderLabels(self._headers)
         self.table_widget.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
         self.table_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_widget.customContextMenuRequested.connect(self.on_context_menu)
-        self.table_widget.horizontalHeader().setContentsMargins(10, 0, 10, 0)
+        self.table_widget.horizontalHeader().setContentsMargins(0, 0, 0, 0)
 
         self.refresh_table_timer = QTimer()
         self.refresh_table_timer.start(1000)
@@ -226,8 +226,8 @@ class CANOpenDrivesTable(QObject):
                 self.table_rows.update({key: node_table_row})
 
                 if self.settings.value("sn_mnt_active", True, type=bool):
-                    dialog = AddSNDialog(channel=channel, node_id=node_id)
-                    node_table_row.serial_number = dialog.serial_number
+                    dialog = WriteRegistersDialog(channel=channel, node_id=node_id)
+                    node_table_row.serial_number = dialog.get_serial_number()
                     node_table_row.label_present_signal.connect(self._report_manager.add_label)
 
     def remove_absent_nodes(self, channel, network):
@@ -290,16 +290,23 @@ class CANOpenDrivesTable(QObject):
                 self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_actual_current()} mA'))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
+                
+            # COLUMN ACTUAL TEMPERATURE
+            _column = 11
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_device_temp()} °C'))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN STATUS
-            _column = 11
+            _column = 12
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN TESTING MODE
-            _column = 12
+            _column = 13
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
 
             i += 1  # IMPORTANT: increment row counter only once!!!
@@ -412,16 +419,23 @@ class CANOpenDrivesTable(QObject):
             # COLUMN SERIAL
             _column = 10
             self.table_widget.setItem(i, _column, QTableWidgetItem(f"{node_table_row.serial_number}"))
+            
+            # COLUMN TEMPERATURE
+            _column = 11
+            try:
+                self.table_widget.setItem(i, _column, QTableWidgetItem(f'{node_table_row.get_device_temp()} °C'))
+            except Exception as e:
+                self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN STATUS
-            _column = 11
+            _column = 12
             try:
                 self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_status()))
             except Exception as e:
                 self.table_widget.setItem(i, _column, QTableWidgetItem("-"))
 
             # COLUMN TESTING MODE
-            _column = 12
+            _column = 13
             self.table_widget.setItem(i, _column, QTableWidgetItem(node_table_row.get_test_mode_description()))
 
             i += 1  # IMPORTANT: increment row counter only once!!!
@@ -440,7 +454,6 @@ class CANOpenDrivesTable(QObject):
         if not index.isValid():
             return
 
-        sn_active = self.settings.value("sn_mnt_active", True, type=bool)
         row = index.row()
 
         key = self.table_widget.item(row, 0).text()  # Column 0 have unique key for channel/node_id
@@ -452,9 +465,7 @@ class CANOpenDrivesTable(QObject):
         reset_action = menu.addAction("Reset device")
         info_action = menu.addAction("Info")
         add_info_action = menu.addAction("Add additional information")
-
-        if sn_active:
-            add_serial_action = menu.addAction("Add serial number")
+        add_serial_action = menu.addAction("Add serial number")
 
         action = menu.exec_(self.table_widget.mapToGlobal(pos))
 
@@ -471,14 +482,13 @@ class CANOpenDrivesTable(QObject):
             node_table_row.comment = dialog.comment
 
         # add serial number action to context menu
-        if sn_active:
-            if action == add_serial_action:
-                dialog = AddSNDialog(
-                    channel=node_table_row.channel,
-                    node_id=node_table_row.node_id,
-                    serial_number=node_table_row.serial_number
-                )
-                node_table_row.serial_number = dialog.serial_number
+        if action == add_serial_action:
+            dialog = WriteRegistersDialog(
+                channel=node_table_row.channel,
+                node_id=node_table_row.node_id,
+                serial_number=node_table_row.serial_number
+            )
+            node_table_row.serial_number = dialog.get_serial_number()
 
         # node info command from context menu
         if action == info_action:
